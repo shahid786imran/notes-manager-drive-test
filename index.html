@@ -14,11 +14,16 @@
   </script>
 
   <style>
+
     body {
       font-family: Arial, sans-serif;
       padding: 25px;
       max-width: 800px;
       margin: auto;
+    }
+
+    h2 {
+      margin-bottom: 20px;
     }
 
     button {
@@ -50,6 +55,7 @@
       white-space: pre-wrap;
       overflow-x: auto;
     }
+
   </style>
 
 </head>
@@ -80,6 +86,11 @@
   </button>
 
 
+  <button id="deleteBtn" disabled>
+    Delete Test File
+  </button>
+
+
   <div id="status">
     Not connected
   </div>
@@ -92,7 +103,7 @@
 
 
 /* =========================================================
-   CONFIGURATION
+   GOOGLE DRIVE CONFIGURATION
    ========================================================= */
 
 
@@ -104,8 +115,22 @@ const DRIVE_SCOPE =
   "https://www.googleapis.com/auth/drive";
 
 
+/* ---------------------------------------------------------
+   ORIGINAL MASTER DATABASE
+   --------------------------------------------------------- */
+
+
 const MASTER_FILE_ID =
   "1dx0IrwUD0Is1GGOmfNsxkqpTD7fC4IW1";
+
+
+/* ---------------------------------------------------------
+   TEST FILE CREATED EARLIER
+   --------------------------------------------------------- */
+
+
+const TEST_FILE_ID =
+  "15IZyIs-ALH7QYbiREH4exeUXHiUpqHAO";
 
 
 /* =========================================================
@@ -145,8 +170,12 @@ const updateBtn =
   document.getElementById("updateBtn");
 
 
+const deleteBtn =
+  document.getElementById("deleteBtn");
+
+
 /* =========================================================
-   STATUS
+   STATUS FUNCTION
    ========================================================= */
 
 
@@ -165,6 +194,7 @@ function setStatus(message) {
 connectBtn.addEventListener(
   "click",
   function () {
+
 
     setStatus(
       "Connecting to Google..."
@@ -187,17 +217,24 @@ connectBtn.addEventListener(
 
             if (response.error) {
 
+
               console.error(response);
 
+
               setStatus(
+
                 "Google authorization failed:\n" +
+
                 (
                   response.error_description ||
                   response.error
                 )
+
               );
 
+
               return;
+
             }
 
 
@@ -213,10 +250,16 @@ connectBtn.addEventListener(
             readBtn.disabled =
               false;
 
+
             createBtn.disabled =
               false;
 
+
             updateBtn.disabled =
+              false;
+
+
+            deleteBtn.disabled =
               false;
 
           }
@@ -236,7 +279,7 @@ connectBtn.addEventListener(
 
 
 /* =========================================================
-   READ MASTER.JSON
+   READ MASTER.JSON FUNCTION
    ========================================================= */
 
 
@@ -270,8 +313,10 @@ async function readMasterFile() {
 
   if (!response.ok) {
 
+
     const errorText =
       await response.text();
+
 
     throw new Error(
 
@@ -345,6 +390,7 @@ readBtn.addEventListener(
 
     try {
 
+
       const json =
         await readMasterFile();
 
@@ -366,12 +412,15 @@ readBtn.addEventListener(
 
     catch (error) {
 
+
       console.error(error);
 
 
       setStatus(
+
         "READ FAILED:\n" +
         error.message
+
       );
 
     }
@@ -411,14 +460,18 @@ createBtn.addEventListener(
 
       const testData = {
 
+
         version:
           1,
+
 
         updatedAt:
           new Date().toISOString(),
 
+
         test:
           "Google Drive CREATE test successful",
+
 
         notes: [
 
@@ -442,8 +495,10 @@ createBtn.addEventListener(
 
       const metadata = {
 
+
         name:
-          "Drive Create Test.json",
+          "Drive CRUD Test.json",
+
 
         mimeType:
           "application/json"
@@ -527,8 +582,10 @@ createBtn.addEventListener(
 
       if (!response.ok) {
 
+
         const errorText =
           await response.text();
+
 
         throw new Error(
 
@@ -549,10 +606,11 @@ createBtn.addEventListener(
       setStatus(
 
         "SUCCESS! Test file created.\n\n" +
+
         "File Name: " +
         result.name +
-        "\n" +
-        "File ID: " +
+
+        "\nFile ID: " +
         result.id
 
       );
@@ -570,11 +628,15 @@ createBtn.addEventListener(
 
     catch (error) {
 
+
       console.error(error);
 
+
       setStatus(
+
         "CREATE FAILED:\n" +
         error.message
+
       );
 
     }
@@ -612,18 +674,13 @@ updateBtn.addEventListener(
     try {
 
 
-      /* -----------------------------------------------------
-         READ CURRENT DATABASE
-         ----------------------------------------------------- */
-
-
       const json =
         await readMasterFile();
 
 
-      /* -----------------------------------------------------
-         UPDATE ONLY TEST INFORMATION
-         ----------------------------------------------------- */
+      /* ---------------------------------------------------
+         TEST FIELDS
+         --------------------------------------------------- */
 
 
       json.updatedAt =
@@ -638,9 +695,9 @@ updateBtn.addEventListener(
         new Date().toLocaleString();
 
 
-      /* -----------------------------------------------------
-         CONVERT JSON TO TEXT
-         ----------------------------------------------------- */
+      /* ---------------------------------------------------
+         CONVERT TO JSON
+         --------------------------------------------------- */
 
 
       const jsonText =
@@ -649,11 +706,6 @@ updateBtn.addEventListener(
           null,
           2
         );
-
-
-      /* -----------------------------------------------------
-         CREATE FILE BLOB
-         ----------------------------------------------------- */
 
 
       const fileBlob =
@@ -671,9 +723,9 @@ updateBtn.addEventListener(
         );
 
 
-      /* -----------------------------------------------------
-         UPDATE EXISTING FILE
-         ----------------------------------------------------- */
+      /* ---------------------------------------------------
+         UPDATE EXISTING MASTER FILE
+         --------------------------------------------------- */
 
 
       const response =
@@ -730,14 +782,10 @@ updateBtn.addEventListener(
         await response.json();
 
 
-      /* -----------------------------------------------------
-         SUCCESS
-         ----------------------------------------------------- */
-
-
       setStatus(
 
         "SUCCESS! Master.json UPDATED successfully.\n\n" +
+
         "File ID: " +
         (
           result.id ||
@@ -759,12 +807,149 @@ updateBtn.addEventListener(
 
     catch (error) {
 
+
       console.error(error);
 
 
       setStatus(
 
         "UPDATE FAILED:\n" +
+        error.message
+
+      );
+
+    }
+
+  }
+);
+
+
+/* =========================================================
+   DELETE TEST FILE
+   ========================================================= */
+
+
+deleteBtn.addEventListener(
+  "click",
+  async function () {
+
+
+    if (!accessToken) {
+
+      setStatus(
+        "Please connect Google Drive first."
+      );
+
+      return;
+
+    }
+
+
+    const confirmed =
+      confirm(
+
+        "Delete the test file only?\n\n" +
+
+        "Master.json will NOT be deleted."
+
+      );
+
+
+    if (!confirmed) {
+
+      setStatus(
+        "Delete cancelled."
+      );
+
+      return;
+
+    }
+
+
+    setStatus(
+      "Deleting test file..."
+    );
+
+
+    try {
+
+
+      const response =
+        await fetch(
+
+          "https://www.googleapis.com/drive/v3/files/" +
+          TEST_FILE_ID,
+
+          {
+
+            method:
+              "DELETE",
+
+            headers: {
+
+              "Authorization":
+                "Bearer " +
+                accessToken
+
+            }
+
+          }
+
+        );
+
+
+      if (!response.ok) {
+
+
+        const errorText =
+          await response.text();
+
+
+        throw new Error(
+
+          "HTTP " +
+          response.status +
+          "\n" +
+          errorText
+
+        );
+
+      }
+
+
+      setStatus(
+
+        "SUCCESS! Test file deleted.\n\n" +
+
+        "Deleted File ID: " +
+        TEST_FILE_ID +
+
+        "\n\n" +
+
+        "Master.json was NOT deleted."
+
+      );
+
+
+      data.textContent =
+        "Delete operation successful.";
+
+
+      deleteBtn.disabled =
+        true;
+
+
+    }
+
+    catch (error) {
+
+
+      console.error(error);
+
+
+      setStatus(
+
+        "DELETE FAILED:\n" +
         error.message
 
       );
