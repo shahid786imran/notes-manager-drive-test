@@ -116,7 +116,7 @@ const DRIVE_SCOPE =
 
 
 /* ---------------------------------------------------------
-   ORIGINAL MASTER DATABASE
+   MASTER DATABASE FILE
    --------------------------------------------------------- */
 
 
@@ -125,12 +125,12 @@ const MASTER_FILE_ID =
 
 
 /* ---------------------------------------------------------
-   TEST FILE CREATED EARLIER
+   NOTES MANAGER TEST DATABASE FOLDER
    --------------------------------------------------------- */
 
 
-const TEST_FILE_ID =
-  "15IZyIs-ALH7QYbiREH4exeUXHiUpqHAO";
+const DATABASE_FOLDER_ID =
+  "1iFxVl1IH0PrEZw5uDUlnJuaablUI77nx";
 
 
 /* =========================================================
@@ -139,6 +139,17 @@ const TEST_FILE_ID =
 
 
 let accessToken = null;
+
+
+/*
+   ID of the test file created during the current session.
+
+   This is intentionally NOT hard-coded because every time
+   we create a new test file, Google Drive gives it a new ID.
+*/
+
+
+let createdTestFileId = null;
 
 
 /* =========================================================
@@ -451,7 +462,7 @@ createBtn.addEventListener(
 
 
     setStatus(
-      "Creating test file..."
+      "Creating test file inside Notes Manager Test DB..."
     );
 
 
@@ -493,6 +504,11 @@ createBtn.addEventListener(
       };
 
 
+      /* ---------------------------------------------------
+         FILE METADATA
+         --------------------------------------------------- */
+
+
       const metadata = {
 
 
@@ -501,9 +517,26 @@ createBtn.addEventListener(
 
 
         mimeType:
-          "application/json"
+          "application/json",
+
+
+        /*
+          IMPORTANT:
+          This places the file inside the
+          Notes Manager Test DB folder.
+        */
+
+
+        parents: [
+          DATABASE_FOLDER_ID
+        ]
 
       };
+
+
+      /* ---------------------------------------------------
+         MULTIPART FORM
+         --------------------------------------------------- */
 
 
       const form =
@@ -552,6 +585,11 @@ createBtn.addEventListener(
         )
 
       );
+
+
+      /* ---------------------------------------------------
+         CREATE FILE
+         --------------------------------------------------- */
 
 
       const response =
@@ -603,9 +641,19 @@ createBtn.addEventListener(
         await response.json();
 
 
+      /*
+        IMPORTANT:
+        Store the ID of the file we just created.
+      */
+
+
+      createdTestFileId =
+        result.id;
+
+
       setStatus(
 
-        "SUCCESS! Test file created.\n\n" +
+        "SUCCESS! Test file created inside Notes Manager Test DB.\n\n" +
 
         "File Name: " +
         result.name +
@@ -622,6 +670,16 @@ createBtn.addEventListener(
           null,
           2
         );
+
+
+      /*
+        Delete is now enabled because we have
+        the newly-created file ID.
+      */
+
+
+      deleteBtn.disabled =
+        false;
 
 
     }
@@ -845,10 +903,31 @@ deleteBtn.addEventListener(
     }
 
 
+    /*
+      Do not allow deletion if no test file was
+      created during this session.
+    */
+
+
+    if (!createdTestFileId) {
+
+      setStatus(
+
+        "No newly created test file is available to delete.\n\n" +
+
+        "Please click Create Test File first."
+
+      );
+
+      return;
+
+    }
+
+
     const confirmed =
       confirm(
 
-        "Delete the test file only?\n\n" +
+        "Delete the newly created test file only?\n\n" +
 
         "Master.json will NOT be deleted."
 
@@ -874,11 +953,15 @@ deleteBtn.addEventListener(
     try {
 
 
+      const fileIdToDelete =
+        createdTestFileId;
+
+
       const response =
         await fetch(
 
           "https://www.googleapis.com/drive/v3/files/" +
-          TEST_FILE_ID,
+          fileIdToDelete,
 
           {
 
@@ -922,7 +1005,7 @@ deleteBtn.addEventListener(
         "SUCCESS! Test file deleted.\n\n" +
 
         "Deleted File ID: " +
-        TEST_FILE_ID +
+        fileIdToDelete +
 
         "\n\n" +
 
@@ -933,6 +1016,16 @@ deleteBtn.addEventListener(
 
       data.textContent =
         "Delete operation successful.";
+
+
+      /*
+        Clear the stored ID so the same file
+        cannot accidentally be deleted again.
+      */
+
+
+      createdTestFileId =
+        null;
 
 
       deleteBtn.disabled =
