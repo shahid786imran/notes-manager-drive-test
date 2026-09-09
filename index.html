@@ -305,6 +305,341 @@
         );
       }
 
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Google Drive Database Test</title>
+
+  <script
+    src="https://accounts.google.com/gsi/client"
+    async
+    defer>
+  </script>
+
+  <style>
+
+    body {
+      font-family: Arial, sans-serif;
+      padding: 25px;
+      max-width: 700px;
+      margin: auto;
+    }
+
+    h2 {
+      margin-bottom: 20px;
+    }
+
+    button {
+      padding: 12px 18px;
+      font-size: 16px;
+      margin: 5px 5px 5px 0;
+      cursor: pointer;
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    #status {
+      margin-top: 20px;
+      padding: 14px;
+      background: #f1f1f1;
+      white-space: pre-wrap;
+      border-radius: 6px;
+    }
+
+    #data {
+      margin-top: 20px;
+      padding: 15px;
+      background: #fafafa;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+
+      white-space: pre-wrap;
+      overflow-x: auto;
+    }
+
+  </style>
+
+</head>
+
+
+<body>
+
+  <h2>Google Drive Database Test</h2>
+
+
+  <button id="connectBtn">
+    Connect Google Drive
+  </button>
+
+
+  <button id="readBtn" disabled>
+    Read Master.json
+  </button>
+
+
+  <button id="writeBtn" disabled>
+    Write Test File
+  </button>
+
+
+  <div id="status">
+    Not connected
+  </div>
+
+
+  <pre id="data"></pre>
+
+
+<script>
+
+
+/* =========================================================
+   GOOGLE DRIVE CONFIGURATION
+   ========================================================= */
+
+
+const CLIENT_ID =
+  "262106898132-tsn94p3vvpf34do0ommc6rai2mtc5sh6.apps.googleusercontent.com";
+
+
+const DRIVE_SCOPE =
+  "https://www.googleapis.com/auth/drive";
+
+
+const MASTER_FILE_ID =
+  "1dx0IrwUD0Is1GGOmfNsxkqpTD7fC4IW1";
+
+
+/* =========================================================
+   VARIABLES
+   ========================================================= */
+
+
+let accessToken = null;
+
+
+/* =========================================================
+   ELEMENTS
+   ========================================================= */
+
+
+const status =
+  document.getElementById("status");
+
+
+const data =
+  document.getElementById("data");
+
+
+const connectBtn =
+  document.getElementById("connectBtn");
+
+
+const readBtn =
+  document.getElementById("readBtn");
+
+
+const writeBtn =
+  document.getElementById("writeBtn");
+
+
+/* =========================================================
+   STATUS
+   ========================================================= */
+
+
+function setStatus(message) {
+
+  status.textContent = message;
+
+}
+
+
+/* =========================================================
+   CONNECT GOOGLE DRIVE
+   ========================================================= */
+
+
+connectBtn.addEventListener(
+  "click",
+  function () {
+
+    setStatus(
+      "Connecting to Google..."
+    );
+
+
+    const tokenClient =
+      google.accounts.oauth2.initTokenClient({
+
+        client_id:
+          CLIENT_ID,
+
+        scope:
+          DRIVE_SCOPE,
+
+
+        callback:
+          function (response) {
+
+
+            if (response.error) {
+
+              console.error(response);
+
+
+              setStatus(
+                "Google authorization failed:\n" +
+                (
+                  response.error_description ||
+                  response.error
+                )
+              );
+
+
+              return;
+
+            }
+
+
+            accessToken =
+              response.access_token;
+
+
+            setStatus(
+              "SUCCESS! Google Drive connected."
+            );
+
+
+            readBtn.disabled =
+              false;
+
+
+            writeBtn.disabled =
+              false;
+
+          }
+
+      });
+
+
+    tokenClient.requestAccessToken({
+
+      prompt:
+        "consent"
+
+    });
+
+  }
+);
+
+
+/* =========================================================
+   READ MASTER.JSON
+   ========================================================= */
+
+
+readBtn.addEventListener(
+  "click",
+  async function () {
+
+
+    if (!accessToken) {
+
+      setStatus(
+        "Please connect Google Drive first."
+      );
+
+      return;
+
+    }
+
+
+    setStatus(
+      "Reading Master.json from Google Drive..."
+    );
+
+
+    data.textContent =
+      "";
+
+
+    try {
+
+
+      const response =
+        await fetch(
+
+          "https://www.googleapis.com/drive/v3/files/" +
+          MASTER_FILE_ID +
+          "?alt=media",
+
+          {
+
+            method:
+              "GET",
+
+            headers: {
+
+              "Authorization":
+                "Bearer " +
+                accessToken
+
+            }
+
+          }
+
+        );
+
+
+      if (!response.ok) {
+
+
+        const errorText =
+          await response.text();
+
+
+        throw new Error(
+
+          "HTTP " +
+          response.status +
+          "\n" +
+          errorText
+
+        );
+
+      }
+
+
+      const text =
+        await response.text();
+
+
+      let json;
+
+
+      try {
+
+        json =
+          JSON.parse(text);
+
+      }
+
+      catch {
+
+        throw new Error(
+          "Master.json contains invalid JSON."
+        );
+
+      }
+
 
       setStatus(
         "SUCCESS! Master.json loaded from Google Drive."
@@ -312,7 +647,11 @@
 
 
       data.textContent =
-        JSON.stringify(json, null, 2);
+        JSON.stringify(
+          json,
+          null,
+          2
+        );
 
 
       console.log(
@@ -321,20 +660,277 @@
       );
 
 
-    } catch (error) {
+    }
+
+    catch (error) {
+
 
       console.error(error);
 
+
       setStatus(
+
         "READ FAILED:\n" +
         error.message
+
       );
 
     }
 
-  });
+  }
+);
+
+
+/* =========================================================
+   WRITE TEST FILE
+   ========================================================= */
+
+
+writeBtn.addEventListener(
+  "click",
+  async function () {
+
+
+    if (!accessToken) {
+
+      setStatus(
+        "Please connect Google Drive first."
+      );
+
+      return;
+
+    }
+
+
+    setStatus(
+      "Creating test file in Google Drive..."
+    );
+
+
+    data.textContent =
+      "";
+
+
+    try {
+
+
+      /* -----------------------------------------------------
+         TEST JSON DATA
+         ----------------------------------------------------- */
+
+
+      const testData = {
+
+        version:
+          1,
+
+        updatedAt:
+          new Date().toISOString(),
+
+        test:
+          "Google Drive WRITE test successful",
+
+        notes: [
+
+          {
+
+            id:
+              1,
+
+            title:
+              "Write Test Note",
+
+            content:
+              "This file was created by the Notes Manager test web app."
+
+          }
+
+        ]
+
+      };
+
+
+      const jsonText =
+        JSON.stringify(
+          testData,
+          null,
+          2
+        );
+
+
+      /* -----------------------------------------------------
+         CREATE FILE METADATA
+         ----------------------------------------------------- */
+
+
+      const metadata = {
+
+        name:
+          "Drive Write Test.json",
+
+        mimeType:
+          "application/json"
+
+      };
+
+
+      /* -----------------------------------------------------
+         CREATE MULTIPART FORM DATA
+         ----------------------------------------------------- */
+
+
+      const form =
+        new FormData();
+
+
+      form.append(
+
+        "metadata",
+
+        new Blob(
+
+          [
+            JSON.stringify(metadata)
+          ],
+
+          {
+            type:
+              "application/json"
+          }
+
+        )
+
+      );
+
+
+      form.append(
+
+        "file",
+
+        new Blob(
+
+          [
+            jsonText
+          ],
+
+          {
+            type:
+              "application/json"
+          }
+
+        )
+
+      );
+
+
+      /* -----------------------------------------------------
+         UPLOAD TO GOOGLE DRIVE
+         ----------------------------------------------------- */
+
+
+      const response =
+        await fetch(
+
+          "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart",
+
+          {
+
+            method:
+              "POST",
+
+            headers: {
+
+              "Authorization":
+                "Bearer " +
+                accessToken
+
+            },
+
+            body:
+              form
+
+          }
+
+        );
+
+
+      if (!response.ok) {
+
+
+        const errorText =
+          await response.text();
+
+
+        throw new Error(
+
+          "HTTP " +
+          response.status +
+          "\n" +
+          errorText
+
+        );
+
+      }
+
+
+      const result =
+        await response.json();
+
+
+      /* -----------------------------------------------------
+         SUCCESS
+         ----------------------------------------------------- */
+
+
+      setStatus(
+
+        "SUCCESS! Test file created in Google Drive.\n\n" +
+        "File Name: " +
+        result.name +
+        "\n" +
+        "File ID: " +
+        result.id
+
+      );
+
+
+      data.textContent =
+        JSON.stringify(
+          testData,
+          null,
+          2
+        );
+
+
+      console.log(
+        "Created file:",
+        result
+      );
+
+
+    }
+
+    catch (error) {
+
+
+      console.error(error);
+
+
+      setStatus(
+
+        "WRITE FAILED:\n" +
+        error.message
+
+      );
+
+    }
+
+  }
+);
+
 
 </script>
 
 </body>
+
 </html>
