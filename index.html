@@ -2,2195 +2,3993 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Notes Manager — Frontend Preview</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Notes Manager</title>
+
+<script src="https://accounts.google.com/gsi/client"></script>
+<script src="https://apis.google.com/js/api.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
 <style>
-/* =========================================================
-   NOTES MANAGER — MOBILE FIRST FRONTEND PREVIEW
-   ========================================================= */
-
-:root {
-    --bg: #f1f3f5;
-    --panel: #ffffff;
-    --border: #dfe3e7;
-    --text: #202124;
-    --muted: #6b7280;
-    --hover: #f6f8fa;
-    --selected: #eef4ff;
-    --danger: #d93025;
-    --blue: #4285f4;
-    --green: #34a853;
-    --orange: #f9ab00;
-    --purple: #8e63d2;
-    --shadow: 0 2px 10px rgba(0,0,0,.06);
+:root{
+  --primary:#4f46e5;
+  --primary-soft:#eef2ff;
+  --bg:#f3f4f6;
+  --card:#fff;
+  --border:#e5e7eb;
+  --text:#1f2937;
+  --muted:#6b7280;
+  --danger:#dc2626;
+  --success:#15803d;
+  --sidebar-width:270px;
+  --radius:10px;
 }
 
-* {
-    box-sizing: border-box;
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family:Arial,Helvetica,sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  font-size:15px;
 }
+button,input,textarea,select{font:inherit}
+button{cursor:pointer}
 
-html,
-body {
-    margin: 0;
-    padding: 0;
-    width: 100%;
-    min-height: 100%;
-    font-family: Arial, Helvetica, sans-serif;
-    background: var(--bg);
-    color: var(--text);
-}
-
-button,
-input,
-textarea,
-select {
-    font: inherit;
-}
-
-button {
-    cursor: pointer;
-}
-
-.app {
-    min-height: 100vh;
-    display: flex;
-    position: relative;
-}
-
-/* =========================================================
-   MOBILE SIDEBAR
-   ========================================================= */
-
-.sidebar {
-    position: fixed;
-    z-index: 1000;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    width: 280px;
-    background: #fff;
-    border-right: 1px solid var(--border);
-    transform: translateX(-100%);
-    transition: transform .2s ease;
-    overflow-y: auto;
-    box-shadow: 4px 0 15px rgba(0,0,0,.08);
-}
-
-.sidebar.open {
-    transform: translateX(0);
-}
-
-.sidebar-header {
-    position: sticky;
-    top: 0;
-    z-index: 2;
-    background: #fff;
-    padding: 14px 14px 10px;
-    border-bottom: 1px solid var(--border);
-}
-
-.sidebar-title {
-    font-size: 18px;
-    font-weight: 600;
-}
-
-.sidebar-section {
-    padding: 8px 8px 14px;
-}
-
-.sidebar-item {
-    position: relative;
-    display: flex;
-    align-items: center;
-    min-height: 42px;
-    padding: 8px 42px 8px 10px;
-    border-radius: 8px;
-    color: #30343b;
-    user-select: none;
-}
-
-.sidebar-item:hover {
-    background: var(--hover);
-}
-
-.sidebar-item.active {
-    background: var(--selected);
-    font-weight: 600;
-}
-
-.sidebar-icon {
-    width: 28px;
-    flex: 0 0 28px;
-}
-
-.sidebar-count {
-    margin-left: auto;
-    color: var(--muted);
-    font-size: 12px;
-}
-
-.sidebar-edit {
-    display: none;
-    position: absolute;
-    right: 8px;
-    border: 0;
-    background: transparent;
-    color: var(--muted);
-    padding: 5px;
-    border-radius: 6px;
-}
+#app{min-height:100vh}
 
-.sidebar-item:hover .sidebar-edit {
-    display: block;
+.topbar{
+  position:sticky;
+  top:0;
+  z-index:100;
+  height:58px;
+  background:#fff;
+  border-bottom:1px solid var(--border);
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:8px 12px;
 }
 
-.sidebar-group-title {
-    display: flex;
-    align-items: center;
-    gap: 7px;
-    padding: 10px 8px 6px;
-    font-size: 12px;
-    color: var(--muted);
-    text-transform: uppercase;
-    letter-spacing: .04em;
+.menu-btn{
+  border:1px solid var(--border);
+  background:#fff;
+  border-radius:8px;
+  padding:8px 11px;
 }
 
-.tree-item {
-    padding-left: 18px;
+.app-title{
+  font-weight:700;
+  white-space:nowrap;
 }
 
-.tree-child {
-    padding-left: 30px;
+.connection{
+  margin-left:auto;
+  font-size:12px;
+  color:var(--muted);
 }
 
-.tree-toggle {
-    width: 20px;
-    border: 0;
-    background: transparent;
-    color: var(--muted);
-    padding: 0;
-}
+.connection.ok{color:var(--success)}
+.connection.err{color:var(--danger)}
 
-.sidebar-overlay {
-    display: none;
-    position: fixed;
-    z-index: 900;
-    inset: 0;
-    background: rgba(0,0,0,.25);
+.add-note{
+  border:0;
+  background:var(--primary);
+  color:#fff;
+  border-radius:8px;
+  padding:9px 13px;
+  font-weight:600;
 }
 
-.sidebar.open + .sidebar-overlay {
-    display: block;
+.layout{
+  display:grid;
+  grid-template-columns:minmax(250px,340px) minmax(300px,420px) minmax(0,1fr);
+  min-height:calc(100vh - 58px);
 }
-
-/* =========================================================
-   FIXED SHOW / HIDE BUTTON
-   ========================================================= */
 
-.sidebar-toggle {
-    position: fixed;
-    z-index: 1200;
-    left: 10px;
-    top: 10px;
-    min-width: 78px;
-    height: 40px;
-    border: 1px solid var(--border);
-    border-radius: 9px;
-    background: #fff;
-    box-shadow: var(--shadow);
-    color: #333;
-    font-size: 14px;
+/* SIDEBAR */
+.sidebar{
+  background:#fff;
+  border-right:1px solid var(--border);
+  overflow:auto;
+  padding:12px;
 }
 
-/* =========================================================
-   MAIN AREA
-   ========================================================= */
+.sidebar.closed{display:none}
 
-.main {
-    width: 100%;
-    min-width: 0;
-    padding-top: 58px;
+.side-section{
+  margin-bottom:7px;
 }
 
-.notes-panel {
-    width: 100%;
-    min-width: 0;
-    padding: 10px;
+.side-item{
+  position:relative;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  min-height:38px;
+  padding:7px 9px;
+  border-radius:7px;
+  cursor:pointer;
 }
 
-.notes-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-    margin-bottom: 10px;
+.side-item:hover,
+.side-item.active{
+  background:#f3f4f6;
 }
 
-.notes-title {
-    font-size: 20px;
-    font-weight: 600;
+.side-count{
+  margin-left:auto;
+  color:var(--muted);
+  font-size:12px;
 }
 
-.notes-count {
-    font-size: 13px;
-    color: var(--muted);
-    white-space: nowrap;
+.side-edit{
+  display:none;
+  border:0;
+  background:transparent;
+  padding:3px;
 }
 
-.search-box {
-    width: 100%;
-    height: 42px;
-    padding: 0 13px;
-    border: 1px solid var(--border);
-    border-radius: 9px;
-    background: #fff;
-    outline: none;
-    margin-bottom: 10px;
+.side-item:hover .side-edit,
+.side-item.selected .side-edit{
+  display:block;
 }
 
-.search-box:focus {
-    border-color: #a9b8ca;
+.tree{
+  margin-left:10px;
+  border-left:1px solid var(--border);
 }
 
-.sort-row {
-    margin-bottom: 10px;
+.tree-node{
+  padding-left:8px;
 }
 
-.sort-select {
-    width: 100%;
-    height: 38px;
-    padding: 0 10px;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    background: #fff;
-    color: #333;
+.tree-row{
+  display:flex;
+  align-items:center;
+  min-height:34px;
+  border-bottom:1px solid #f1f1f1;
 }
 
-/* =========================================================
-   NOTES LIST
-   ========================================================= */
-
-.notes-list {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-}
-
-.note-item {
-    position: relative;
-    background: #fff;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 10px 11px 9px 15px;
-    cursor: pointer;
-    overflow: hidden;
-    transition: background .15s ease, border-color .15s ease;
+.tree-toggle{
+  width:24px;
+  border:0;
+  background:transparent;
 }
 
-.note-item:hover {
-    background: var(--hover);
+.tree-label{
+  flex:1;
+  padding:7px 4px;
+  cursor:pointer;
 }
 
-.note-item.selected {
-    background: var(--selected);
-    border-color: #c8d8f2;
+.sidebar-tools{
+  display:flex;
+  gap:5px;
+  margin:4px 0 8px;
 }
 
-.note-item.pinned {
-    background: #fffdfa;
+.small-btn{
+  border:1px solid var(--border);
+  background:#fff;
+  border-radius:7px;
+  padding:6px 8px;
 }
 
-.note-accent {
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    width: 4px;
+/* NOTE LIST */
+.notes-panel{
+  background:#f8f9fa;
+  border-right:1px solid var(--border);
+  overflow:auto;
 }
 
-.note-title {
-    font-size: 15px;
-    font-weight: 600;
-    line-height: 1.3;
-    margin-bottom: 3px;
+.list-header{
+  padding:14px;
+  background:#fff;
+  border-bottom:1px solid var(--border);
 }
 
-.note-preview {
-    color: #5f6368;
-    font-size: 13px;
-    line-height: 1.35;
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 2;
-    overflow: hidden;
-    margin-bottom: 6px;
+.list-title-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
 }
 
-.note-meta {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 5px 8px;
-    font-size: 11px;
-    color: #5f6368;
-    line-height: 1.3;
+.list-title{
+  font-size:18px;
+  font-weight:700;
 }
 
-.meta-icon {
-    margin-right: 2px;
+.search{
+  width:100%;
+  margin-top:10px;
+  border:1px solid var(--border);
+  border-radius:8px;
+  padding:10px 11px;
+  outline:none;
+  background:#fff;
 }
 
-.favorite {
-    color: #9aa0a6;
+.bulk-bar{
+  display:none;
+  position:sticky;
+  top:0;
+  z-index:20;
+  background:#fff;
+  border-bottom:1px solid var(--border);
+  padding:8px;
+  gap:5px;
+  flex-wrap:wrap;
 }
 
-.favorite.active {
-    color: #f4b400;
-}
+.bulk-bar.show{display:flex}
 
-.pin {
-    color: #9aa0a6;
+.bulk-bar button{
+  border:1px solid var(--border);
+  background:#fff;
+  border-radius:7px;
+  padding:7px 9px;
 }
 
-.pin.active {
-    color: #d93025;
-}
+.note-list{padding:8px}
 
-.note-date {
-    margin-top: 4px;
-    font-size: 11px;
-    color: var(--muted);
+.note-row{
+  background:#fff;
+  border:1px solid var(--border);
+  border-radius:9px;
+  margin-bottom:7px;
+  padding:9px 10px 9px 14px;
+  position:relative;
+  cursor:pointer;
 }
-
-/* =========================================================
-   RIGHT / ACTUAL NOTE PANEL
-   ========================================================= */
 
-.note-page {
-    width: 100%;
-    min-width: 0;
-    padding: 10px;
+.note-row::before{
+  content:"";
+  position:absolute;
+  left:0;
+  top:0;
+  bottom:0;
+  width:4px;
+  border-radius:9px 0 0 9px;
+  background:var(--note-color,#9ca3af);
 }
 
-.document {
-    width: 100%;
-    max-width: 850px;
-    margin: 0 auto;
+.note-row.selected{
+  background:#eef2ff;
 }
 
-.color-line {
-    height: 7px;
-    width: 100%;
-    border-radius: 4px 4px 0 0;
-    margin-bottom: 7px;
+.note-row.pinned{
+  background:#fffdf5;
 }
 
-.card {
-    background: #fff;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    margin-bottom: 7px;
-    box-shadow: none;
+.note-title{
+  font-size:15px;
+  font-weight:700;
+  margin-bottom:3px;
 }
 
-/* =========================================================
-   ACTIONS
-   ========================================================= */
-
-.actions-card {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 5px;
-    padding: 7px;
+.note-preview{
+  color:#4b5563;
+  font-size:13px;
+  line-height:1.35;
+  display:-webkit-box;
+  -webkit-box-orient:vertical;
+  -webkit-line-clamp:2;
+  overflow:hidden;
 }
 
-.action-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 5px;
-    min-height: 34px;
-    padding: 6px 9px;
-    border: 1px solid var(--border);
-    border-radius: 7px;
-    background: #fff;
-    color: #333;
-    font-size: 12px;
+.note-meta{
+  margin-top:7px;
+  display:flex;
+  gap:7px;
+  align-items:center;
+  flex-wrap:wrap;
+  color:#6b7280;
+  font-size:12px;
 }
 
-.action-btn:hover {
-    background: var(--hover);
+.icon-action{
+  color:#9ca3af;
+  font-size:17px;
+  cursor:pointer;
+  border:0;
+  background:transparent;
+  padding:1px;
 }
 
-/* =========================================================
-   HEADING / CONTENT
-   ========================================================= */
+.icon-action.active-pin{color:#374151}
+.icon-action.active-fav{color:#eab308}
 
-.heading-card {
-    padding: 13px 14px;
+.note-date{
+  margin-top:4px;
+  font-size:11px;
+  color:#6b7280;
 }
 
-.note-heading {
-    margin: 0;
-    font-size: 25px;
-    line-height: 1.25;
-    font-weight: 650;
+/* DATA PANEL */
+.data-panel{
+  background:#e5e7eb;
+  overflow:auto;
+  padding:14px;
 }
 
-.content-card {
-    padding: 14px;
+.document{
+  max-width:900px;
+  margin:0 auto;
 }
 
-.note-content {
-    white-space: pre-wrap;
-    word-break: break-word;
-    font-size: 14px;
-    line-height: 1.65;
+.color-line{
+  height:8px;
+  border-radius:6px 6px 0 0;
+  background:var(--note-color,#4f46e5);
 }
-
-/* =========================================================
-   LINKS
-   ========================================================= */
 
-.links-card {
-    padding: 9px;
+.card{
+  background:#fff;
+  border:1px solid var(--border);
+  border-radius:9px;
+  margin-bottom:9px;
+  padding:12px;
+  box-shadow:0 1px 2px rgba(0,0,0,.03);
 }
 
-.card-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-    margin-bottom: 7px;
+.actions{
+  display:flex;
+  gap:5px;
+  flex-wrap:wrap;
 }
 
-.card-header-title {
-    font-size: 14px;
-    font-weight: 600;
+.action-btn{
+  border:1px solid var(--border);
+  background:#fff;
+  border-radius:7px;
+  padding:7px 9px;
+  color:#374151;
 }
 
-.small-btn {
-    min-height: 31px;
-    padding: 5px 9px;
-    border: 1px solid var(--border);
-    border-radius: 7px;
-    background: #fff;
-    font-size: 12px;
-}
+.action-btn:hover{background:#f9fafb}
 
-.links-list {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
+.note-heading{
+  font-size:23px;
+  font-weight:700;
+  line-height:1.2;
 }
 
-.link-item {
-    display: flex;
-    align-items: center;
-    gap: 7px;
-    padding: 7px;
-    border: 1px solid #e7eaed;
-    border-radius: 6px;
-    min-width: 0;
+.content-editor{
+  min-height:280px;
+  outline:none;
+  line-height:1.55;
+  word-break:break-word;
 }
 
-.link-info {
-    flex: 1;
-    min-width: 0;
+.content-editor[contenteditable="false"]{
+  cursor:default;
 }
 
-.link-name {
-    font-size: 12px;
-    font-weight: 600;
+.toolbar{
+  display:flex;
+  gap:5px;
+  flex-wrap:wrap;
+  margin-bottom:9px;
+  padding-bottom:8px;
+  border-bottom:1px solid var(--border);
 }
 
-.link-url {
-    font-size: 11px;
-    color: var(--muted);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+.toolbar button{
+  border:1px solid var(--border);
+  background:#fff;
+  border-radius:6px;
+  padding:5px 8px;
 }
 
-.open-link {
-    border: 0;
-    background: transparent;
-    color: var(--blue);
-    font-size: 11px;
+.link-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:8px;
 }
-
-/* =========================================================
-   METADATA
-   ========================================================= */
 
-.metadata-card {
-    padding: 9px;
+.link-title{
+  font-weight:700;
 }
 
-.metadata-grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 0;
+.link-row{
+  border-top:1px solid var(--border);
+  padding:8px 0;
+  display:flex;
+  align-items:center;
+  gap:8px;
 }
 
-.metadata-row {
-    display: grid;
-    grid-template-columns: 135px 1fr;
-    gap: 8px;
-    padding: 5px 2px;
-    border-bottom: 1px solid #eef0f2;
-    font-size: 12px;
+.link-row a{
+  color:#2563eb;
+  text-decoration:none;
+  font-weight:600;
 }
 
-.metadata-row:last-child {
-    border-bottom: 0;
+.link-open{
+  margin-left:auto;
+  font-size:12px;
+  color:#2563eb;
 }
 
-.metadata-label {
-    color: var(--muted);
+.meta-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:6px 14px;
+  font-size:12px;
 }
 
-.metadata-value {
-    word-break: break-word;
+.meta-cell{
+  padding:5px 0;
+  border-bottom:1px solid #f0f0f0;
 }
 
-/* =========================================================
-   MENUS / MODALS
-   ========================================================= */
-
-.menu {
-    position: fixed;
-    z-index: 3000;
-    background: #fff;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    box-shadow: 0 5px 18px rgba(0,0,0,.12);
-    min-width: 170px;
-    padding: 5px;
-    display: none;
+.meta-label{
+  color:#6b7280;
 }
 
-.menu.show {
-    display: block;
+.meta-value{
+  font-weight:600;
 }
 
-.menu button {
-    display: block;
-    width: 100%;
-    border: 0;
-    background: transparent;
-    text-align: left;
-    padding: 9px 10px;
-    border-radius: 6px;
-    font-size: 12px;
+/* MODAL */
+.modal-backdrop{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.35);
+  z-index:500;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding:14px;
 }
 
-.menu button:hover {
-    background: var(--hover);
-}
+.modal-backdrop.show{display:flex}
 
-.modal-backdrop {
-    position: fixed;
-    z-index: 4000;
-    inset: 0;
-    display: none;
-    align-items: center;
-    justify-content: center;
-    padding: 15px;
-    background: rgba(0,0,0,.25);
+.modal{
+  background:#fff;
+  border-radius:11px;
+  width:min(600px,100%);
+  max-height:90vh;
+  overflow:auto;
+  padding:16px;
 }
 
-.modal-backdrop.show {
-    display: flex;
-}
+.modal h3{margin:0 0 12px}
 
-.modal {
-    width: 100%;
-    max-width: 430px;
-    background: #fff;
-    border-radius: 10px;
-    border: 1px solid var(--border);
-    padding: 15px;
+.form-row{
+  margin-bottom:10px;
 }
 
-.modal h3 {
-    margin: 0 0 12px;
-    font-size: 17px;
+.form-row label{
+  display:block;
+  font-size:12px;
+  color:#6b7280;
+  margin-bottom:4px;
 }
 
-.form-group {
-    margin-bottom: 10px;
+.form-row input,
+.form-row textarea,
+.form-row select{
+  width:100%;
+  border:1px solid var(--border);
+  border-radius:7px;
+  padding:9px;
+  outline:none;
 }
 
-.form-group label {
-    display: block;
-    font-size: 12px;
-    color: var(--muted);
-    margin-bottom: 4px;
+.modal-actions{
+  display:flex;
+  justify-content:flex-end;
+  gap:7px;
+  margin-top:14px;
 }
 
-.form-group input,
-.form-group select {
-    width: 100%;
-    min-height: 38px;
-    padding: 7px 9px;
-    border: 1px solid var(--border);
-    border-radius: 7px;
+.primary{
+  border:0;
+  background:var(--primary);
+  color:#fff;
+  border-radius:7px;
+  padding:8px 12px;
 }
 
-.modal-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 6px;
-    margin-top: 12px;
+.secondary{
+  border:1px solid var(--border);
+  background:#fff;
+  border-radius:7px;
+  padding:8px 12px;
 }
 
-.primary {
-    background: #202124;
-    color: #fff;
-    border-color: #202124;
+.danger{
+  border:0;
+  background:var(--danger);
+  color:#fff;
+  border-radius:7px;
+  padding:8px 12px;
 }
 
-/* =========================================================
-   EMPTY STATE
-   ========================================================= */
-
-.empty-state {
-    background: #fff;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 25px 15px;
-    text-align: center;
-    color: var(--muted);
-    font-size: 13px;
+.empty{
+  padding:35px 15px;
+  text-align:center;
+  color:#6b7280;
 }
 
-/* =========================================================
-   TABLET
-   ========================================================= */
+/* MOBILE */
+@media(max-width:900px){
+  .layout{
+    display:block;
+  }
 
-@media (min-width: 700px) {
+  .sidebar{
+    position:fixed;
+    z-index:300;
+    top:58px;
+    left:0;
+    bottom:0;
+    width:min(86vw,310px);
+    box-shadow:5px 0 20px rgba(0,0,0,.12);
+  }
 
-    .main {
-        padding-top: 58px;
-    }
+  .sidebar.closed{display:none}
 
-    .notes-panel {
-        max-width: 700px;
-        margin: 0 auto;
-    }
+  .notes-panel{
+    border-right:0;
+  }
 
-    .note-page {
-        max-width: 700px;
-        margin: 0 auto;
-    }
+  .data-panel{
+    border-top:1px solid var(--border);
+    min-height:500px;
+  }
 }
-
-/* =========================================================
-   DESKTOP — THREE PANELS
-   ========================================================= */
-
-@media (min-width: 1050px) {
-
-    .sidebar {
-        position: fixed;
-        transform: translateX(-100%);
-        width: 255px;
-    }
-
-    .sidebar.open {
-        transform: translateX(0);
-    }
-
-    .main {
-        padding-top: 0;
-        display: grid;
-        grid-template-columns: minmax(260px, 31%) minmax(420px, 69%);
-        min-height: 100vh;
-        width: 100%;
-    }
 
-    .notes-panel {
-        max-width: none;
-        margin: 0;
-        border-right: 1px solid var(--border);
-        padding: 14px;
-        overflow-y: auto;
-        height: 100vh;
-    }
-
-    .note-page {
-        max-width: none;
-        margin: 0;
-        padding: 14px;
-        height: 100vh;
-        overflow-y: auto;
-    }
-
-    .document {
-        max-width: 820px;
-    }
-
-    .sidebar-toggle {
-        top: 12px;
-        left: 12px;
-    }
-
-    .notes-panel {
-        padding-top: 58px;
-    }
-
-    .note-page {
-        padding-top: 58px;
-    }
-
-    .metadata-grid {
-        grid-template-columns: 1fr 1fr;
-        column-gap: 14px;
-    }
-
-    .metadata-row {
-        grid-template-columns: 110px 1fr;
-    }
-}
+@media(max-width:560px){
+  body{font-size:14px}
 
-/* =========================================================
-   PRINT
-   ========================================================= */
+  .topbar{
+    padding:7px;
+  }
 
-@media print {
+  .app-title{font-size:14px}
 
-    body {
-        background: #fff;
-    }
+  .connection{display:none}
 
-    .sidebar,
-    .sidebar-toggle,
-    .sidebar-overlay,
-    .notes-panel,
-    .actions-card,
-    .open-link {
-        display: none !important;
-    }
+  .add-note{
+    padding:8px 9px;
+  }
 
-    .main {
-        display: block !important;
-        padding: 0 !important;
-    }
+  .data-panel{
+    padding:8px;
+  }
 
-    .note-page {
-        padding: 0 !important;
-        height: auto !important;
-        overflow: visible !important;
-    }
+  .card{
+    padding:10px;
+  }
 
-    .document {
-        max-width: none;
-        width: 100%;
-    }
+  .note-heading{
+    font-size:20px;
+  }
 
-    .card {
-        border: 1px solid #ddd;
-        box-shadow: none;
-        break-inside: avoid;
-    }
+  .meta-grid{
+    grid-template-columns:1fr;
+  }
 
-    .color-line {
-        print-color-adjust: exact;
-        -webkit-print-color-adjust: exact;
-    }
+  .action-btn{
+    padding:7px 8px;
+    font-size:12px;
+  }
 }
 </style>
 </head>
 
 <body>
 
-<div class="app">
-
-    <!-- =====================================================
-         SIDEBAR
-         ===================================================== -->
-
-    <aside class="sidebar" id="sidebar">
-
-        <div class="sidebar-header">
-            <div class="sidebar-title">Notes Manager</div>
-        </div>
-
-        <div class="sidebar-section">
-
-            <div class="sidebar-item active" data-section="All Notes">
-                <span class="sidebar-icon">📝</span>
-                <span>All Notes</span>
-                <span class="sidebar-count" id="allCount">6</span>
-                <button class="sidebar-edit" type="button">✏️</button>
-            </div>
-
-            <div class="sidebar-item" data-section="Favorites">
-                <span class="sidebar-icon">⭐</span>
-                <span>Favorites</span>
-                <span class="sidebar-count" id="favoriteCount">3</span>
-                <button class="sidebar-edit" type="button">✏️</button>
-            </div>
-
-            <div class="sidebar-group-title">Categories</div>
-
-            <div class="sidebar-item tree-item">
-                <button class="tree-toggle" type="button">▸</button>
-                <span class="sidebar-icon">📁</span>
-                <span>Projects</span>
-                <span class="sidebar-count">3</span>
-                <button class="sidebar-edit" type="button">✏️</button>
-            </div>
-
-            <div class="sidebar-item tree-item">
-                <button class="tree-toggle" type="button">▸</button>
-                <span class="sidebar-icon">📁</span>
-                <span>Personal</span>
-                <span class="sidebar-count">1</span>
-                <button class="sidebar-edit" type="button">✏️</button>
-            </div>
-
-            <div class="sidebar-item tree-item">
-                <button class="tree-toggle" type="button">▸</button>
-                <span class="sidebar-icon">📁</span>
-                <span>Technology</span>
-                <span class="sidebar-count">2</span>
-                <button class="sidebar-edit" type="button">✏️</button>
-            </div>
-
-            <div class="sidebar-group-title">Tags</div>
-
-            <div class="sidebar-item">
-                <span class="sidebar-icon">🏷️</span>
-                <span>Important</span>
-                <span class="sidebar-count">3</span>
-                <button class="sidebar-edit" type="button">✏️</button>
-            </div>
-
-            <div class="sidebar-item">
-                <span class="sidebar-icon">🏷️</span>
-                <span>Development</span>
-                <span class="sidebar-count">2</span>
-                <button class="sidebar-edit" type="button">✏️</button>
-            </div>
-
-            <div class="sidebar-item">
-                <span class="sidebar-icon">🏷️</span>
-                <span>Work</span>
-                <span class="sidebar-count">2</span>
-                <button class="sidebar-edit" type="button">✏️</button>
-            </div>
-
-            <div class="sidebar-item">
-                <span class="sidebar-icon">☑️</span>
-                <span>Checklist</span>
-                <button class="sidebar-edit" type="button">✏️</button>
-            </div>
-
-            <div class="sidebar-item">
-                <span class="sidebar-icon">🗑️</span>
-                <span>Recycle Bin</span>
-                <span class="sidebar-count">2</span>
-                <button class="sidebar-edit" type="button">✏️</button>
-            </div>
-
-            <div class="sidebar-item">
-                <span class="sidebar-icon">⚙️</span>
-                <span>Settings</span>
-                <button class="sidebar-edit" type="button">✏️</button>
-            </div>
-
-        </div>
-    </aside>
-
-    <div class="sidebar-overlay" id="sidebarOverlay"></div>
-
-    <!-- =====================================================
-         FIXED SHOW / HIDE
-         ===================================================== -->
-
-    <button class="sidebar-toggle" id="sidebarToggle">
-        ☰ Show
-    </button>
-
-    <!-- =====================================================
-         MAIN AREA
-         ===================================================== -->
-
-    <main class="main">
-
-        <!-- =================================================
-             CENTER NOTES LIST
-             ================================================= -->
-
-        <section class="notes-panel">
-
-            <div class="notes-header">
-                <div class="notes-title" id="sectionTitle">
-                    All Notes
-                </div>
-
-                <div class="notes-count" id="notesCount">
-                    6 Notes
-                </div>
-            </div>
-
-            <input
-                type="search"
-                id="searchInput"
-                class="search-box"
-                placeholder="Search notes..."
-            >
-
-            <div class="sort-row">
-                <select id="sortSelect" class="sort-select">
-                    <option value="modified">Last Modified First</option>
-                    <option value="newest">Newest First</option>
-                    <option value="oldest">Oldest First</option>
-                    <option value="alphabetical">Alphabetical Order (A–Z)</option>
-                </select>
-            </div>
-
-            <div class="notes-list" id="notesList"></div>
-
-        </section>
-
-        <!-- =================================================
-             RIGHT ACTUAL NOTE / DATA
-             ================================================= -->
-
-        <section class="note-page">
-
-            <div class="document" id="document">
-
-                <!-- 1. COLOR CODING LINE -->
-                <div
-                    class="color-line"
-                    id="noteColorLine"
-                ></div>
-
-                <!-- 2. ACTIONS CARD -->
-                <div class="card actions-card">
-
-                    <button class="action-btn" id="editBtn">
-                        ✏️ Edit
-                    </button>
-
-                    <button class="action-btn" id="favoriteBtn">
-                        ⭐ Favorite
-                    </button>
-
-                    <button class="action-btn" id="pinBtn">
-                        📌 Pin
-                    </button>
-
-                    <button class="action-btn" id="categoryBtn">
-                        📁 Category
-                    </button>
-
-                    <button class="action-btn" id="tagsBtn">
-                        🏷️ Tags
-                    </button>
-
-                    <button class="action-btn" id="colorBtn">
-                        🎨 Color
-                    </button>
-
-                    <button class="action-btn" id="deleteBtn">
-                        🗑️ Delete
-                    </button>
-
-                    <button class="action-btn" id="moreBtn">
-                        ⋮ More
-                    </button>
-
-                </div>
-
-                <!-- 3. NOTE HEADING CARD -->
-                <div class="card heading-card">
-                    <h1 class="note-heading" id="noteHeading"></h1>
-                </div>
-
-                <!-- 4. NOTE CONTENT CARD -->
-                <div class="card content-card">
-                    <div class="note-content" id="noteContent"></div>
-                </div>
-
-                <!-- 5. LINKS CARD -->
-                <div class="card links-card">
-
-                    <div class="card-header">
-
-                        <div class="card-header-title">
-                            🔗 Links
-                        </div>
-
-                        <button
-                            class="small-btn"
-                            id="addLinkBtn"
-                        >
-                            ➕ Add
-                        </button>
-
-                    </div>
-
-                    <div
-                        class="links-list"
-                        id="linksList"
-                    ></div>
-
-                </div>
-
-                <!-- 6. NOTE METADATA CARD -->
-                <div class="card metadata-card">
-
-                    <div class="card-header">
-                        <div class="card-header-title">
-                            Note Metadata
-                        </div>
-                    </div>
-
-                    <div
-                        class="metadata-grid"
-                        id="metadataGrid"
-                    ></div>
-
-                </div>
-
-            </div>
-
-        </section>
-
-    </main>
-
-</div>
-
-<!-- =========================================================
-     CATEGORY MENU
-     ========================================================= -->
-
-<div class="menu" id="categoryMenu">
-    <button data-action="category-add">Add</button>
-    <button data-action="category-rename">Rename</button>
-    <button data-action="category-move">Move</button>
-    <button data-action="category-delete">Delete</button>
-</div>
-
-<!-- =========================================================
-     MORE MENU
-     ========================================================= -->
-
-<div class="menu" id="moreMenu">
-    <button data-action="duplicate">Duplicate</button>
-    <button data-action="print">Print</button>
-    <button data-action="share">Share</button>
-</div>
-
-<!-- =========================================================
-     LINK ADD MENU
-     ========================================================= -->
-
-<div class="menu" id="linkMenu">
-    <button data-action="add-link">🔗 Add Link</button>
-    <button data-action="google-file">📎 Google File Attachment</button>
-    <button data-action="other-link">🌐 Other</button>
-</div>
-
-<!-- =========================================================
-     LINK MODAL
-     ========================================================= -->
-
-<div class="modal-backdrop" id="linkModalBackdrop">
-
-    <div class="modal">
-
-        <h3 id="linkModalTitle">
-            Add Link
-        </h3>
-
-        <div class="form-group">
-            <label>Link Name</label>
-            <input id="linkNameInput" type="text">
-        </div>
-
-        <div class="form-group">
-            <label>Link Text / URL</label>
-            <input id="linkUrlInput" type="text">
-        </div>
-
-        <div class="modal-actions">
-
-            <button
-                class="small-btn"
-                id="cancelLinkBtn"
-            >
-                Cancel
-            </button>
-
-            <button
-                class="small-btn primary"
-                id="saveLinkBtn"
-            >
-                Save / Add
-            </button>
-
-        </div>
-
+<div id="app">
+
+<header class="topbar">
+  <button class="menu-btn" id="sidebarBtn">☰ Show</button>
+  <div class="app-title">Notes Manager</div>
+  <div class="connection" id="connectionStatus">Not connected</div>
+  <button class="add-note" id="addNoteBtn">＋ Add Note</button>
+</header>
+
+<div class="layout">
+
+<!-- SIDEBAR -->
+<aside class="sidebar closed" id="sidebar">
+
+  <div class="side-section">
+    <div class="side-item active" data-section="all">
+      <span>📝</span>
+      <span>All Notes</span>
+      <span class="side-count" id="allCount">0</span>
     </div>
 
-</div>
+    <div class="side-item" data-section="favorites">
+      <span>⭐</span>
+      <span>Favorites</span>
+      <span class="side-count" id="favCount">0</span>
+    </div>
+  </div>
 
-<!-- =========================================================
-     GOOGLE FILE PREVIEW MODAL
-     ========================================================= -->
+  <div class="side-section">
 
-<div class="modal-backdrop" id="googleFileBackdrop">
-
-    <div class="modal">
-
-        <h3>Google File Attachment</h3>
-
-        <div class="form-group">
-            <label>File Type</label>
-
-            <select id="googleFileType">
-                <option>📄 Google Docs</option>
-                <option>📊 Google Sheets</option>
-                <option>📑 Google Slides</option>
-                <option>📕 PDF</option>
-                <option>📄 Word</option>
-                <option>📊 Excel</option>
-            </select>
-        </div>
-
-        <div class="form-group">
-            <label>File Name</label>
-            <input
-                id="googleFileName"
-                type="text"
-                placeholder="Example File"
-            >
-        </div>
-
-        <div class="modal-actions">
-
-            <button
-                class="small-btn"
-                id="cancelGoogleBtn"
-            >
-                Cancel
-            </button>
-
-            <button
-                class="small-btn primary"
-                id="saveGoogleBtn"
-            >
-                Add
-            </button>
-
-        </div>
-
+    <div class="side-item" id="categoriesToggle">
+      <span>📁</span>
+      <span>Categories</span>
+      <span class="side-count" id="categoryCount">0</span>
+      <button class="side-edit" id="categoryManage">✏️</button>
     </div>
 
+    <div class="sidebar-tools" id="categoryTools" style="display:none">
+      <button class="small-btn" id="addRootCategory">＋ Category</button>
+      <button class="small-btn" id="categoryMenuBtn">Manage</button>
+    </div>
+
+    <div id="categoryTree" class="tree" style="display:none"></div>
+
+  </div>
+
+  <div class="side-section">
+
+    <div class="side-item" id="tagsToggle">
+      <span>🏷️</span>
+      <span>Tags</span>
+      <span class="side-count" id="tagCount">0</span>
+      <button class="side-edit" id="tagManage">✏️</button>
+    </div>
+
+    <div class="sidebar-tools" id="tagTools" style="display:none">
+      <button class="small-btn" id="addTag">＋ Tag</button>
+    </div>
+
+    <div id="tagList" style="display:none"></div>
+
+  </div>
+
+  <div class="side-section">
+    <div class="side-item" data-section="checklist">
+      <span>☑️</span>
+      <span>Checklist</span>
+    </div>
+  </div>
+
+  <div class="side-section">
+    <div class="side-item" data-section="trash">
+      <span>🗑️</span>
+      <span id="trashLabel">Recycle Bin</span>
+      <span class="side-count" id="trashCount">0</span>
+    </div>
+  </div>
+
+  <div class="side-section">
+    <div class="side-item" id="settingsBtn">
+      <span>⚙️</span>
+      <span>Settings</span>
+    </div>
+  </div>
+
+</aside>
+
+<!-- NOTE LIST -->
+<section class="notes-panel">
+
+  <div class="list-header">
+    <div class="list-title-row">
+      <div class="list-title" id="listTitle">All Notes</div>
+      <div id="listCount">0 Notes</div>
+    </div>
+
+    <input
+      id="searchInput"
+      class="search"
+      placeholder="Search notes..."
+      autocomplete="off"
+    >
+  </div>
+
+  <div class="bulk-bar" id="bulkBar">
+    <span id="selectedCount" style="padding:7px">0 selected</span>
+    <button id="bulkPin">📌 Pin</button>
+    <button id="bulkFavorite">⭐ Favorite</button>
+    <button id="bulkCategory">📁 Category</button>
+    <button id="bulkTags">🏷️ Tags</button>
+    <button id="bulkColor">🎨 Color</button>
+    <button id="bulkDuplicate">📋 Duplicate</button>
+    <button id="bulkDelete">🗑️ Delete</button>
+  </div>
+
+  <div class="note-list" id="noteList"></div>
+
+</section>
+
+<!-- DATA PANEL -->
+<main class="data-panel">
+
+  <div class="document" id="documentPanel">
+    <div class="empty">
+      Select a note.
+    </div>
+  </div>
+
+</main>
+
+</div>
+</div>
+
+<div class="modal-backdrop" id="modalBackdrop">
+  <div class="modal" id="modal"></div>
 </div>
 
 <script>
-/* =========================================================
-   NOTES MANAGER — FRONTEND ONLY
-   ========================================================= */
+/* ============================================================
+   GOOGLE DRIVE CONFIGURATION
+   ============================================================ */
 
-const notes = [
-    {
-        id: "NOTE-00001",
-        title: "PC Monitoring System",
-        content:
-`This note contains the complete planning information for the PC Monitoring System.
+const CONFIG = {
+  CLIENT_ID:
+    "262106898132-tsn94p3vvpf34do0ommc6rai2mtc5sh6.apps.googleusercontent.com",
 
-The system is designed for lightweight long-term monitoring of multiple Windows PCs.
+  FOLDER_ID:
+    "1iFxVl1IH0PrEZw5uDUlnJuaablUI77nx",
 
-Important areas include:
-• PC identification
-• Online / Offline status
-• Human activity timing
-• CPU and RAM monitoring
-• Network monitoring
-• Active software monitoring
+  DB_FILE_ID:
+    "1i3LtPybAqhvumBsy0HXJyUCjmFBIdGP7",
 
-The final application will use a central online database and a lightweight frontend.`,
-        category: "Projects",
-        categoryPath: "Projects → PC Monitoring → Development",
-        categoryColor: "#4285f4",
-        tags: ["Development", "Important"],
-        favorite: true,
-        pinned: true,
-        created: "2026-09-05T13:20:00",
-        modified: "2026-09-05T15:45:00",
-        viewed: "2026-09-05T18:30:00",
-        synced: "2026-09-05T18:31:00",
-        status: "Active",
-        views: 28,
-        size: "12.4 KB",
-        links: [
-            {
-                icon: "🔗",
-                name: "Project Documentation",
-                url: "https://example.com/project"
-            },
-            {
-                icon: "📄",
-                name: "Requirements Document",
-                url: "Google Document"
-            }
-        ],
-        attachments: 3
-    },
+  DB_FILE_NAME:
+    "MasterDB.json",
 
-    {
-        id: "NOTE-00002",
-        title: "Google Drive Database",
-        content:
-`Google Drive database architecture and data storage notes.
+  SCOPES:
+    "https://www.googleapis.com/auth/drive"
+};
 
-The database should remain lightweight and reliable for long-term use.
 
-Master data must remain protected and records must never be unintentionally removed.`,
-        category: "Technology",
-        categoryPath: "Technology → Google → Drive",
-        categoryColor: "#8e63d2",
-        tags: ["Development", "Work"],
-        favorite: true,
-        pinned: false,
-        created: "2026-09-04T11:10:00",
-        modified: "2026-09-06T10:20:00",
-        viewed: "2026-09-07T12:15:00",
-        synced: "2026-09-07T12:16:00",
-        status: "Active",
-        views: 18,
-        size: "7.8 KB",
-        links: [
-            {
-                icon: "📊",
-                name: "Database Sheet",
-                url: "Google Sheets"
-            }
-        ],
-        attachments: 1
-    },
+/* ============================================================
+   STATE
+   ============================================================ */
 
-    {
-        id: "NOTE-00003",
-        title: "Daily Work Tasks",
-        content:
-`Daily work tasks and important reminders.
+const DEFAULT_DB = {
+  version: 1,
 
-Review pending work, check project progress and update important notes before the end of the day.`,
-        category: "Personal",
-        categoryPath: "Personal",
-        categoryColor: "#34a853",
-        tags: ["Work"],
-        favorite: false,
-        pinned: false,
-        created: "2026-09-03T09:00:00",
-        modified: "2026-09-03T14:00:00",
-        viewed: "2026-09-04T09:00:00",
-        synced: "2026-09-04T09:01:00",
-        status: "Active",
-        views: 9,
-        size: "3.1 KB",
-        links: [],
-        attachments: 0
-    },
+  settings: {
+    sidebarDefault: "closed",
+    sidebarDensity: "compact",
+    categoryDefault: "collapsed",
+    tagsDefault: "collapsed",
+    dividerLines: true,
+    categoryIndentation: "compact",
 
-    {
-        id: "NOTE-00004",
-        title: "Network Configuration",
-        content:
-`Network configuration notes.
+    noteDisplayStyle: "normal",
+    notesPerPage: "20",
 
-Router, VPN, subnet routing and connected-device information are maintained here.
+    sorting: "lastModified",
+    searchMode: "all",
 
-Keep configuration information organized and easy to locate.`,
-        category: "Technology",
-        categoryPath: "Technology → Network",
-        categoryColor: "#8e63d2",
-        tags: ["Important"],
-        favorite: true,
-        pinned: false,
-        created: "2026-09-01T10:00:00",
-        modified: "2026-09-08T16:20:00",
-        viewed: "2026-09-08T17:00:00",
-        synced: "2026-09-08T17:01:00",
-        status: "Active",
-        views: 42,
-        size: "5.9 KB",
-        links: [],
-        attachments: 0
-    },
+    autoSave: true,
+    autoSaveInterval: 1500,
 
-    {
-        id: "NOTE-00005",
-        title: "Solar System Information",
-        content:
-`Solar panels, inverter, battery and power system information.
+    saveConfirmation: true,
+    notificationDuration: 1800,
 
-Keep technical specifications, configuration and maintenance information together.`,
-        category: "Projects",
-        categoryPath: "Projects → Solar",
-        categoryColor: "#f9ab00",
-        tags: ["Important"],
-        favorite: false,
-        pinned: false,
-        created: "2026-08-29T12:30:00",
-        modified: "2026-09-02T15:00:00",
-        viewed: "2026-09-03T12:00:00",
-        synced: "2026-09-03T12:01:00",
-        status: "Active",
-        views: 12,
-        size: "4.7 KB",
-        links: [],
-        attachments: 0
-    },
+    dateFormat: "DD MMM YYYY",
+    timeFormat: "12",
 
-    {
-        id: "NOTE-00006",
-        title: "Shopping Notes",
-        content:
-`A small list of household and grocery items.
+    layoutMode: "automatic",
 
-Keep prices and quantities updated whenever required.`,
-        category: "Personal",
-        categoryPath: "Personal → Shopping",
-        categoryColor: "#34a853",
-        tags: [],
-        favorite: false,
-        pinned: true,
-        created: "2026-08-28T18:00:00",
-        modified: "2026-08-30T19:00:00",
-        viewed: "2026-08-31T10:00:00",
-        synced: "2026-08-31T10:01:00",
-        status: "Active",
-        views: 7,
-        size: "2.2 KB",
-        links: [],
-        attachments: 0
-    }
-];
+    confirmDelete: true,
+    confirmEmptyTrash: true,
+    confirmCategoryRemoval: true,
+    confirmTagRemoval: true
+  },
 
-let selectedNoteId = notes[0].id;
-let currentSection = "All Notes";
+  categories: [],
 
-/* =========================================================
-   ELEMENTS
-   ========================================================= */
+  tags: [],
 
-const sidebar = document.getElementById("sidebar");
-const sidebarToggle = document.getElementById("sidebarToggle");
-const sidebarOverlay = document.getElementById("sidebarOverlay");
+  notes: [],
 
-const notesList = document.getElementById("notesList");
-const searchInput = document.getElementById("searchInput");
-const sortSelect = document.getElementById("sortSelect");
+  trashState: {
+    label: "Recycle Bin",
+    hidden: false
+  },
 
-const sectionTitle = document.getElementById("sectionTitle");
-const notesCount = document.getElementById("notesCount");
+  checklist: {
+    url: ""
+  },
 
-const noteColorLine = document.getElementById("noteColorLine");
-const noteHeading = document.getElementById("noteHeading");
-const noteContent = document.getElementById("noteContent");
-const linksList = document.getElementById("linksList");
-const metadataGrid = document.getElementById("metadataGrid");
+  counters: {
+    binSequence: 0
+  }
+};
 
-const favoriteBtn = document.getElementById("favoriteBtn");
-const pinBtn = document.getElementById("pinBtn");
+let db = structuredClone(DEFAULT_DB);
+let accessToken = null;
+let tokenClient = null;
+let gapiReady = false;
 
-/* =========================================================
-   SIDEBAR SHOW / HIDE
-   ========================================================= */
+let currentSection = "all";
+let selectedNoteId = null;
+let selectedIds = new Set();
 
-function openSidebar() {
-    sidebar.classList.add("open");
-    sidebarToggle.textContent = "✕ Hide";
-}
+let searchText = "";
+let currentPage = 1;
 
-function closeSidebar() {
-    sidebar.classList.remove("open");
-    sidebarToggle.textContent = "☰ Show";
-}
+let saveTimer = null;
+let saveInProgress = false;
+let saveAgain = false;
 
-sidebarToggle.addEventListener("click", () => {
-    if (sidebar.classList.contains("open")) {
-        closeSidebar();
-    } else {
-        openSidebar();
-    }
-});
+let expandedCategories = new Set();
 
-sidebarOverlay.addEventListener("click", closeSidebar);
 
-/* =========================================================
+/* ============================================================
    HELPERS
-   ========================================================= */
+   ============================================================ */
 
-function formatDate(value) {
-    const d = new Date(value);
+const $ = id => document.getElementById(id);
 
-    return d.toLocaleDateString("en-GB", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric"
-    }) + " · " +
-    d.toLocaleTimeString("en-US", {
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: true
+function uid(prefix="id"){
+  return prefix + "_" +
+    Date.now().toString(36) + "_" +
+    Math.random().toString(36).slice(2,8);
+}
+
+function nowISO(){
+  return new Date().toISOString();
+}
+
+function escapeHTML(value=""){
+  return String(value)
+    .replace(/&/g,"&amp;")
+    .replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;")
+    .replace(/'/g,"&#039;");
+}
+
+function stripHTML(html=""){
+  const d=document.createElement("div");
+  d.innerHTML=html;
+  return d.textContent || d.innerText || "";
+}
+
+function formatDate(value){
+  if(!value) return "—";
+
+  const d=new Date(value);
+
+  if(Number.isNaN(d.getTime())) return "—";
+
+  const date =
+    String(d.getDate()).padStart(2,"0") + " " +
+    d.toLocaleString("en-US",{month:"short"}) + " " +
+    d.getFullYear();
+
+  let time;
+
+  if(db.settings.timeFormat==="24"){
+    time=d.toLocaleTimeString([],{
+      hour:"2-digit",
+      minute:"2-digit",
+      hour12:false
     });
+  }else{
+    time=d.toLocaleTimeString([],{
+      hour:"2-digit",
+      minute:"2-digit",
+      hour12:true
+    });
+  }
+
+  return date + " · " + time;
 }
 
-function wordCount(text) {
-    return text.trim()
-        ? text.trim().split(/\s+/).length
-        : 0;
+function showMessage(message, type="ok"){
+  const el=$("connectionStatus");
+
+  el.textContent=message;
+  el.className="connection " + (type==="ok" ? "ok" : "err");
+
+  if(db.settings.notificationDuration){
+    setTimeout(()=>{
+      if(el.textContent===message){
+        el.textContent=accessToken ? "Google Drive connected" : "Not connected";
+      }
+    },db.settings.notificationDuration);
+  }
 }
 
-function getVisibleNotes() {
-
-    let result = [...notes];
-
-    if (currentSection === "Favorites") {
-        result = result.filter(n => n.favorite);
-    }
-
-    const query = searchInput.value.trim().toLowerCase();
-
-    if (query) {
-        result = result.filter(n =>
-            n.title.toLowerCase().includes(query) ||
-            n.content.toLowerCase().includes(query) ||
-            n.category.toLowerCase().includes(query) ||
-            n.tags.some(tag => tag.toLowerCase().includes(query))
-        );
-    }
-
-    switch (sortSelect.value) {
-
-        case "modified":
-            result.sort(
-                (a, b) =>
-                    new Date(b.modified) - new Date(a.modified)
-            );
-            break;
-
-        case "newest":
-            result.sort(
-                (a, b) =>
-                    new Date(b.created) - new Date(a.created)
-            );
-            break;
-
-        case "oldest":
-            result.sort(
-                (a, b) =>
-                    new Date(a.created) - new Date(b.created)
-            );
-            break;
-
-        case "alphabetical":
-            result.sort(
-                (a, b) =>
-                    a.title.localeCompare(b.title)
-            );
-            break;
-    }
-
-    return result;
+function confirmAction(message, setting){
+  if(db.settings[setting]===false) return true;
+  return confirm(message);
 }
 
-/* =========================================================
-   RENDER NOTES
-   ========================================================= */
 
-function renderNotes() {
+/* ============================================================
+   GOOGLE API
+   ============================================================ */
 
-    const visible = getVisibleNotes();
+async function initGoogle(){
 
-    sectionTitle.textContent = currentSection;
+  try{
 
-    notesCount.textContent =
-        `${visible.length} ${visible.length === 1 ? "Note" : "Notes"}`;
+    await new Promise((resolve,reject)=>{
+      gapi.load("client",async()=>{
+        try{
+          await gapi.client.init({
+            discoveryDocs:[
+              "https://www.googleapis.com/discovery/v1/apis/drive/v3/rest"
+            ]
+          });
 
-    notesList.innerHTML = "";
+          gapiReady=true;
+          resolve();
+        }catch(e){
+          reject(e);
+        }
+      });
+    });
 
-    if (!visible.length) {
-        notesList.innerHTML = `
-            <div class="empty-state">
-                No notes found.
-            </div>
-        `;
-        return;
-    }
+    tokenClient=google.accounts.oauth2.initTokenClient({
+      client_id:CONFIG.CLIENT_ID,
+      scope:CONFIG.SCOPES,
+      callback:async response=>{
+        if(response.error){
+          showMessage("Google authorization failed","err");
+          return;
+        }
 
-    visible.forEach(note => {
+        accessToken=response.access_token;
 
-        const item = document.createElement("div");
-
-        item.className =
-            "note-item" +
-            (note.id === selectedNoteId ? " selected" : "") +
-            (note.pinned ? " pinned" : "");
-
-        item.innerHTML = `
-
-            <div
-                class="note-accent"
-                style="background:${note.categoryColor}"
-            ></div>
-
-            <div class="note-title">
-                ${escapeHtml(note.title)}
-            </div>
-
-            <div class="note-preview">
-                ${escapeHtml(note.content)}
-            </div>
-
-            <div class="note-meta">
-
-                <span
-                    class="pin ${note.pinned ? "active" : ""}"
-                    title="${note.pinned ? "Pinned" : "Not pinned"}"
-                >📌</span>
-
-                <span
-                    class="favorite ${note.favorite ? "active" : ""}"
-                    title="${note.favorite ? "Favorite" : "Not favorite"}"
-                >⭐</span>
-
-                <span
-                    style="color:${note.categoryColor}"
-                >
-                    📁 ${escapeHtml(note.category)}
-                </span>
-
-                ${
-                    note.tags.length
-                    ? note.tags.map(tag =>
-                        `<span>🏷️ ${escapeHtml(tag)}</span>`
-                    ).join("")
-                    : ""
-                }
-
-            </div>
-
-            <div class="note-date">
-                ${formatDate(note.modified)}
-            </div>
-        `;
-
-        item.addEventListener("click", () => {
-
-            selectedNoteId = note.id;
-
-            renderNotes();
-            renderSelectedNote();
-
-            if (window.innerWidth < 700) {
-                closeSidebar();
-            }
+        gapi.client.setToken({
+          access_token:accessToken
         });
 
-        notesList.appendChild(item);
+        showMessage("Google Drive connected","ok");
+
+        await loadDatabase();
+      }
     });
+
+    $("connectionStatus").textContent="Click Show → Connect";
+
+  }catch(error){
+    console.error(error);
+    showMessage("Google API initialization failed","err");
+  }
 }
 
-/* =========================================================
-   RENDER SELECTED NOTE
-   ========================================================= */
+function connectGoogle(){
 
-function renderSelectedNote() {
+  if(!tokenClient){
+    alert("Google API ابھی تیار نہیں ہوا۔");
+    return;
+  }
 
-    const note = notes.find(n => n.id === selectedNoteId);
-
-    if (!note) return;
-
-    noteColorLine.style.background = note.categoryColor;
-
-    noteHeading.textContent = note.title;
-    noteContent.textContent = note.content;
-
-    favoriteBtn.innerHTML =
-        note.favorite ? "⭐ Favorite" : "⭐ Favorite";
-
-    pinBtn.innerHTML =
-        note.pinned ? "📌 Pin" : "📌 Pin";
-
-    renderLinks(note);
-    renderMetadata(note);
+  tokenClient.requestAccessToken({
+    prompt:"consent"
+  });
 }
 
-/* =========================================================
-   LINKS
-   ========================================================= */
 
-function renderLinks(note) {
+/* ============================================================
+   GOOGLE DRIVE JSON
+   ============================================================ */
 
-    linksList.innerHTML = "";
+async function loadDatabase(){
 
-    if (!note.links.length) {
+  if(!accessToken){
+    connectGoogle();
+    return;
+  }
 
-        linksList.innerHTML = `
-            <div
-                style="
-                    color:var(--muted);
-                    font-size:11px;
-                    padding:4px 2px;
-                "
-            >
-                No links added.
-            </div>
-        `;
+  try{
 
-        return;
+    const response=await fetch(
+      `https://www.googleapis.com/drive/v3/files/${CONFIG.DB_FILE_ID}?alt=media`,
+      {
+        headers:{
+          Authorization:"Bearer "+accessToken
+        }
+      }
+    );
+
+    if(!response.ok){
+      throw new Error("Drive JSON read failed: "+response.status);
     }
 
-    note.links.forEach(link => {
+    const remote=await response.json();
 
-        const item = document.createElement("div");
-
-        item.className = "link-item";
-
-        item.innerHTML = `
-            <div>${link.icon}</div>
-
-            <div class="link-info">
-                <div class="link-name">
-                    ${escapeHtml(link.name)}
-                </div>
-
-                <div class="link-url">
-                    ${escapeHtml(link.url)}
-                </div>
-            </div>
-
-            <button
-                class="open-link"
-                type="button"
-            >
-                Open
-            </button>
-        `;
-
-        item.querySelector(".open-link")
-            .addEventListener("click", event => {
-
-                event.stopPropagation();
-
-                if (
-                    link.url.startsWith("http://") ||
-                    link.url.startsWith("https://")
-                ) {
-                    window.open(link.url, "_blank");
-                } else {
-                    alert("Preview: this link will be opened by the future backend-connected version.");
-                }
-            });
-
-        linksList.appendChild(item);
-    });
-}
-
-/* =========================================================
-   METADATA
-   ========================================================= */
-
-function renderMetadata(note) {
-
-    const rows = [
-
-        ["Created", formatDate(note.created)],
-        ["Last Modified", formatDate(note.modified)],
-        ["Last Viewed", formatDate(note.viewed)],
-        ["Last Synced", formatDate(note.synced)],
-
-        ["Category", `📁 ${note.category}`],
-        ["Category Path", note.categoryPath],
-        ["Tags",
-            note.tags.length
-                ? note.tags.map(t => `🏷️ ${t}`).join(" · ")
-                : "None"
-        ],
-        ["Status", note.status],
-        ["Favorite", note.favorite ? "⭐ Yes" : "No"],
-        ["Pin", note.pinned ? "📌 Yes" : "No"],
-        ["Word Count", wordCount(note.content).toLocaleString()],
-        ["Note Size", note.size],
-        ["Links Count", note.links.length],
-        ["Attachment Count", note.attachments],
-        ["Total Views", note.views],
-        ["Storage / Sync", "☁️ Synced"],
-        ["Note ID", note.id]
-    ];
-
-    metadataGrid.innerHTML = rows.map(row => `
-        <div class="metadata-row">
-            <div class="metadata-label">
-                ${escapeHtml(row[0])}
-            </div>
-
-            <div class="metadata-value">
-                ${escapeHtml(String(row[1]))}
-            </div>
-        </div>
-    `).join("");
-}
-
-/* =========================================================
-   ESCAPE HTML
-   ========================================================= */
-
-function escapeHtml(value) {
-
-    return String(value)
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#039;");
-}
-
-/* =========================================================
-   SEARCH / SORT
-   ========================================================= */
-
-searchInput.addEventListener("input", renderNotes);
-
-sortSelect.addEventListener("change", renderNotes);
-
-/* =========================================================
-   FAVORITE
-   ========================================================= */
-
-favoriteBtn.addEventListener("click", () => {
-
-    const note = notes.find(n => n.id === selectedNoteId);
-
-    if (!note) return;
-
-    note.favorite = !note.favorite;
-
-    renderNotes();
-    renderSelectedNote();
-});
-
-/* =========================================================
-   PIN
-   ========================================================= */
-
-pinBtn.addEventListener("click", () => {
-
-    const note = notes.find(n => n.id === selectedNoteId);
-
-    if (!note) return;
-
-    note.pinned = !note.pinned;
-
-    renderNotes();
-    renderSelectedNote();
-});
-
-/* =========================================================
-   CATEGORY MENU
-   ========================================================= */
-
-const categoryMenu = document.getElementById("categoryMenu");
-
-document.getElementById("categoryBtn")
-    .addEventListener("click", event => {
-
-        showMenu(
-            categoryMenu,
-            event.currentTarget
-        );
-    });
-
-/* =========================================================
-   MORE MENU
-   ========================================================= */
-
-const moreMenu = document.getElementById("moreMenu");
-
-document.getElementById("moreBtn")
-    .addEventListener("click", event => {
-
-        showMenu(
-            moreMenu,
-            event.currentTarget
-        );
-    });
-
-/* =========================================================
-   LINK MENU
-   ========================================================= */
-
-const linkMenu = document.getElementById("linkMenu");
-
-document.getElementById("addLinkBtn")
-    .addEventListener("click", event => {
-
-        showMenu(
-            linkMenu,
-            event.currentTarget
-        );
-    });
-
-function showMenu(menu, button) {
-
-    document.querySelectorAll(".menu")
-        .forEach(m => m.classList.remove("show"));
-
-    const rect = button.getBoundingClientRect();
-
-    menu.style.left =
-        Math.min(
-            rect.left,
-            window.innerWidth - menu.offsetWidth - 10
-        ) + "px";
-
-    menu.style.top =
-        (rect.bottom + 5) + "px";
-
-    menu.classList.add("show");
-}
-
-document.addEventListener("click", event => {
-
-    if (
-        !event.target.closest(".menu") &&
-        !event.target.closest(".action-btn") &&
-        !event.target.closest(".small-btn")
-    ) {
-        document.querySelectorAll(".menu")
-            .forEach(m => m.classList.remove("show"));
-    }
-});
-
-/* =========================================================
-   CATEGORY ACTIONS
-   ========================================================= */
-
-categoryMenu.addEventListener("click", event => {
-
-    const action = event.target.dataset.action;
-
-    if (!action) return;
-
-    categoryMenu.classList.remove("show");
-
-    const messages = {
-        "category-add": "Preview: Add Category",
-        "category-rename": "Preview: Rename Category",
-        "category-move": "Preview: Move Category",
-        "category-delete": "Preview: Delete Category"
+    db={
+      ...structuredClone(DEFAULT_DB),
+      ...remote,
+      settings:{
+        ...DEFAULT_DB.settings,
+        ...(remote.settings||{})
+      }
     };
 
-    alert(messages[action]);
-});
+    db.notes=Array.isArray(db.notes)?db.notes:[];
+    db.categories=Array.isArray(db.categories)?db.categories:[];
+    db.tags=Array.isArray(db.tags)?db.tags:[];
+    db.checklist=db.checklist||{url:""};
+    db.trashState=db.trashState||{
+      label:"Recycle Bin",
+      hidden:false
+    };
 
-/* =========================================================
-   MORE ACTIONS
-   ========================================================= */
+    renderAll();
 
-moreMenu.addEventListener("click", event => {
+    showMessage("MasterDB.json loaded","ok");
 
-    const action = event.target.dataset.action;
+  }catch(error){
 
-    if (!action) return;
+    console.error(error);
 
-    moreMenu.classList.remove("show");
+    alert(
+      "Google Drive سے MasterDB.json read نہیں ہو سکی۔\n\n"+
+      error.message
+    );
 
-    if (action === "print") {
-        window.print();
-        return;
+    showMessage("Drive read failed","err");
+  }
+}
+
+async function saveDatabase(){
+
+  if(!accessToken){
+    connectGoogle();
+    return false;
+  }
+
+  if(saveInProgress){
+    saveAgain=true;
+    return false;
+  }
+
+  saveInProgress=true;
+
+  try{
+
+    const blob=new Blob(
+      [JSON.stringify(db,null,2)],
+      {type:"application/json"}
+    );
+
+    const metadata={
+      name:CONFIG.DB_FILE_NAME,
+      mimeType:"application/json"
+    };
+
+    const form=new FormData();
+
+    form.append(
+      "metadata",
+      new Blob(
+        [JSON.stringify(metadata)],
+        {type:"application/json"}
+      )
+    );
+
+    form.append("file",blob);
+
+    const response=await fetch(
+      `https://www.googleapis.com/upload/drive/v3/files/${CONFIG.DB_FILE_ID}?uploadType=multipart`,
+      {
+        method:"PATCH",
+        headers:{
+          Authorization:"Bearer "+accessToken
+        },
+        body:form
+      }
+    );
+
+    if(!response.ok){
+      throw new Error("Drive write failed: "+response.status);
     }
 
-    if (action === "duplicate") {
-        alert("Preview: Duplicate Note");
-        return;
+    showMessage("Saved to Google Drive","ok");
+
+    if(saveAgain){
+      saveAgain=false;
+      saveInProgress=false;
+      return await saveDatabase();
     }
 
-    if (action === "share") {
-        alert("Preview: Share Note");
+    saveInProgress=false;
+
+    return true;
+
+  }catch(error){
+
+    console.error(error);
+
+    saveInProgress=false;
+
+    showMessage("Drive save failed","err");
+
+    alert("Google Drive میں save نہیں ہو سکا۔\n\n"+error.message);
+
+    return false;
+  }
+}
+
+function scheduleSave(){
+
+  if(db.settings.autoSave===false) return;
+
+  clearTimeout(saveTimer);
+
+  saveTimer=setTimeout(
+    ()=>saveDatabase(),
+    Number(db.settings.autoSaveInterval)||1500
+  );
+}
+
+async function deleteDatabaseFile(){
+
+  if(!accessToken){
+    connectGoogle();
+    return;
+  }
+
+  if(!confirm("MasterDB.json کو Google Drive سے delete کرنا ہے؟")) return;
+
+  try{
+
+    const response=await fetch(
+      `https://www.googleapis.com/drive/v3/files/${CONFIG.DB_FILE_ID}`,
+      {
+        method:"DELETE",
+        headers:{
+          Authorization:"Bearer "+accessToken
+        }
+      }
+    );
+
+    if(!response.ok){
+      throw new Error("Delete failed: "+response.status);
     }
-});
 
-/* =========================================================
-   LINK ACTIONS
-   ========================================================= */
+    alert("MasterDB.json deleted.");
 
-const linkModalBackdrop =
-    document.getElementById("linkModalBackdrop");
+  }catch(error){
+    alert(error.message);
+  }
+}
 
-const googleFileBackdrop =
-    document.getElementById("googleFileBackdrop");
 
-linkMenu.addEventListener("click", event => {
+/* ============================================================
+   NOTE MODEL
+   ============================================================ */
 
-    const action = event.target.dataset.action;
+function createNote(){
 
-    if (!action) return;
+  const t=nowISO();
 
-    linkMenu.classList.remove("show");
+  return {
+    id:uid("note"),
+    title:"New Note",
+    content:"",
+    links:[],
 
-    if (
-        action === "add-link" ||
-        action === "other-link"
-    ) {
-        document.getElementById("linkModalTitle").textContent =
-            action === "add-link"
-                ? "Add Link"
-                : "Add Other Link";
+    createdAt:t,
+    modifiedAt:t,
+    lastViewedAt:"",
+    lastSyncedAt:t,
 
-        document.getElementById("linkNameInput").value = "";
-        document.getElementById("linkUrlInput").value = "";
+    categoryId:null,
+    previousCategoryId:null,
 
-        linkModalBackdrop.classList.add("show");
+    tags:[],
+
+    favorite:false,
+    pinned:false,
+
+    color:"#4f46e5",
+
+    deleted:false,
+    trashHidden:false,
+
+    views:0,
+
+    binHistory:[],
+
+    attachments:[],
+    status:"Active"
+  };
+}
+
+function getNote(id){
+  return db.notes.find(n=>n.id===id);
+}
+
+function activeNotes(){
+  return db.notes.filter(n=>!n.deleted && !n.trashHidden);
+}
+
+function deletedNotes(){
+  return db.notes.filter(n=>n.deleted && !n.trashHidden);
+}
+
+function allVisibleNotes(){
+
+  let notes;
+
+  if(currentSection==="favorites"){
+    notes=activeNotes().filter(n=>n.favorite);
+
+  }else if(currentSection==="trash"){
+    notes=deletedNotes();
+
+  }else if(currentSection.startsWith("category:")){
+
+    const id=currentSection.slice(9);
+
+    notes=activeNotes().filter(n=>
+      n.categoryId===id ||
+      isDescendantCategory(n.categoryId,id)
+    );
+
+  }else if(currentSection.startsWith("tag:")){
+
+    const tag=currentSection.slice(4);
+
+    notes=activeNotes().filter(n=>
+      n.tags.includes(tag)
+    );
+
+  }else{
+    notes=activeNotes();
+  }
+
+  if(searchText.trim()){
+    const q=searchText.toLowerCase();
+
+    notes=notes.filter(n=>{
+
+      const title=n.title||"";
+      const content=stripHTML(n.content||"");
+
+      const cat=getCategory(n.categoryId);
+      const categoryName=cat?.name||"";
+
+      const tags=n.tags.join(" ");
+
+      if(db.settings.searchMode==="title"){
+        return title.toLowerCase().includes(q);
+      }
+
+      if(db.settings.searchMode==="titleContent"){
+        return (
+          title+" "+content
+        ).toLowerCase().includes(q);
+      }
+
+      return (
+        title+" "+content+" "+
+        categoryName+" "+tags
+      ).toLowerCase().includes(q);
+    });
+  }
+
+  return sortNotes(notes);
+}
+
+function sortNotes(notes){
+
+  const copy=[...notes];
+
+  switch(db.settings.sorting){
+
+    case "newest":
+      return copy.sort((a,b)=>
+        new Date(b.createdAt)-new Date(a.createdAt)
+      );
+
+    case "oldest":
+      return copy.sort((a,b)=>
+        new Date(a.createdAt)-new Date(b.createdAt)
+      );
+
+    case "alphabetical":
+      return copy.sort((a,b)=>
+        (a.title||"").localeCompare(
+          b.title||"",
+          undefined,
+          {sensitivity:"base"}
+        )
+      );
+
+    default:
+      return copy.sort((a,b)=>
+        new Date(b.modifiedAt)-new Date(a.modifiedAt)
+      );
+  }
+}
+
+
+/* ============================================================
+   CATEGORIES
+   ============================================================ */
+
+function getCategory(id){
+  return db.categories.find(c=>c.id===id);
+}
+
+function categoryChildren(parentId){
+  return db.categories.filter(c=>
+    (c.parentId||null)===(parentId||null)
+  );
+}
+
+function isDescendantCategory(categoryId,ancestorId){
+
+  let current=getCategory(categoryId);
+
+  while(current){
+
+    if(current.parentId===ancestorId) return true;
+
+    current=getCategory(current.parentId);
+  }
+
+  return false;
+}
+
+function categoryPath(id){
+
+  const parts=[];
+  let c=getCategory(id);
+
+  while(c){
+    parts.unshift(c.name);
+    c=getCategory(c.parentId);
+  }
+
+  return parts.join(" / ");
+}
+
+function categoryColor(id){
+
+  const colors=[
+    "#3b82f6",
+    "#22c55e",
+    "#f97316",
+    "#8b5cf6",
+    "#ec4899",
+    "#06b6d4",
+    "#eab308",
+    "#ef4444"
+  ];
+
+  let c=getCategory(id);
+
+  if(!c) return "#9ca3af";
+
+  return c.color || colors[
+    db.categories.findIndex(x=>x.id===c.id)%colors.length
+  ];
+}
+
+function categoryNoteCount(id){
+
+  return activeNotes().filter(n=>
+    n.categoryId===id ||
+    isDescendantCategory(n.categoryId,id)
+  ).length;
+}
+
+function addCategory(name,parentId=null){
+
+  name=name.trim();
+
+  if(!name) return;
+
+  if(db.categories.some(c=>
+    c.name.toLowerCase()===name.toLowerCase() &&
+    (c.parentId||null)===(parentId||null)
+  )){
+    alert("یہ Category پہلے سے موجود ہے۔");
+    return;
+  }
+
+  const category={
+    id:uid("cat"),
+    name,
+    parentId,
+    color:categoryColor(null)
+  };
+
+  db.categories.push(category);
+
+  if(parentId) expandedCategories.add(parentId);
+
+  scheduleSave();
+  renderAll();
+}
+
+function renameCategory(id){
+
+  const c=getCategory(id);
+  if(!c)return;
+
+  const name=prompt("New Category Name",c.name);
+
+  if(!name || !name.trim()) return;
+
+  c.name=name.trim();
+  scheduleSave();
+  renderAll();
+}
+
+function removeCategory(id){
+
+  const c=getCategory(id);
+  if(!c)return;
+
+  if(!confirmAction(
+    `Category "${c.name}" remove کرنی ہے؟ Notes delete نہیں ہوں گی۔`,
+    "confirmCategoryRemoval"
+  ))return;
+
+  const parent=c.parentId||null;
+
+  db.notes.forEach(n=>{
+    if(n.categoryId===id){
+      n.categoryId=parent;
+      n.modifiedAt=nowISO();
     }
+  });
 
-    if (action === "google-file") {
-        document.getElementById("googleFileName").value = "";
-        googleFileBackdrop.classList.add("show");
+  db.categories.forEach(child=>{
+    if(child.parentId===id){
+      child.parentId=parent;
     }
-});
+  });
 
-/* =========================================================
-   SAVE LINK
-   ========================================================= */
+  db.categories=db.categories.filter(x=>x.id!==id);
 
-document.getElementById("saveLinkBtn")
-    .addEventListener("click", () => {
+  scheduleSave();
+  renderAll();
+}
 
-        const name =
-            document.getElementById("linkNameInput")
-                .value.trim();
 
-        const url =
-            document.getElementById("linkUrlInput")
-                .value.trim();
+/* ============================================================
+   TAGS
+   ============================================================ */
 
-        if (!name || !url) {
-            alert("Please enter Link Name and Link Text / URL.");
-            return;
+function usedTags(){
+
+  const set=new Set();
+
+  activeNotes().forEach(n=>{
+    (n.tags||[]).forEach(t=>set.add(t));
+  });
+
+  return [...set].sort((a,b)=>
+    a.localeCompare(b,undefined,{sensitivity:"base"})
+  );
+}
+
+function addTag(){
+
+  const name=prompt("New Tag");
+
+  if(!name || !name.trim())return;
+
+  const clean=name.trim();
+
+  if(db.tags.some(t=>
+    t.toLowerCase()===clean.toLowerCase()
+  )){
+    alert("یہ Tag پہلے سے موجود ہے۔");
+    return;
+  }
+
+  db.tags.push(clean);
+
+  scheduleSave();
+  renderAll();
+}
+
+function renameTag(tag){
+
+  const newName=prompt("Rename Tag",tag);
+
+  if(!newName || !newName.trim())return;
+
+  const clean=newName.trim();
+
+  if(db.tags.some(t=>
+    t!==tag &&
+    t.toLowerCase()===clean.toLowerCase()
+  )){
+    alert("یہ Tag پہلے سے موجود ہے۔");
+    return;
+  }
+
+  db.tags=db.tags.map(t=>t===tag?clean:t);
+
+  db.notes.forEach(n=>{
+    n.tags=(n.tags||[]).map(t=>t===tag?clean:t);
+  });
+
+  scheduleSave();
+  renderAll();
+}
+
+function removeTag(tag){
+
+  if(!confirmAction(
+    `Tag "${tag}" remove کرنا ہے؟`,
+    "confirmTagRemoval"
+  ))return;
+
+  db.tags=db.tags.filter(t=>t!==tag);
+
+  db.notes.forEach(n=>{
+    n.tags=(n.tags||[]).filter(t=>t!==tag);
+  });
+
+  scheduleSave();
+  renderAll();
+}
+
+
+/* ============================================================
+   DELETE / RESTORE / BIN
+   ============================================================ */
+
+function deleteNote(note){
+
+  if(!confirmAction(
+    "یہ Note Recycle Bin میں بھیجنا ہے؟",
+    "confirmDelete"
+  ))return;
+
+  note.deleted=true;
+  note.status="Deleted";
+  note.modifiedAt=nowISO();
+
+  /*
+   IMPORTANT:
+   Bin is permanent until manually removed.
+  */
+
+  if(!note.tags.includes("Bin")){
+    note.tags.push("Bin");
+  }
+
+  if(!db.tags.includes("Bin")){
+    db.tags.push("Bin");
+  }
+
+  db.counters.binSequence++;
+
+  const binTag="Bin "+db.counters.binSequence;
+
+  if(!note.tags.includes(binTag)){
+    note.tags.push(binTag);
+  }
+
+  if(!db.tags.includes(binTag)){
+    db.tags.push(binTag);
+  }
+
+  if(selectedNoteId===note.id){
+    selectedNoteId=null;
+  }
+
+  scheduleSave();
+  renderAll();
+}
+
+function restoreNote(note){
+
+  note.deleted=false;
+  note.trashHidden=false;
+  note.status="Active";
+
+  /*
+   IMPORTANT:
+   Bin / Bin N tags are NOT removed.
+  */
+
+  note.modifiedAt=nowISO();
+
+  scheduleSave();
+  renderAll();
+}
+
+function emptyTrash(){
+
+  if(!confirmAction(
+    "Recycle Bin empty کرنا ہے؟ Notes permanently delete نہیں ہوں گے، صرف hide ہوں گے۔",
+    "confirmEmptyTrash"
+  ))return;
+
+  db.notes.forEach(n=>{
+    if(n.deleted){
+      n.trashHidden=true;
+    }
+  });
+
+  db.trashState.hidden=true;
+
+  scheduleSave();
+  renderAll();
+}
+
+function restoreTrash(){
+
+  db.notes.forEach(n=>{
+    if(n.deleted){
+      n.trashHidden=false;
+    }
+  });
+
+  db.trashState.hidden=false;
+
+  scheduleSave();
+  renderAll();
+}
+
+
+/* ============================================================
+   RENDER SIDEBAR
+   ============================================================ */
+
+function renderSidebar(){
+
+  $("allCount").textContent=activeNotes().length;
+
+  $("favCount").textContent=
+    activeNotes().filter(n=>n.favorite).length;
+
+  $("trashCount").textContent=
+    deletedNotes().length;
+
+  $("categoryCount").textContent=
+    db.categories.length;
+
+  $("tagCount").textContent=
+    usedTags().length;
+
+  $("trashLabel").textContent=
+    db.trashState.label||"Recycle Bin";
+
+  renderCategoryTree();
+  renderTags();
+}
+
+function renderCategoryTree(){
+
+  const container=$("categoryTree");
+
+  container.innerHTML="";
+
+  function build(parentId=null,level=0){
+
+    const children=categoryChildren(parentId);
+
+    children.forEach(c=>{
+
+      const node=document.createElement("div");
+      node.className="tree-node";
+
+      const row=document.createElement("div");
+      row.className="tree-row";
+
+      const toggle=document.createElement("button");
+      toggle.className="tree-toggle";
+
+      const hasChildren=
+        categoryChildren(c.id).length>0;
+
+      toggle.textContent=
+        hasChildren
+          ? (expandedCategories.has(c.id)?"▾":"▸")
+          : "";
+
+      const label=document.createElement("div");
+      label.className="tree-label";
+      label.style.color=categoryColor(c.id);
+
+      label.innerHTML=
+        `📁 ${escapeHTML(c.name)}
+         <span class="side-count">${categoryNoteCount(c.id)}</span>`;
+
+      label.onclick=()=>{
+
+        if(hasChildren){
+          if(expandedCategories.has(c.id))
+            expandedCategories.delete(c.id);
+          else
+            expandedCategories.add(c.id);
+
+          renderCategoryTree();
         }
 
-        const note =
-            notes.find(n => n.id === selectedNoteId);
+        currentSection="category:"+c.id;
+        currentPage=1;
+        renderAll();
+      };
 
-        note.links.push({
-            icon: "🔗",
-            name,
-            url
-        });
+      toggle.onclick=()=>{
 
-        linkModalBackdrop.classList.remove("show");
+        if(!hasChildren)return;
 
-        renderSelectedNote();
+        if(expandedCategories.has(c.id))
+          expandedCategories.delete(c.id);
+        else
+          expandedCategories.add(c.id);
+
+        renderCategoryTree();
+      };
+
+      row.append(toggle,label);
+
+      const edit=document.createElement("button");
+      edit.className="side-edit";
+      edit.textContent="✏️";
+
+      edit.onclick=e=>{
+        e.stopPropagation();
+        openCategoryMenu(c.id);
+      };
+
+      row.appendChild(edit);
+      node.appendChild(row);
+
+      if(hasChildren && expandedCategories.has(c.id)){
+        const childWrap=document.createElement("div");
+        childWrap.className="tree";
+        childWrap.appendChild(
+          buildFragment(c.id,level+1)
+        );
+        node.appendChild(childWrap);
+      }
+
+      container.appendChild(node);
+    });
+  }
+
+  function buildFragment(parentId,level){
+
+    const frag=document.createDocumentFragment();
+
+    categoryChildren(parentId).forEach(c=>{
+
+      const node=document.createElement("div");
+      node.className="tree-node";
+
+      const row=document.createElement("div");
+      row.className="tree-row";
+
+      const hasChildren=
+        categoryChildren(c.id).length>0;
+
+      const toggle=document.createElement("button");
+      toggle.className="tree-toggle";
+      toggle.textContent=
+        hasChildren
+        ? (expandedCategories.has(c.id)?"▾":"▸")
+        : "";
+
+      toggle.onclick=e=>{
+        e.stopPropagation();
+
+        if(expandedCategories.has(c.id))
+          expandedCategories.delete(c.id);
+        else
+          expandedCategories.add(c.id);
+
+        renderCategoryTree();
+      };
+
+      const label=document.createElement("div");
+      label.className="tree-label";
+      label.style.color=categoryColor(c.id);
+
+      label.innerHTML=
+        `📁 ${escapeHTML(c.name)}
+         <span class="side-count">${categoryNoteCount(c.id)}</span>`;
+
+      label.onclick=()=>{
+        currentSection="category:"+c.id;
+        currentPage=1;
+        renderAll();
+      };
+
+      const edit=document.createElement("button");
+      edit.className="side-edit";
+      edit.textContent="✏️";
+
+      edit.onclick=e=>{
+        e.stopPropagation();
+        openCategoryMenu(c.id);
+      };
+
+      row.append(toggle,label,edit);
+      node.appendChild(row);
+
+      if(hasChildren && expandedCategories.has(c.id)){
+        const child=document.createElement("div");
+        child.className="tree";
+        child.appendChild(buildFragment(c.id,level+1));
+        node.appendChild(child);
+      }
+
+      frag.appendChild(node);
     });
 
-document.getElementById("cancelLinkBtn")
-    .addEventListener("click", () => {
+    return frag;
+  }
 
-        linkModalBackdrop.classList.remove("show");
+  build();
+}
+
+function renderTags(){
+
+  const container=$("tagList");
+
+  container.innerHTML="";
+
+  usedTags().forEach(tag=>{
+
+    const row=document.createElement("div");
+    row.className="side-item";
+
+    row.innerHTML=
+      `<span>🏷️</span>
+       <span>${escapeHTML(tag)}</span>
+       <span class="side-count">
+         ${activeNotes().filter(n=>n.tags.includes(tag)).length}
+       </span>`;
+
+    row.onclick=()=>{
+      currentSection="tag:"+tag;
+      currentPage=1;
+      renderAll();
+    };
+
+    const edit=document.createElement("button");
+    edit.className="side-edit";
+    edit.textContent="✏️";
+
+    edit.onclick=e=>{
+      e.stopPropagation();
+
+      openTagMenu(tag);
+    };
+
+    row.appendChild(edit);
+
+    container.appendChild(row);
+  });
+}
+
+
+/* ============================================================
+   NOTE LIST RENDER
+   ============================================================ */
+
+function renderNoteList(){
+
+  const notes=allVisibleNotes();
+
+  let title="All Notes";
+
+  if(currentSection==="favorites")
+    title="Favorites";
+
+  else if(currentSection==="trash")
+    title=db.trashState.label||"Recycle Bin";
+
+  else if(currentSection.startsWith("category:"))
+    title=getCategory(currentSection.slice(9))?.name||"Category";
+
+  else if(currentSection.startsWith("tag:"))
+    title=currentSection.slice(4);
+
+  $("listTitle").textContent=title;
+  $("listCount").textContent=
+    `${notes.length} ${notes.length===1?"Note":"Notes"}`;
+
+  const list=$("noteList");
+
+  list.innerHTML="";
+
+  if(!notes.length){
+
+    list.innerHTML=
+      `<div class="empty">No notes found.</div>`;
+
+    return;
+  }
+
+  const fragment=document.createDocumentFragment();
+
+  notes.forEach(note=>{
+
+    const row=document.createElement("div");
+
+    row.className=
+      "note-row"+
+      (selectedNoteId===note.id?" selected":"")+
+      (note.pinned?" pinned":"");
+
+    row.style.setProperty(
+      "--note-color",
+      note.color||"#9ca3af"
+    );
+
+    const check=document.createElement("input");
+    check.type="checkbox";
+    check.checked=selectedIds.has(note.id);
+
+    check.onclick=e=>{
+      e.stopPropagation();
+
+      if(check.checked)
+        selectedIds.add(note.id);
+      else
+        selectedIds.delete(note.id);
+
+      renderBulkBar();
+    };
+
+    const title=document.createElement("div");
+    title.className="note-title";
+    title.textContent=
+      note.title || "[No Heading]";
+
+    const preview=document.createElement("div");
+    preview.className="note-preview";
+    preview.textContent=
+      stripHTML(note.content||"") ||
+      "[No Content]";
+
+    const meta=document.createElement("div");
+    meta.className="note-meta";
+
+    const pin=document.createElement("button");
+    pin.className=
+      "icon-action "+
+      (note.pinned?"active-pin":"");
+
+    pin.textContent="📌";
+
+    pin.title=note.pinned?"Unpin":"Pin";
+
+    pin.onclick=e=>{
+      e.stopPropagation();
+      note.pinned=!note.pinned;
+      note.modifiedAt=nowISO();
+      scheduleSave();
+      renderAll();
+    };
+
+    const fav=document.createElement("button");
+    fav.className=
+      "icon-action "+
+      (note.favorite?"active-fav":"");
+
+    fav.textContent="⭐";
+
+    fav.title=
+      note.favorite
+      ?"Remove Favorite"
+      :"Add Favorite";
+
+    fav.onclick=e=>{
+      e.stopPropagation();
+
+      note.favorite=!note.favorite;
+      note.modifiedAt=nowISO();
+
+      scheduleSave();
+      renderAll();
+    };
+
+    meta.append(pin,fav);
+
+    const cat=getCategory(note.categoryId);
+
+    if(cat){
+
+      const catSpan=document.createElement("span");
+
+      catSpan.style.color=categoryColor(cat.id);
+
+      catSpan.textContent=
+        `📁 ${cat.name}`;
+
+      meta.appendChild(catSpan);
+    }
+
+    (note.tags||[]).forEach(tag=>{
+
+      const span=document.createElement("span");
+
+      span.textContent=`🏷️ ${tag}`;
+
+      meta.appendChild(span);
     });
 
-/* =========================================================
-   GOOGLE FILE PREVIEW
-   ========================================================= */
+    const date=document.createElement("div");
+    date.className="note-date";
 
-document.getElementById("saveGoogleBtn")
-    .addEventListener("click", () => {
+    date.textContent=formatDate(
+      note.modifiedAt||note.createdAt
+    );
 
-        const type =
-            document.getElementById("googleFileType")
-                .value;
+    row.append(check,title,preview,meta,date);
 
-        const name =
-            document.getElementById("googleFileName")
-                .value.trim();
+    row.onclick=()=>{
+      selectNote(note.id);
+    };
 
-        if (!name) {
-            alert("Please enter a file name.");
-            return;
+    fragment.appendChild(row);
+  });
+
+  list.appendChild(fragment);
+
+  renderBulkBar();
+}
+
+function renderBulkBar(){
+
+  const count=selectedIds.size;
+
+  $("bulkBar").classList.toggle(
+    "show",
+    count>0
+  );
+
+  $("selectedCount").textContent=
+    `${count} selected`;
+
+  $("bulkPin").textContent=
+    selectedIds.size &&
+    [...selectedIds].every(id=>getNote(id)?.pinned)
+    ? "📌 Unpin"
+    : "📌 Pin";
+
+  $("bulkFavorite").textContent=
+    selectedIds.size &&
+    [...selectedIds].every(id=>getNote(id)?.favorite)
+    ? "⭐ Unfavorite"
+    : "⭐ Favorite";
+}
+
+
+/* ============================================================
+   SELECT NOTE
+   ============================================================ */
+
+function selectNote(id){
+
+  const note=getNote(id);
+
+  if(!note)return;
+
+  selectedNoteId=id;
+
+  note.lastViewedAt=nowISO();
+  note.views=(note.views||0)+1;
+
+  renderAll();
+
+  scheduleSave();
+}
+
+
+/* ============================================================
+   DATA PANEL
+   ============================================================ */
+
+function renderDataPanel(){
+
+  const panel=$("documentPanel");
+
+  const note=getNote(selectedNoteId);
+
+  if(!note){
+
+    panel.innerHTML=
+      `<div class="empty">Select a note.</div>`;
+
+    return;
+  }
+
+  panel.style.setProperty(
+    "--note-color",
+    note.color||"#4f46e5"
+  );
+
+  const category=getCategory(note.categoryId);
+
+  panel.innerHTML=`
+
+    <div class="color-line"></div>
+
+    <div class="card">
+      <div class="actions">
+
+        <button class="action-btn" onclick="editCurrentNote()">
+          ✏️ Edit
+        </button>
+
+        <button class="action-btn" onclick="toggleCurrentFavorite()">
+          ⭐ ${note.favorite?"Unfavorite":"Favorite"}
+        </button>
+
+        <button class="action-btn" onclick="toggleCurrentPin()">
+          📌 ${note.pinned?"Unpin":"Pin"}
+        </button>
+
+        <button class="action-btn" onclick="openNoteCategoryMenu()">
+          📁 Category
+        </button>
+
+        <button class="action-btn" onclick="openNoteTagsMenu()">
+          🏷️ Tags
+        </button>
+
+        <button class="action-btn" onclick="openColorMenu()">
+          🎨 Color
+        </button>
+
+        <button class="action-btn" onclick="deleteCurrentNote()">
+          🗑️ Delete
+        </button>
+
+        <button class="action-btn" onclick="printCurrentNote()">
+          🖨️ Print
+        </button>
+
+        <button class="action-btn" onclick="shareCurrentByQR()">
+          📱 Share by QR Code
+        </button>
+
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="note-heading">
+        ${escapeHTML(note.title||"[No Heading]")}
+      </div>
+    </div>
+
+    <div class="card">
+
+      <div class="toolbar" id="editorToolbar">
+
+        <button onclick="formatText('bold')"><b>B</b></button>
+
+        <button onclick="formatText('underline')">
+          <u>U</u>
+        </button>
+
+        <button onclick="openTextColor()">
+          🎨 Text
+        </button>
+
+        <button onclick="insertLinkAtCursor()">
+          🔗 Insert Link
+        </button>
+
+      </div>
+
+      <div
+        id="contentEditor"
+        class="content-editor"
+        contenteditable="true"
+        spellcheck="true"
+      >${note.content||""}</div>
+
+    </div>
+
+    <div class="card">
+
+      <div class="link-header">
+        <div class="link-title">🔗 Links</div>
+
+        <button class="small-btn" onclick="openAddLinkMenu()">
+          ➕ Add
+        </button>
+      </div>
+
+      <div id="linksContainer"></div>
+
+    </div>
+
+    <div class="card">
+
+      <div class="link-title" style="margin-bottom:8px">
+        Note Metadata
+      </div>
+
+      <div class="meta-grid">
+
+        ${metadataCell("Created",formatDate(note.createdAt))}
+        ${metadataCell("Last Modified",formatDate(note.modifiedAt))}
+        ${metadataCell("Last Viewed",formatDate(note.lastViewedAt))}
+        ${metadataCell("Last Synced",formatDate(note.lastSyncedAt))}
+
+        ${metadataCell("Category",category?.name||"Uncategorized")}
+        ${metadataCell("Category Path",
+          categoryPath(note.categoryId)||"Uncategorized")}
+
+        ${metadataCell("Tags",
+          note.tags?.length
+          ? note.tags.join(", ")
+          : "None")}
+
+        ${metadataCell("Status",
+          note.deleted?"Deleted":"Active")}
+
+        ${metadataCell("Favorite",
+          note.favorite?"Yes":"No")}
+
+        ${metadataCell("Pin",
+          note.pinned?"Yes":"No")}
+
+        ${metadataCell("Word Count",
+          wordCount(note))}
+
+        ${metadataCell("Note Size",
+          noteSize(note))}
+
+        ${metadataCell("Links Count",
+          (note.links||[]).length)}
+
+        ${metadataCell("Attachment Count",
+          (note.attachments||[]).length)}
+
+        ${metadataCell("Total Views",
+          note.views||0)}
+
+        ${metadataCell("Storage / Sync Status",
+          accessToken?"Google Drive":"Not Connected")}
+
+        ${metadataCell("Note ID",note.id)}
+
+      </div>
+    </div>
+  `;
+
+  const editor=$("contentEditor");
+
+  editor.addEventListener("input",()=>{
+
+    note.content=editor.innerHTML;
+    note.modifiedAt=nowISO();
+
+    scheduleSave();
+  });
+
+  renderLinks(note);
+}
+
+function metadataCell(label,value){
+
+  return `
+    <div class="meta-cell">
+      <div class="meta-label">${escapeHTML(label)}</div>
+      <div class="meta-value">${escapeHTML(String(value))}</div>
+    </div>
+  `;
+}
+
+function wordCount(note){
+
+  const text=stripHTML(note.content||"").trim();
+
+  if(!text)return 0;
+
+  return text.split(/\s+/).length;
+}
+
+function noteSize(note){
+
+  const bytes=
+    new Blob([JSON.stringify(note)]).size;
+
+  if(bytes<1024)return bytes+" B";
+
+  if(bytes<1024*1024)
+    return (bytes/1024).toFixed(1)+" KB";
+
+  return (bytes/(1024*1024)).toFixed(1)+" MB";
+}
+
+
+/* ============================================================
+   LINKS
+   ============================================================ */
+
+function renderLinks(note){
+
+  const container=$("linksContainer");
+
+  if(!container)return;
+
+  container.innerHTML="";
+
+  if(!(note.links||[]).length){
+
+    container.innerHTML=
+      `<div style="color:#6b7280;font-size:12px">
+        No links.
+      </div>`;
+
+    return;
+  }
+
+  note.links.forEach(link=>{
+
+    const row=document.createElement("div");
+    row.className="link-row";
+
+    row.innerHTML=`
+      <span>🔗</span>
+      <a href="${escapeHTML(link.url)}"
+         target="_blank"
+         rel="noopener noreferrer">
+        ${escapeHTML(link.title)}
+      </a>
+
+      <span class="link-open">Open ↗</span>
+
+      <button
+        class="small-btn"
+        onclick="editLink('${link.id}')">
+        ✏️
+      </button>
+
+      <button
+        class="small-btn"
+        onclick="removeLink('${link.id}')">
+        🗑️
+      </button>
+    `;
+
+    container.appendChild(row);
+  });
+}
+
+function openAddLinkMenu(){
+
+  openModal(`
+    <h3>Add Link</h3>
+
+    <div class="form-row">
+      <button class="secondary"
+        onclick="addNormalLink()">
+        🔗 Add Link
+      </button>
+    </div>
+
+    <div class="form-row">
+      <button class="secondary"
+        onclick="addGoogleAttachment()">
+        📎 Google File Attachment
+      </button>
+    </div>
+
+    <div class="form-row">
+      <button class="secondary"
+        onclick="addOtherLink()">
+        🌐 Other
+      </button>
+    </div>
+
+    <div class="modal-actions">
+      <button class="secondary" onclick="closeModal()">
+        Cancel
+      </button>
+    </div>
+  `);
+}
+
+function addNormalLink(){
+  closeModal();
+
+  openModal(`
+    <h3>Add Link</h3>
+
+    <div class="form-row">
+      <label>Link Title</label>
+      <input id="linkTitle">
+    </div>
+
+    <div class="form-row">
+      <label>Link URL</label>
+      <input id="linkURL" placeholder="https://">
+    </div>
+
+    <div class="modal-actions">
+      <button class="secondary" onclick="closeModal()">Cancel</button>
+      <button class="primary" onclick="saveNewLink()">Save</button>
+    </div>
+  `);
+}
+
+function addOtherLink(){
+  addNormalLink();
+}
+
+function saveNewLink(){
+
+  const title=$("linkTitle").value.trim();
+  const url=$("linkURL").value.trim();
+
+  if(!title || !url){
+    alert("Link Title اور URL دونوں required ہیں۔");
+    return;
+  }
+
+  if(!/^https?:\/\//i.test(url)){
+    alert("Valid http/https URL دیں۔");
+    return;
+  }
+
+  const note=getNote(selectedNoteId);
+
+  note.links.push({
+    id:uid("link"),
+    title,
+    url,
+    type:"link"
+  });
+
+  note.modifiedAt=nowISO();
+
+  closeModal();
+  scheduleSave();
+  renderDataPanel();
+}
+
+function addGoogleAttachment(){
+
+  closeModal();
+
+  openModal(`
+    <h3>Google File Attachment</h3>
+
+    <div class="form-row">
+      <label>File Type</label>
+
+      <select id="attachmentType">
+        <option>Google Docs</option>
+        <option>Google Sheets</option>
+        <option>Google Slides</option>
+        <option>PDF</option>
+        <option>Word</option>
+        <option>Excel</option>
+      </select>
+    </div>
+
+    <div class="form-row">
+      <label>File Name</label>
+      <input id="attachmentName">
+    </div>
+
+    <div class="form-row">
+      <label>Google Drive File URL</label>
+      <input id="attachmentURL" placeholder="https://drive.google.com/...">
+    </div>
+
+    <div class="modal-actions">
+      <button class="secondary" onclick="closeModal()">Cancel</button>
+      <button class="primary" onclick="saveAttachment()">Save</button>
+    </div>
+  `);
+}
+
+function saveAttachment(){
+
+  const note=getNote(selectedNoteId);
+
+  const type=$("attachmentType").value;
+  const name=$("attachmentName").value.trim();
+  const url=$("attachmentURL").value.trim();
+
+  if(!name || !url){
+    alert("File Name اور URL required ہیں۔");
+    return;
+  }
+
+  note.attachments.push({
+    id:uid("attachment"),
+    type,
+    name,
+    url
+  });
+
+  note.links.push({
+    id:uid("link"),
+    title:name,
+    url,
+    type:"attachment",
+    attachmentType:type
+  });
+
+  note.modifiedAt=nowISO();
+
+  closeModal();
+  scheduleSave();
+  renderDataPanel();
+}
+
+function editLink(id){
+
+  const note=getNote(selectedNoteId);
+  const link=note.links.find(x=>x.id===id);
+
+  if(!link)return;
+
+  openModal(`
+    <h3>Edit Link</h3>
+
+    <div class="form-row">
+      <label>Link Title</label>
+      <input id="editLinkTitle"
+        value="${escapeHTML(link.title)}">
+    </div>
+
+    <div class="form-row">
+      <label>URL</label>
+      <input id="editLinkURL"
+        value="${escapeHTML(link.url)}">
+    </div>
+
+    <div class="modal-actions">
+      <button class="secondary" onclick="closeModal()">Cancel</button>
+      <button class="primary"
+        onclick="saveEditedLink('${id}')">
+        Save
+      </button>
+    </div>
+  `);
+}
+
+function saveEditedLink(id){
+
+  const note=getNote(selectedNoteId);
+  const link=note.links.find(x=>x.id===id);
+
+  if(!link)return;
+
+  const title=$("editLinkTitle").value.trim();
+  const url=$("editLinkURL").value.trim();
+
+  if(!title || !url)return;
+
+  link.title=title;
+  link.url=url;
+
+  note.modifiedAt=nowISO();
+
+  closeModal();
+  scheduleSave();
+  renderDataPanel();
+}
+
+function removeLink(id){
+
+  const note=getNote(selectedNoteId);
+
+  note.links=
+    note.links.filter(x=>x.id!==id);
+
+  note.modifiedAt=nowISO();
+
+  scheduleSave();
+  renderDataPanel();
+}
+
+
+/* ============================================================
+   EDITOR
+   ============================================================ */
+
+function formatText(command){
+
+  document.execCommand(command,false,null);
+
+  const note=getNote(selectedNoteId);
+
+  if(note){
+
+    note.content=$("contentEditor").innerHTML;
+    note.modifiedAt=nowISO();
+
+    scheduleSave();
+  }
+}
+
+function insertLinkAtCursor(){
+
+  const selection=window.getSelection();
+
+  const selectedText=
+    selection && selection.toString();
+
+  const url=prompt(
+    "Link URL",
+    "https://"
+  );
+
+  if(!url)return;
+
+  if(!/^https?:\/\//i.test(url)){
+    alert("Valid http/https URL دیں۔");
+    return;
+  }
+
+  if(selectedText){
+
+    document.execCommand(
+      "createLink",
+      false,
+      url
+    );
+
+  }else{
+
+    const title=prompt(
+      "Link Text",
+      url
+    );
+
+    if(!title)return;
+
+    document.execCommand(
+      "insertHTML",
+      false,
+      `<a href="${escapeHTML(url)}"
+          target="_blank"
+          rel="noopener noreferrer">
+        ${escapeHTML(title)}
+       </a>`
+    );
+  }
+
+  const note=getNote(selectedNoteId);
+
+  note.content=$("contentEditor").innerHTML;
+  note.modifiedAt=nowISO();
+
+  scheduleSave();
+}
+
+function openTextColor(){
+
+  openModal(`
+    <h3>Text Color</h3>
+
+    <div class="form-row">
+      <label>Select Color</label>
+      <input
+        id="selectedTextColor"
+        type="color"
+        value="#1f2937">
+    </div>
+
+    <div class="modal-actions">
+      <button class="secondary" onclick="closeModal()">
+        Cancel
+      </button>
+
+      <button class="primary" onclick="applyTextColor()">
+        Apply
+      </button>
+    </div>
+  `);
+}
+
+function applyTextColor(){
+
+  const color=$("selectedTextColor").value;
+
+  document.execCommand(
+    "foreColor",
+    false,
+    color
+  );
+
+  const note=getNote(selectedNoteId);
+
+  note.content=$("contentEditor").innerHTML;
+  note.modifiedAt=nowISO();
+
+  closeModal();
+  scheduleSave();
+}
+
+
+/* ============================================================
+   NOTE ACTIONS
+   ============================================================ */
+
+function editCurrentNote(){
+
+  const note=getNote(selectedNoteId);
+
+  if(!note)return;
+
+  openModal(`
+    <h3>Edit Note</h3>
+
+    <div class="form-row">
+      <label>Heading</label>
+      <input id="editHeading"
+        value="${escapeHTML(note.title||"")}">
+    </div>
+
+    <div class="modal-actions">
+      <button class="secondary" onclick="closeModal()">
+        Cancel
+      </button>
+
+      <button class="primary" onclick="saveHeading()">
+        Save
+      </button>
+    </div>
+  `);
+}
+
+function saveHeading(){
+
+  const note=getNote(selectedNoteId);
+
+  note.title=
+    $("editHeading").value.trim();
+
+  note.modifiedAt=nowISO();
+
+  closeModal();
+  scheduleSave();
+  renderAll();
+}
+
+function toggleCurrentFavorite(){
+
+  const note=getNote(selectedNoteId);
+
+  note.favorite=!note.favorite;
+  note.modifiedAt=nowISO();
+
+  scheduleSave();
+  renderAll();
+}
+
+function toggleCurrentPin(){
+
+  const note=getNote(selectedNoteId);
+
+  note.pinned=!note.pinned;
+  note.modifiedAt=nowISO();
+
+  scheduleSave();
+  renderAll();
+}
+
+function deleteCurrentNote(){
+
+  const note=getNote(selectedNoteId);
+
+  if(note)deleteNote(note);
+}
+
+function openNoteCategoryMenu(){
+
+  const note=getNote(selectedNoteId);
+
+  let options=
+    `<option value="">Uncategorized</option>`;
+
+  db.categories.forEach(c=>{
+    options+=`
+      <option value="${c.id}"
+        ${note.categoryId===c.id?"selected":""}>
+        ${escapeHTML(categoryPath(c.id))}
+      </option>
+    `;
+  });
+
+  openModal(`
+    <h3>Category</h3>
+
+    <div class="form-row">
+      <label>Category</label>
+      <select id="noteCategory">
+        ${options}
+      </select>
+    </div>
+
+    <div class="modal-actions">
+      <button class="secondary" onclick="closeModal()">
+        Cancel
+      </button>
+
+      <button class="primary" onclick="saveNoteCategory()">
+        Save
+      </button>
+    </div>
+  `);
+}
+
+function saveNoteCategory(){
+
+  const note=getNote(selectedNoteId);
+
+  note.categoryId=
+    $("noteCategory").value||null;
+
+  note.modifiedAt=nowISO();
+
+  closeModal();
+  scheduleSave();
+  renderAll();
+}
+
+function openNoteTagsMenu(){
+
+  const note=getNote(selectedNoteId);
+
+  const allTags=
+    [...new Set([
+      ...db.tags,
+      ...usedTags()
+    ])];
+
+  openModal(`
+    <h3>Tags</h3>
+
+    <div id="noteTagsOptions"></div>
+
+    <div class="modal-actions">
+      <button class="secondary" onclick="closeModal()">
+        Cancel
+      </button>
+
+      <button class="primary" onclick="saveNoteTags()">
+        Save
+      </button>
+    </div>
+  `);
+
+  const container=$("noteTagsOptions");
+
+  allTags.forEach(tag=>{
+
+    const row=document.createElement("label");
+
+    row.style.display="block";
+    row.style.padding="5px";
+
+    row.innerHTML=`
+      <input
+        type="checkbox"
+        value="${escapeHTML(tag)}"
+        ${note.tags.includes(tag)?"checked":""}>
+      ${escapeHTML(tag)}
+    `;
+
+    container.appendChild(row);
+  });
+}
+
+function saveNoteTags(){
+
+  const note=getNote(selectedNoteId);
+
+  const checks=
+    document.querySelectorAll(
+      "#noteTagsOptions input:checked"
+    );
+
+  note.tags=
+    [...checks].map(x=>x.value);
+
+  note.modifiedAt=nowISO();
+
+  closeModal();
+  scheduleSave();
+  renderAll();
+}
+
+function openColorMenu(){
+
+  const note=getNote(selectedNoteId);
+
+  openModal(`
+    <h3>Note Primary Color</h3>
+
+    <div class="form-row">
+      <label>Color</label>
+      <input
+        id="notePrimaryColor"
+        type="color"
+        value="${escapeHTML(note.color||"#4f46e5")}">
+    </div>
+
+    <div class="modal-actions">
+      <button class="secondary" onclick="closeModal()">
+        Cancel
+      </button>
+
+      <button class="primary" onclick="saveNoteColor()">
+        Apply
+      </button>
+    </div>
+  `);
+}
+
+function saveNoteColor(){
+
+  const note=getNote(selectedNoteId);
+
+  note.color=$("notePrimaryColor").value;
+  note.modifiedAt=nowISO();
+
+  closeModal();
+  scheduleSave();
+  renderAll();
+}
+
+
+/* ============================================================
+   PRINT
+   ============================================================ */
+
+function printCurrentNote(){
+
+  const note=getNote(selectedNoteId);
+
+  if(!note)return;
+
+  const heading=
+    note.title || "[No Heading]";
+
+  const content=
+    note.content || "[No Content]";
+
+  const links=(note.links||[])
+    .map(l=>
+      `<p><a href="${escapeHTML(l.url)}">
+        ${escapeHTML(l.title)}
+       </a></p>`
+    )
+    .join("");
+
+  const w=window.open("","_blank");
+
+  if(!w)return;
+
+  w.document.write(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>${escapeHTML(heading)}</title>
+      <style>
+        body{
+          font-family:Arial;
+          max-width:800px;
+          margin:40px auto;
+          line-height:1.6;
         }
+        h1{font-size:28px}
+      </style>
+    </head>
+    <body>
+      <h1>${escapeHTML(heading)}</h1>
+      <div>${content}</div>
+      ${links}
+    </body>
+    </html>
+  `);
 
-        const note =
-            notes.find(n => n.id === selectedNoteId);
+  w.document.close();
 
-        note.links.push({
-            icon: type.split(" ")[0],
-            name,
-            url: `${type} — Google Drive preview`
-        });
+  setTimeout(()=>{
+    w.print();
+  },300);
+}
 
-        note.attachments++;
 
-        googleFileBackdrop.classList.remove("show");
+/* ============================================================
+   QR SHARE
+   ============================================================ */
 
-        renderSelectedNote();
+function qrText(note){
+
+  const heading=
+    note.title
+      ? note.title
+      : "[No Heading]";
+
+  const content=
+    stripHTML(note.content||"")
+      .trim() || "[No Content]";
+
+  /*
+   No Heading: / Content: labels are deliberately used.
+  */
+
+  return (
+    heading +
+    "\n\n" +
+    content
+  );
+}
+
+function shareCurrentByQR(){
+
+  const note=getNote(selectedNoteId);
+
+  if(!note)return;
+
+  openModal(`
+    <h3>Share by QR Code</h3>
+
+    <div
+      id="qrCode"
+      style="
+        display:flex;
+        justify-content:center;
+        padding:15px;
+      ">
+    </div>
+
+    <div
+      style="
+        text-align:center;
+        font-size:12px;
+        color:#6b7280;
+      ">
+      Scan this QR code to read the Note data.
+    </div>
+
+    <div class="modal-actions">
+      <button class="secondary" onclick="closeModal()">
+        Close
+      </button>
+    </div>
+  `);
+
+  new QRCode(
+    $("qrCode"),
+    {
+      text:qrText(note),
+      width:230,
+      height:230,
+      correctLevel:QRCode.CorrectLevel.M
+    }
+  );
+}
+
+
+/* ============================================================
+   BULK ACTIONS
+   ============================================================ */
+
+function selectedNotes(){
+
+  return [...selectedIds]
+    .map(id=>getNote(id))
+    .filter(Boolean);
+}
+
+function bulkToggle(field){
+
+  const notes=selectedNotes();
+
+  if(!notes.length)return;
+
+  const all=notes.every(n=>n[field]);
+
+  notes.forEach(n=>{
+    n[field]=!all;
+    n.modifiedAt=nowISO();
+  });
+
+  scheduleSave();
+  renderAll();
+}
+
+$("bulkPin").onclick=()=>{
+  bulkToggle("pinned");
+};
+
+$("bulkFavorite").onclick=()=>{
+  bulkToggle("favorite");
+};
+
+$("bulkDelete").onclick=()=>{
+
+  selectedNotes().forEach(n=>{
+    if(!n.deleted) deleteNote(n);
+  });
+
+  selectedIds.clear();
+
+  renderAll();
+};
+
+$("bulkDuplicate").onclick=()=>{
+
+  selectedNotes().forEach(note=>{
+
+    const copy=structuredClone(note);
+
+    copy.id=uid("note");
+    copy.title=(note.title||"Note")+" Copy";
+
+    const t=nowISO();
+
+    copy.createdAt=t;
+    copy.modifiedAt=t;
+    copy.lastViewedAt="";
+    copy.views=0;
+
+    copy.deleted=false;
+    copy.trashHidden=false;
+    copy.status="Active";
+
+    db.notes.push(copy);
+  });
+
+  selectedIds.clear();
+
+  scheduleSave();
+  renderAll();
+};
+
+$("bulkCategory").onclick=()=>{
+
+  const notes=selectedNotes();
+
+  if(!notes.length)return;
+
+  let options=
+    `<option value="">Uncategorized</option>`;
+
+  db.categories.forEach(c=>{
+    options+=`
+      <option value="${c.id}">
+        ${escapeHTML(categoryPath(c.id))}
+      </option>
+    `;
+  });
+
+  openModal(`
+    <h3>Bulk Category</h3>
+
+    <div class="form-row">
+      <select id="bulkCategorySelect">
+        ${options}
+      </select>
+    </div>
+
+    <div class="modal-actions">
+      <button class="secondary" onclick="closeModal()">Cancel</button>
+      <button class="primary" onclick="applyBulkCategory()">Apply</button>
+    </div>
+  `);
+};
+
+function applyBulkCategory(){
+
+  const value=
+    $("bulkCategorySelect").value||null;
+
+  selectedNotes().forEach(n=>{
+    n.categoryId=value;
+    n.modifiedAt=nowISO();
+  });
+
+  selectedIds.clear();
+
+  closeModal();
+  scheduleSave();
+  renderAll();
+}
+
+$("bulkTags").onclick=()=>{
+
+  const tags=usedTags();
+
+  openModal(`
+    <h3>Bulk Tags</h3>
+
+    <div id="bulkTagOptions"></div>
+
+    <div class="modal-actions">
+      <button class="secondary" onclick="closeModal()">Cancel</button>
+      <button class="primary" onclick="applyBulkTags()">Add Tags</button>
+    </div>
+  `);
+
+  const box=$("bulkTagOptions");
+
+  tags.forEach(tag=>{
+
+    const label=document.createElement("label");
+
+    label.style.display="block";
+    label.style.padding="5px";
+
+    label.innerHTML=`
+      <input type="checkbox"
+        value="${escapeHTML(tag)}">
+      ${escapeHTML(tag)}
+    `;
+
+    box.appendChild(label);
+  });
+};
+
+function applyBulkTags(){
+
+  const tags=
+    [...document.querySelectorAll(
+      "#bulkTagOptions input:checked"
+    )].map(x=>x.value);
+
+  selectedNotes().forEach(n=>{
+
+    tags.forEach(tag=>{
+      if(!n.tags.includes(tag))
+        n.tags.push(tag);
     });
 
-document.getElementById("cancelGoogleBtn")
-    .addEventListener("click", () => {
+    n.modifiedAt=nowISO();
+  });
 
-        googleFileBackdrop.classList.remove("show");
-    });
+  selectedIds.clear();
 
-/* =========================================================
-   EDIT
-   ========================================================= */
+  closeModal();
+  scheduleSave();
+  renderAll();
+}
 
-document.getElementById("editBtn")
-    .addEventListener("click", () => {
+$("bulkColor").onclick=()=>{
 
-        alert(
-            "Frontend Preview: Note editing interface will be connected in the next implementation stage."
-        );
-    });
+  openModal(`
+    <h3>Bulk Color</h3>
 
-/* =========================================================
-   COLOR
-   ========================================================= */
+    <div class="form-row">
+      <input
+        id="bulkColorValue"
+        type="color"
+        value="#4f46e5">
+    </div>
 
-document.getElementById("colorBtn")
-    .addEventListener("click", () => {
+    <div class="modal-actions">
+      <button class="secondary" onclick="closeModal()">Cancel</button>
+      <button class="primary" onclick="applyBulkColor()">Apply</button>
+    </div>
+  `);
+};
 
-        const note =
-            notes.find(n => n.id === selectedNoteId);
+function applyBulkColor(){
 
-        const colors = [
-            "#4285f4",
-            "#34a853",
-            "#f9ab00",
-            "#8e63d2"
-        ];
+  const color=$("bulkColorValue").value;
 
-        const current =
-            colors.indexOf(note.categoryColor);
+  selectedNotes().forEach(n=>{
+    n.color=color;
+    n.modifiedAt=nowISO();
+  });
 
-        note.categoryColor =
-            colors[(current + 1) % colors.length];
+  selectedIds.clear();
 
-        renderNotes();
-        renderSelectedNote();
-    });
+  closeModal();
+  scheduleSave();
+  renderAll();
+}
 
-/* =========================================================
-   DELETE PREVIEW
-   ========================================================= */
 
-document.getElementById("deleteBtn")
-    .addEventListener("click", () => {
+/* ============================================================
+   CATEGORY / TAG MENUS
+   ============================================================ */
 
-        const note =
-            notes.find(n => n.id === selectedNoteId);
+function openCategoryMenu(id){
 
-        if (!note) return;
+  const c=getCategory(id);
 
-        const ok =
-            confirm(
-                "Preview only: Move this Note to Recycle Bin?"
-            );
+  if(!c)return;
 
-        if (!ok) return;
+  openModal(`
+    <h3>Category: ${escapeHTML(c.name)}</h3>
 
-        alert(
-            "Frontend Preview: Recycle Bin operation will be connected later."
-        );
-    });
+    <div class="form-row">
+      <button class="secondary"
+        onclick="categoryAddChild('${id}')">
+        ＋ Add Child
+      </button>
+    </div>
 
-/* =========================================================
-   SIDEBAR ITEMS
-   ========================================================= */
+    <div class="form-row">
+      <button class="secondary"
+        onclick="categoryAddSister('${id}')">
+        ＋ Add Sister
+      </button>
+    </div>
 
-document.querySelectorAll(".sidebar-item")
-    .forEach(item => {
+    <div class="form-row">
+      <button class="secondary"
+        onclick="renameCategory('${id}');closeModal()">
+        ✏️ Rename
+      </button>
+    </div>
 
-        item.addEventListener("click", event => {
+    <div class="form-row">
+      <button class="danger"
+        onclick="removeCategory('${id}');closeModal()">
+        🗑️ Remove
+      </button>
+    </div>
 
-            if (
-                event.target.closest(".sidebar-edit") ||
-                event.target.closest(".tree-toggle")
-            ) {
-                return;
-            }
+    <div class="modal-actions">
+      <button class="secondary" onclick="closeModal()">
+        Close
+      </button>
+    </div>
+  `);
+}
 
-            document.querySelectorAll(".sidebar-item")
-                .forEach(x =>
-                    x.classList.remove("active")
-                );
+function categoryAddChild(id){
 
-            item.classList.add("active");
+  closeModal();
 
-            const section =
-                item.dataset.section;
+  const name=prompt("Child Category Name");
 
-            if (section) {
+  if(name)addCategory(name,id);
+}
 
-                currentSection = section;
+function categoryAddSister(id){
 
-                renderNotes();
-            }
-        });
-    });
+  const c=getCategory(id);
 
-/* =========================================================
-   MOBILE TOUCH EDIT BUTTON
-   ========================================================= */
+  closeModal();
 
-document.querySelectorAll(".sidebar-item")
-    .forEach(item => {
+  const name=prompt("Sister Category Name");
 
-        item.addEventListener("touchstart", () => {
+  if(name)addCategory(name,c.parentId||null);
+}
 
-            document.querySelectorAll(".sidebar-item")
-                .forEach(x => x.classList.remove("touch-selected"));
+function openTagMenu(tag){
 
-            item.classList.add("touch-selected");
+  openModal(`
+    <h3>Tag: ${escapeHTML(tag)}</h3>
 
-        }, { passive: true });
-    });
+    <div class="form-row">
+      <button class="secondary"
+        onclick="renameTag('${escapeHTML(tag)}');closeModal()">
+        ✏️ Rename
+      </button>
+    </div>
 
-/* =========================================================
-   TREE TOGGLE PREVIEW
-   ========================================================= */
+    <div class="form-row">
+      <button class="danger"
+        onclick="removeTag('${escapeHTML(tag)}');closeModal()">
+        🗑️ Remove
+      </button>
+    </div>
 
-document.querySelectorAll(".tree-toggle")
-    .forEach(toggle => {
+    <div class="modal-actions">
+      <button class="secondary" onclick="closeModal()">
+        Close
+      </button>
+    </div>
+  `);
+}
 
-        toggle.addEventListener("click", event => {
 
-            event.stopPropagation();
+/* ============================================================
+   SETTINGS
+   ============================================================ */
 
-            toggle.textContent =
-                toggle.textContent === "▸"
-                    ? "▾"
-                    : "▸";
-        });
-    });
+function openSettings(){
 
-/* =========================================================
-   INITIAL RENDER
-   ========================================================= */
+  openModal(`
+    <h3>Settings</h3>
 
-sortSelect.value = "modified";
+    <div class="form-row">
+      <label>Sidebar Default State</label>
+      <select id="s_sidebarDefault">
+        <option value="closed">Closed</option>
+        <option value="open">Open</option>
+      </select>
+    </div>
 
-renderNotes();
-renderSelectedNote();
+    <div class="form-row">
+      <label>Sidebar Density</label>
+      <select id="s_sidebarDensity">
+        <option value="compact">Compact</option>
+        <option value="normal">Normal</option>
+      </select>
+    </div>
 
-/*
-   Sidebar intentionally starts CLOSED.
-*/
-closeSidebar();
+    <div class="form-row">
+      <label>Category Default State</label>
+      <select id="s_categoryDefault">
+        <option value="collapsed">Collapsed</option>
+        <option value="expanded">Expanded</option>
+      </select>
+    </div>
+
+    <div class="form-row">
+      <label>Tags Default State</label>
+      <select id="s_tagsDefault">
+        <option value="collapsed">Collapsed</option>
+        <option value="expanded">Expanded</option>
+      </select>
+    </div>
+
+    <div class="form-row">
+      <label>Note List Display Style</label>
+      <select id="s_noteDisplayStyle">
+        <option value="compact">Compact</option>
+        <option value="normal">Normal</option>
+        <option value="detailed">Detailed</option>
+      </select>
+    </div>
+
+    <div class="form-row">
+      <label>Sorting</label>
+      <select id="s_sorting">
+        <option value="lastModified">Last Modified First</option>
+        <option value="newest">Newest First</option>
+        <option value="oldest">Oldest First</option>
+        <option value="alphabetical">Alphabetical Order</option>
+      </select>
+    </div>
+
+    <div class="form-row">
+      <label>Notes per Page</label>
+      <select id="s_notesPerPage">
+        <option value="10">10</option>
+        <option value="20">20</option>
+        <option value="50">50</option>
+        <option value="100">100</option>
+        <option value="all">All</option>
+      </select>
+    </div>
+
+    <div class="form-row">
+      <label>Search</label>
+      <select id="s_searchMode">
+        <option value="title">Title Only</option>
+        <option value="titleContent">Title + Note Content</option>
+        <option value="all">Title, Content, Categories, Tags</option>
+      </select>
+    </div>
+
+    <div class="form-row">
+      <label>Auto Save</label>
+      <select id="s_autoSave">
+        <option value="true">ON</option>
+        <option value="false">OFF</option>
+      </select>
+    </div>
+
+    <div class="form-row">
+      <label>Auto Save Interval (ms)</label>
+      <input id="s_autoSaveInterval" type="number">
+    </div>
+
+    <div class="form-row">
+      <label>Save Confirmation</label>
+      <select id="s_saveConfirmation">
+        <option value="true">ON</option>
+        <option value="false">OFF</option>
+      </select>
+    </div>
+
+    <div class="form-row">
+      <label>Notification Duration (ms)</label>
+      <input id="s_notificationDuration" type="number">
+    </div>
+
+    <div class="form-row">
+      <label>Time Format</label>
+      <select id="s_timeFormat">
+        <option value="12">12 Hour</option>
+        <option value="24">24 Hour</option>
+      </select>
+    </div>
+
+    <div class="form-row">
+      <label>Layout Mode</label>
+      <select id="s_layoutMode">
+        <option value="automatic">Automatic</option>
+        <option value="mobile">Mobile</option>
+        <option value="desktop">Desktop</option>
+      </select>
+    </div>
+
+    <div class="form-row">
+      <label>Delete Confirmation</label>
+      <select id="s_confirmDelete">
+        <option value="true">ON</option>
+        <option value="false">OFF</option>
+      </select>
+    </div>
+
+    <div class="form-row">
+      <label>Empty Recycle Bin Confirmation</label>
+      <select id="s_confirmEmptyTrash">
+        <option value="true">ON</option>
+        <option value="false">OFF</option>
+      </select>
+    </div>
+
+    <div class="modal-actions">
+      <button class="secondary" onclick="closeModal()">
+        Cancel
+      </button>
+
+      <button class="primary" onclick="saveSettings()">
+        Save Settings
+      </button>
+    </div>
+  `);
+
+  $("s_sidebarDefault").value=db.settings.sidebarDefault;
+  $("s_sidebarDensity").value=db.settings.sidebarDensity;
+  $("s_categoryDefault").value=db.settings.categoryDefault;
+  $("s_tagsDefault").value=db.settings.tagsDefault;
+  $("s_noteDisplayStyle").value=db.settings.noteDisplayStyle;
+  $("s_sorting").value=db.settings.sorting;
+  $("s_notesPerPage").value=db.settings.notesPerPage;
+  $("s_searchMode").value=db.settings.searchMode;
+  $("s_autoSave").value=String(db.settings.autoSave);
+  $("s_autoSaveInterval").value=db.settings.autoSaveInterval;
+  $("s_saveConfirmation").value=String(db.settings.saveConfirmation);
+  $("s_notificationDuration").value=db.settings.notificationDuration;
+  $("s_timeFormat").value=db.settings.timeFormat;
+  $("s_layoutMode").value=db.settings.layoutMode;
+  $("s_confirmDelete").value=String(db.settings.confirmDelete);
+  $("s_confirmEmptyTrash").value=String(db.settings.confirmEmptyTrash);
+}
+
+function saveSettings(){
+
+  db.settings.sidebarDefault=
+    $("s_sidebarDefault").value;
+
+  db.settings.sidebarDensity=
+    $("s_sidebarDensity").value;
+
+  db.settings.categoryDefault=
+    $("s_categoryDefault").value;
+
+  db.settings.tagsDefault=
+    $("s_tagsDefault").value;
+
+  db.settings.noteDisplayStyle=
+    $("s_noteDisplayStyle").value;
+
+  db.settings.sorting=
+    $("s_sorting").value;
+
+  db.settings.notesPerPage=
+    $("s_notesPerPage").value;
+
+  db.settings.searchMode=
+    $("s_searchMode").value;
+
+  db.settings.autoSave=
+    $("s_autoSave").value==="true";
+
+  db.settings.autoSaveInterval=
+    Number($("s_autoSaveInterval").value)||1500;
+
+  db.settings.saveConfirmation=
+    $("s_saveConfirmation").value==="true";
+
+  db.settings.notificationDuration=
+    Number($("s_notificationDuration").value)||1800;
+
+  db.settings.timeFormat=
+    $("s_timeFormat").value;
+
+  db.settings.layoutMode=
+    $("s_layoutMode").value;
+
+  db.settings.confirmDelete=
+    $("s_confirmDelete").value==="true";
+
+  db.settings.confirmEmptyTrash=
+    $("s_confirmEmptyTrash").value==="true";
+
+  closeModal();
+
+  scheduleSave();
+  renderAll();
+}
+
+
+/* ============================================================
+   MODAL
+   ============================================================ */
+
+function openModal(html){
+
+  $("modal").innerHTML=html;
+
+  $("modalBackdrop")
+    .classList.add("show");
+}
+
+function closeModal(){
+
+  $("modalBackdrop")
+    .classList.remove("show");
+
+  $("modal").innerHTML="";
+}
+
+$("modalBackdrop").addEventListener("click",e=>{
+
+  if(e.target===$("modalBackdrop")){
+    closeModal();
+  }
+});
+
+
+/* ============================================================
+   ADD NOTE
+   ============================================================ */
+
+$("addNoteBtn").onclick=()=>{
+
+  const note=createNote();
+
+  db.notes.unshift(note);
+
+  selectedNoteId=note.id;
+  currentSection="all";
+
+  scheduleSave();
+  renderAll();
+
+  setTimeout(()=>{
+    editCurrentNote();
+  },50);
+};
+
+
+/* ============================================================
+   SIDEBAR CONTROLS
+   ============================================================ */
+
+function toggleSidebar(){
+
+  const sidebar=$("sidebar");
+
+  sidebar.classList.toggle("closed");
+
+  const open=!sidebar.classList.contains("closed");
+
+  $("sidebarBtn").textContent=
+    open ? "✕ Hide" : "☰ Show";
+}
+
+$("sidebarBtn").onclick=toggleSidebar;
+
+$("categoriesToggle").onclick=e=>{
+
+  if(e.target.closest(".side-edit"))return;
+
+  const tree=$("categoryTree");
+  const tools=$("categoryTools");
+
+  const open=
+    tree.style.display==="none";
+
+  tree.style.display=open?"block":"none";
+  tools.style.display=open?"flex":"none";
+};
+
+$("tagsToggle").onclick=e=>{
+
+  if(e.target.closest(".side-edit"))return;
+
+  const list=$("tagList");
+  const tools=$("tagTools");
+
+  const open=
+    list.style.display==="none";
+
+  list.style.display=open?"block":"none";
+  tools.style.display=open?"flex":"none";
+};
+
+$("categoryManage").onclick=e=>{
+  e.stopPropagation();
+
+  openModal(`
+    <h3>Categories</h3>
+
+    <div class="form-row">
+      <button class="primary"
+        onclick="closeModal();addRootCategory.click()">
+        ＋ Add Category
+      </button>
+    </div>
+
+    <div class="modal-actions">
+      <button class="secondary" onclick="closeModal()">
+        Close
+      </button>
+    </div>
+  `);
+};
+
+$("tagManage").onclick=e=>{
+  e.stopPropagation();
+
+  openModal(`
+    <h3>Tags</h3>
+
+    <div class="form-row">
+      <button class="primary"
+        onclick="closeModal();addTag()">
+        ＋ Add Tag
+      </button>
+    </div>
+
+    <div class="modal-actions">
+      <button class="secondary" onclick="closeModal()">
+        Close
+      </button>
+    </div>
+  `);
+};
+
+$("addRootCategory").onclick=()=>{
+
+  const name=prompt("New Category Name");
+
+  if(name)addCategory(name,null);
+};
+
+$("addTag").onclick=addTag;
+
+$("settingsBtn").onclick=openSettings;
+
+
+/* ============================================================
+   SIDEBAR SECTION NAVIGATION
+   ============================================================ */
+
+document.querySelectorAll(
+  ".side-item[data-section]"
+).forEach(item=>{
+
+  item.addEventListener("click",e=>{
+
+    if(e.target.closest(".side-edit"))return;
+
+    currentSection=item.dataset.section;
+
+    currentPage=1;
+
+    selectedIds.clear();
+
+    renderAll();
+  });
+});
+
+
+/* ============================================================
+   SEARCH
+   ============================================================ */
+
+$("searchInput").addEventListener(
+  "input",
+  e=>{
+    searchText=e.target.value;
+    currentPage=1;
+    renderNoteList();
+  }
+);
+
+
+/* ============================================================
+   CHECKLIST
+   ============================================================ */
+
+document.querySelector(
+  '[data-section="checklist"]'
+).addEventListener("click",()=>{
+
+  const url=db.checklist.url;
+
+  if(url){
+    window.open(
+      url,
+      "_blank",
+      "noopener,noreferrer"
+    );
+  }else{
+
+    openModal(`
+      <h3>Checklist Web App</h3>
+
+      <div class="form-row">
+        <label>Web App URL</label>
+        <input id="checklistURL"
+          placeholder="https://script.google.com/...">
+      </div>
+
+      <div class="modal-actions">
+        <button class="secondary" onclick="closeModal()">
+          Cancel
+        </button>
+
+        <button class="primary"
+          onclick="saveChecklistURL()">
+          Save
+        </button>
+      </div>
+    `);
+  }
+});
+
+function saveChecklistURL(){
+
+  const url=$("checklistURL").value.trim();
+
+  if(!/^https?:\/\//i.test(url)){
+    alert("Valid URL دیں۔");
+    return;
+  }
+
+  db.checklist.url=url;
+
+  closeModal();
+
+  scheduleSave();
+}
+
+
+/* ============================================================
+   TRASH CONTROLS
+   ============================================================ */
+
+document.querySelector(
+  '[data-section="trash"]'
+).addEventListener("dblclick",()=>{
+
+  openModal(`
+    <h3>${escapeHTML(db.trashState.label)}</h3>
+
+    <div class="form-row">
+      <button class="secondary"
+        onclick="restoreTrash();closeModal()">
+        Restore Recycle Bin
+      </button>
+    </div>
+
+    <div class="form-row">
+      <button class="danger"
+        onclick="emptyTrash();closeModal()">
+        Empty Recycle Bin
+      </button>
+    </div>
+
+    <div class="modal-actions">
+      <button class="secondary" onclick="closeModal()">
+        Close
+      </button>
+    </div>
+  `);
+});
+
+
+/* ============================================================
+   RENDER ALL
+   ============================================================ */
+
+function renderAll(){
+
+  renderSidebar();
+  renderNoteList();
+  renderDataPanel();
+
+  $("sidebar").classList.toggle(
+    "compact",
+    db.settings.sidebarDensity==="compact"
+  );
+
+  document.documentElement.style.setProperty(
+    "--primary",
+    selectedNoteId && getNote(selectedNoteId)
+      ? getNote(selectedNoteId).color || "#4f46e5"
+      : "#4f46e5"
+  );
+}
+
+
+/* ============================================================
+   INITIALIZATION
+   ============================================================ */
+
+document.addEventListener("DOMContentLoaded",()=>{
+
+  renderAll();
+
+  initGoogle();
+
+  /*
+   The Sidebar remains CLOSED by default,
+   according to the approved requirement.
+  */
+  $("sidebar").classList.add("closed");
+  $("sidebarBtn").textContent="☰ Show";
+});
+
+
+/* ============================================================
+   EXPOSE FUNCTIONS USED BY INLINE UI
+   ============================================================ */
+
+window.editCurrentNote=editCurrentNote;
+window.toggleCurrentFavorite=toggleCurrentFavorite;
+window.toggleCurrentPin=toggleCurrentPin;
+window.deleteCurrentNote=deleteCurrentNote;
+window.openNoteCategoryMenu=openNoteCategoryMenu;
+window.openNoteTagsMenu=openNoteTagsMenu;
+window.openColorMenu=openColorMenu;
+window.printCurrentNote=printCurrentNote;
+window.shareCurrentByQR=shareCurrentByQR;
+
+window.formatText=formatText;
+window.insertLinkAtCursor=insertLinkAtCursor;
+window.openTextColor=openTextColor;
+window.applyTextColor=applyTextColor;
+
+window.openAddLinkMenu=openAddLinkMenu;
+window.addNormalLink=addNormalLink;
+window.addOtherLink=addOtherLink;
+window.saveNewLink=saveNewLink;
+window.addGoogleAttachment=addGoogleAttachment;
+window.saveAttachment=saveAttachment;
+window.editLink=editLink;
+window.saveEditedLink=saveEditedLink;
+window.removeLink=removeLink;
+
+window.saveHeading=saveHeading;
+window.saveNoteCategory=saveNoteCategory;
+window.saveNoteTags=saveNoteTags;
+window.saveNoteColor=saveNoteColor;
+
+window.categoryAddChild=categoryAddChild;
+window.categoryAddSister=categoryAddSister;
+window.renameCategory=renameCategory;
+window.removeCategory=removeCategory;
+window.renameTag=renameTag;
+window.removeTag=removeTag;
+
+window.applyBulkCategory=applyBulkCategory;
+window.applyBulkTags=applyBulkTags;
+window.applyBulkColor=applyBulkColor;
+
+window.saveSettings=saveSettings;
+window.closeModal=closeModal;
+window.saveChecklistURL=saveChecklistURL;
+
+window.restoreTrash=restoreTrash;
+window.emptyTrash=emptyTrash;
 
 </script>
 
