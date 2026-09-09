@@ -6,30 +6,63 @@
 
   <title>Google Drive Authorization Test</title>
 
-  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <!--
+    ============================================================
+    GOOGLE DRIVE AUTHORIZATION PERSISTENCE TEST
+    ============================================================
+
+    CODE UPDATED:
+    2026-09-09 18:XX:XX PKT
+
+    PURPOSE:
+    Test whether Google OAuth consent remains authorized after
+    page refresh without forcing prompt=consent again.
+
+    IMPORTANT:
+    - Client ID is safe for frontend use.
+    - DO NOT put a Google Client Secret in this file.
+    ============================================================
+  -->
+
+  <script src="https://accounts.google.com/gsi/client"></script>
 
   <style>
     body {
       font-family: Arial, sans-serif;
-      max-width: 800px;
-      margin: 40px auto;
-      padding: 20px;
+      margin: 0;
+      padding: 30px;
       background: #f5f5f5;
+      color: #222;
     }
 
-    .card {
+    .box {
+      max-width: 750px;
+      margin: auto;
       background: white;
-      padding: 24px;
+      padding: 25px;
       border-radius: 12px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+      box-shadow: 0 2px 12px rgba(0,0,0,0.10);
+    }
+
+    h1 {
+      margin-top: 0;
+    }
+
+    .updated {
+      background: #eef3ff;
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      font-size: 14px;
     }
 
     button {
-      padding: 10px 16px;
-      margin: 5px;
+      padding: 12px 18px;
+      margin: 6px 5px 6px 0;
       border: 0;
-      border-radius: 8px;
+      border-radius: 7px;
       cursor: pointer;
+      font-size: 15px;
     }
 
     #authorizeBtn {
@@ -42,22 +75,57 @@
       color: white;
     }
 
+    #clearBtn {
+      background: #777;
+      color: white;
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
     #status {
       margin-top: 20px;
       padding: 15px;
       background: #f1f3f4;
       border-radius: 8px;
       white-space: pre-wrap;
-      word-break: break-word;
+      line-height: 1.5;
+    }
+
+    #result {
+      margin-top: 20px;
+      padding: 15px;
+      background: #fafafa;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      white-space: pre-wrap;
+      overflow-x: auto;
+    }
+
+    .success {
+      color: #188038;
+      font-weight: bold;
+    }
+
+    .warning {
+      color: #b06000;
+      font-weight: bold;
     }
   </style>
 </head>
 
 <body>
 
-<div class="card">
+<div class="box">
 
   <h1>Google Drive Authorization Test</h1>
+
+  <div class="updated">
+    <strong>Code Updated:</strong>
+    <span id="updatedTime"></span>
+  </div>
 
   <p>
     Fresh test page — OAuth persistence test
@@ -71,209 +139,411 @@
     Test Drive Access
   </button>
 
+  <button id="clearBtn">
+    Clear Test State
+  </button>
+
   <div id="status">
-    Waiting for authorization...
+    Google authorization system تیار ہے۔
   </div>
+
+  <div id="result"></div>
 
 </div>
 
+
 <script>
 
-const CLIENT_ID =
-  "262106898132-tsn94p3vvpf34do0ommc6rai2mtc5sh6.apps.googleusercontent.com";
+  /*
+   * ============================================================
+   * CONFIGURATION
+   * ============================================================
+   */
 
-const SCOPES =
-  "https://www.googleapis.com/auth/drive";
+  const CLIENT_ID =
+    "262106898132-tsn94p3vvpf34do0ommc6rai2mtc5sh6.apps.googleusercontent.com";
 
-let tokenClient = null;
-let accessToken = null;
-
-const statusBox = document.getElementById("status");
-const authorizeBtn = document.getElementById("authorizeBtn");
-const driveBtn = document.getElementById("driveBtn");
-
-
-function setStatus(message) {
-  statusBox.textContent = message;
-}
+  const DRIVE_SCOPE =
+    "https://www.googleapis.com/auth/drive";
 
 
-/*
- * Initialize Google OAuth Token Client
- */
-function initializeGoogleAuth() {
+  /*
+   * ============================================================
+   * CODE VERSION / UPDATE TIME
+   * ============================================================
+   */
 
-  if (!window.google || !google.accounts || !google.accounts.oauth2) {
-    setStatus("Google Identity Services ابھی load نہیں ہوئی۔");
-    return;
+  const CODE_UPDATED =
+    "2026-09-09 18:XX:XX PKT";
+
+  document.getElementById("updatedTime").textContent =
+    CODE_UPDATED;
+
+
+  /*
+   * ============================================================
+   * RUNTIME STATE
+   * ============================================================
+   */
+
+  let tokenClient = null;
+
+  let accessToken = null;
+
+  let authorizationRequestStarted = false;
+
+
+  /*
+   * ============================================================
+   * ELEMENTS
+   * ============================================================
+   */
+
+  const authorizeBtn =
+    document.getElementById("authorizeBtn");
+
+  const driveBtn =
+    document.getElementById("driveBtn");
+
+  const clearBtn =
+    document.getElementById("clearBtn");
+
+  const statusBox =
+    document.getElementById("status");
+
+  const resultBox =
+    document.getElementById("result");
+
+
+  /*
+   * ============================================================
+   * STATUS FUNCTION
+   * ============================================================
+   */
+
+  function setStatus(message, type = "") {
+
+    statusBox.className = type;
+
+    statusBox.textContent = message;
   }
 
-  tokenClient = google.accounts.oauth2.initTokenClient({
-    client_id: CLIENT_ID,
-    scope: SCOPES,
 
-    callback: (response) => {
+  /*
+   * ============================================================
+   * INITIALIZE GOOGLE TOKEN CLIENT
+   * ============================================================
+   */
 
-      if (response.error) {
-        console.error(response);
+  function initializeGoogle() {
 
-        setStatus(
-          "Authorization Error:\n" +
-          JSON.stringify(response, null, 2)
-        );
-
-        return;
-      }
-
-      accessToken = response.access_token;
-
-      driveBtn.disabled = false;
+    if (
+      !window.google ||
+      !google.accounts ||
+      !google.accounts.oauth2
+    ) {
 
       setStatus(
-        "Google Drive Authorization کامیاب!\n\n" +
-        "Access Token حاصل ہو گیا۔\n\n" +
-        "اب Test Drive Access دبائیں۔"
+        "Google Identity Services load نہیں ہوئی۔\n\n" +
+        "Page کو دوبارہ reload کریں۔",
+        "warning"
       );
+
+      return;
     }
-  });
-
-  setStatus(
-    "Google authorization system تیار ہے۔\n\n" +
-    "پہلی دفعہ Authorize Google Drive دبائیں۔"
-  );
-}
 
 
-/*
- * Authorization button
- *
- * پہلی دفعہ:
- * prompt = consent
- *
- * بعد کی authorization:
- * prompt = ""
- */
-authorizeBtn.addEventListener("click", () => {
+    tokenClient =
+      google.accounts.oauth2.initTokenClient({
 
-  if (!tokenClient) {
-    setStatus("Google authorization ابھی تیار نہیں ہے۔");
-    return;
+        client_id: CLIENT_ID,
+
+        scope: DRIVE_SCOPE,
+
+        callback: function(response) {
+
+          authorizationRequestStarted = false;
+
+
+          if (response.error) {
+
+            console.error(response);
+
+            accessToken = null;
+
+            driveBtn.disabled = true;
+
+            setStatus(
+              "Google authorization failed.\n\n" +
+              JSON.stringify(response, null, 2),
+              "warning"
+            );
+
+            return;
+          }
+
+
+          accessToken = response.access_token;
+
+          driveBtn.disabled = false;
+
+
+          setStatus(
+            "Google Drive Authorization کامیاب!\n\n" +
+            "Access Token حاصل ہو گیا۔\n\n" +
+            "اب Test Drive Access دبائیں۔",
+            "success"
+          );
+
+        }
+
+      });
+
+
+    setStatus(
+      "Google authorization system تیار ہے۔\n\n" +
+      "Authorize Google Drive دبائیں۔"
+    );
   }
 
-  const firstAuthorization =
-    !sessionStorage.getItem("googleDriveAuthorized");
 
-  if (firstAuthorization) {
+  /*
+   * ============================================================
+   * AUTHORIZE BUTTON
+   * ============================================================
+   *
+   * IMPORTANT:
+   *
+   * We deliberately DO NOT use:
+   *
+   * prompt: "consent"
+   *
+   * every time.
+   *
+   * Instead:
+   *
+   * prompt: ""
+   *
+   * tells Google to use an existing authorization when
+   * available.
+   *
+   * If Google needs consent for this client/scope/account,
+   * Google itself may show the appropriate authorization flow.
+   *
+   * ============================================================
+   */
+
+  authorizeBtn.addEventListener("click", function() {
+
+    if (!tokenClient) {
+
+      setStatus(
+        "Google authorization system ابھی تیار نہیں ہے۔\n\n" +
+        "چند seconds بعد دوبارہ کوشش کریں۔",
+        "warning"
+      );
+
+      return;
+    }
+
+
+    if (authorizationRequestStarted) {
+
+      return;
+    }
+
+
+    authorizationRequestStarted = true;
+
 
     setStatus(
-      "پہلی authorization شروع ہو رہی ہے..."
+      "Google authorization شروع ہو رہی ہے...\n\n" +
+      "Existing authorization استعمال کرنے کی کوشش کی جا رہی ہے۔"
     );
 
-    tokenClient.requestAccessToken({
-      prompt: "consent"
-    });
 
-  } else {
-
-    setStatus(
-      "Existing Google authorization استعمال کی جا رہی ہے..."
-    );
+    /*
+     * NO forced consent.
+     *
+     * This is the important change.
+     */
 
     tokenClient.requestAccessToken({
       prompt: ""
     });
-  }
-});
+
+  });
 
 
-/*
- * Successful token کے بعد browser session میں صرف
- * authorization state رکھیں گے۔
- *
- * اصل access token کو permanent storage میں نہیں رکھ رہے۔
- */
-function markAuthorized() {
+  /*
+   * ============================================================
+   * TEST GOOGLE DRIVE ACCESS
+   * ============================================================
+   */
 
-  sessionStorage.setItem(
-    "googleDriveAuthorized",
-    "true"
-  );
-}
+  driveBtn.addEventListener("click", async function() {
 
+    if (!accessToken) {
 
-/*
- * Drive API Test
- */
-driveBtn.addEventListener("click", async () => {
-
-  if (!accessToken) {
-    setStatus("پہلے Google Drive authorize کریں۔");
-    return;
-  }
-
-  setStatus("Google Drive API test چل رہا ہے...");
-
-  try {
-
-    const response = await fetch(
-      "https://www.googleapis.com/drive/v3/files?pageSize=5",
-      {
-        method: "GET",
-
-        headers: {
-          "Authorization":
-            "Bearer " + accessToken
-        }
-      }
-    );
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(
-        JSON.stringify(data, null, 2)
+      setStatus(
+        "Access Token موجود نہیں ہے۔\n\n" +
+        "پہلے Authorize Google Drive دبائیں۔",
+        "warning"
       );
+
+      return;
     }
 
-    setStatus(
-      "Google Drive API کامیاب!\n\n" +
-      JSON.stringify(data, null, 2)
-    );
 
-  } catch (error) {
+    driveBtn.disabled = true;
 
-    console.error(error);
 
     setStatus(
-      "Drive API Error:\n\n" +
-      error.message
+      "Google Drive API سے data حاصل کیا جا رہا ہے..."
     );
-  }
-});
 
 
-/*
- * Google library load ہونے کے بعد initialize
- */
-window.addEventListener("load", () => {
+    resultBox.textContent = "";
 
-  const waitForGoogle = setInterval(() => {
 
-    if (
-      window.google &&
-      google.accounts &&
-      google.accounts.oauth2
-    ) {
+    try {
 
-      clearInterval(waitForGoogle);
+      const response = await fetch(
+        "https://www.googleapis.com/drive/v3/files" +
+        "?pageSize=10" +
+        "&fields=files(id,name,mimeType)",
+        {
+          method: "GET",
 
-      initializeGoogleAuth();
+          headers: {
+            "Authorization":
+              "Bearer " + accessToken
+          }
+        }
+      );
+
+
+      const data = await response.json();
+
+
+      if (!response.ok) {
+
+        throw new Error(
+          JSON.stringify(data, null, 2)
+        );
+      }
+
+
+      let output =
+        "Google Drive API ACCESS کامیاب!\n\n";
+
+
+      if (
+        data.files &&
+        data.files.length > 0
+      ) {
+
+        data.files.forEach(function(file, index) {
+
+          output +=
+            (index + 1) +
+            ". " +
+            file.name +
+            "\n" +
+            "ID: " +
+            file.id +
+            "\n" +
+            "Type: " +
+            file.mimeType +
+            "\n\n";
+
+        });
+
+      } else {
+
+        output +=
+          "No files returned.";
+
+      }
+
+
+      resultBox.textContent = output;
+
+
+      setStatus(
+        "Google Drive Authorization کامیاب!\n\n" +
+        "Drive API بھی کامیابی سے access ہو گئی ہے۔",
+        "success"
+      );
+
+    }
+    catch (error) {
+
+      console.error(error);
+
+      resultBox.textContent =
+        error.message;
+
+      setStatus(
+        "Google Drive API access ناکام ہوئی۔",
+        "warning"
+      );
+
+    }
+    finally {
+
+      driveBtn.disabled = false;
+
     }
 
-  }, 100);
+  });
 
-});
 
+  /*
+   * ============================================================
+   * CLEAR TEST STATE
+   * ============================================================
+   *
+   * IMPORTANT:
+   *
+   * This DOES NOT revoke Google's authorization.
+   *
+   * It only clears this page's temporary JavaScript state.
+   *
+   * There is intentionally NO localStorage/sessionStorage here.
+   *
+   * ============================================================
+   */
+
+  clearBtn.addEventListener("click", function() {
+
+    accessToken = null;
+
+    authorizationRequestStarted = false;
+
+    driveBtn.disabled = true;
+
+    resultBox.textContent = "";
+
+    setStatus(
+      "Test page کی temporary state clear ہو گئی ہے۔\n\n" +
+      "Google account کی اصل authorization revoke نہیں ہوئی۔"
+    );
+
+  });
+
+
+  /*
+   * ============================================================
+   * START
+   * ============================================================
+   */
+
+  window.addEventListener("load", function() {
+
+    initializeGoogle();
+
+  });
 
 </script>
 
