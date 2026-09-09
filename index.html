@@ -1,714 +1,3907 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
 
-  <title>Google Drive Authorization Test</title>
+<title>Notes Manager — Google Drive</title>
 
-  <!--
-  ============================================================
-  GOOGLE DRIVE OAUTH TEST
-  ============================================================
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 
-  TEST VERSION:
-  Account Selection Auto-Authorization
+<style>
+*{
+    box-sizing:border-box;
+}
 
-  CODE UPDATED:
-  10 September 2026 — 00:53:00 PKT
+html,body{
+    margin:0;
+    padding:0;
+    width:100%;
+    height:100%;
+    font-family:Arial,Helvetica,sans-serif;
+    background:#f4f6f8;
+    color:#202124;
+}
 
-  EXPECTED FLOW:
+button,
+input,
+textarea,
+select{
+    font:inherit;
+}
 
-  PAGE OPEN
-       ↓
-  GOOGLE ACCOUNT SELECTION
-       ↓
-  USER CLICKS ACCOUNT
-       ↓
-  GOOGLE WINDOW CLOSES
-       ↓
-  ACCESS TOKEN RECEIVED
-       ↓
-  DRIVE AUTHORIZATION READY
+button{
+    cursor:pointer;
+}
 
-  No:
-  - Continue button
-  - Allow button
-  - Authorize button
-  after account selection.
+.app{
+    display:flex;
+    width:100%;
+    height:100vh;
+    overflow:hidden;
+}
 
-  IMPORTANT:
-  No Client Secret is used in this frontend.
-  ============================================================
-  -->
+/* =========================
+   SIDEBAR
+========================= */
 
-  <script src="https://accounts.google.com/gsi/client"></script>
+.sidebar{
+    position:fixed;
+    left:0;
+    top:0;
+    bottom:0;
+    width:270px;
+    background:#202124;
+    color:white;
+    z-index:1000;
+    transform:translateX(-100%);
+    transition:.25s ease;
+    display:flex;
+    flex-direction:column;
+    box-shadow:3px 0 15px rgba(0,0,0,.25);
+}
 
-  <style>
+.sidebar.open{
+    transform:translateX(0);
+}
 
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 30px;
-      background: #f5f5f5;
-      color: #222;
+.sidebar-header{
+    padding:16px;
+    border-bottom:1px solid #444;
+}
+
+.sidebar-title{
+    font-size:20px;
+    font-weight:bold;
+}
+
+.sidebar-scroll{
+    overflow-y:auto;
+    flex:1;
+    padding:8px;
+}
+
+.side-item{
+    position:relative;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:11px 10px;
+    margin:2px 0;
+    border-radius:7px;
+    color:#eee;
+}
+
+.side-item:hover{
+    background:#303134;
+}
+
+.side-item.active{
+    background:#3c4043;
+}
+
+.side-count{
+    margin-left:auto;
+    opacity:.7;
+    font-size:12px;
+}
+
+.side-edit{
+    display:none;
+    margin-left:5px;
+    background:none;
+    border:0;
+    color:white;
+}
+
+.side-item:hover .side-edit{
+    display:block;
+}
+
+.section{
+    margin-top:8px;
+}
+
+.section-title{
+    padding:8px 10px;
+    font-size:12px;
+    color:#aaa;
+    text-transform:uppercase;
+}
+
+.nested{
+    padding-left:18px;
+}
+
+.overlay{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.35);
+    z-index:999;
+    display:none;
+}
+
+.overlay.show{
+    display:block;
+}
+
+/* =========================
+   MAIN
+========================= */
+
+.main{
+    width:100%;
+    height:100%;
+    display:flex;
+    flex-direction:column;
+}
+
+.topbar{
+    min-height:64px;
+    background:white;
+    border-bottom:1px solid #ddd;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:10px;
+    z-index:10;
+}
+
+.menu-btn{
+    width:44px;
+    height:44px;
+    border:0;
+    border-radius:8px;
+    background:#202124;
+    color:white;
+    font-size:20px;
+}
+
+.app-name{
+    font-size:19px;
+    font-weight:bold;
+    white-space:nowrap;
+}
+
+.search{
+    flex:1;
+    min-width:100px;
+    max-width:500px;
+    margin-left:auto;
+}
+
+.search input{
+    width:100%;
+    padding:11px 14px;
+    border:1px solid #ccc;
+    border-radius:8px;
+    outline:none;
+}
+
+.drive-status{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    font-size:12px;
+    white-space:nowrap;
+}
+
+.status-dot{
+    width:9px;
+    height:9px;
+    border-radius:50%;
+    background:#aaa;
+}
+
+.status-dot.connected{
+    background:#0f9d58;
+}
+
+.status-dot.error{
+    background:#d93025;
+}
+
+.toolbar{
+    background:white;
+    border-bottom:1px solid #ddd;
+    padding:8px 10px;
+    display:flex;
+    flex-wrap:wrap;
+    gap:7px;
+}
+
+.btn{
+    border:1px solid #c9cdd1;
+    background:white;
+    border-radius:7px;
+    padding:8px 12px;
+}
+
+.btn:hover{
+    background:#f1f3f4;
+}
+
+.btn.primary{
+    background:#1a73e8;
+    border-color:#1a73e8;
+    color:white;
+}
+
+.btn.danger{
+    background:#d93025;
+    border-color:#d93025;
+    color:white;
+}
+
+.btn.success{
+    background:#188038;
+    border-color:#188038;
+    color:white;
+}
+
+.btn.warning{
+    background:#f9ab00;
+    border-color:#f9ab00;
+    color:#202124;
+}
+
+.btn:disabled{
+    opacity:.5;
+    cursor:not-allowed;
+}
+
+.sync-area{
+    margin-left:auto;
+    display:flex;
+    align-items:center;
+    gap:8px;
+    font-size:12px;
+    color:#5f6368;
+}
+
+/* =========================
+   WORK AREA
+========================= */
+
+.workspace{
+    flex:1;
+    min-height:0;
+    display:flex;
+}
+
+.note-list{
+    width:340px;
+    min-width:260px;
+    background:white;
+    border-right:1px solid #ddd;
+    overflow-y:auto;
+}
+
+.list-header{
+    padding:12px;
+    border-bottom:1px solid #ddd;
+    font-weight:bold;
+    display:flex;
+    justify-content:space-between;
+}
+
+.note-card{
+    padding:12px;
+    border-bottom:1px solid #eee;
+    cursor:pointer;
+    position:relative;
+}
+
+.note-card:hover{
+    background:#f8f9fa;
+}
+
+.note-card.selected{
+    background:#e8f0fe;
+}
+
+.note-card-title{
+    font-weight:bold;
+    margin-bottom:6px;
+    padding-left:10px;
+}
+
+.note-card-preview{
+    color:#5f6368;
+    font-size:13px;
+    line-height:1.4;
+    padding-left:10px;
+}
+
+.note-marker{
+    position:absolute;
+    left:4px;
+    top:12px;
+    width:4px;
+    height:42px;
+    border-radius:3px;
+}
+
+.note-card-meta{
+    margin-top:7px;
+    font-size:11px;
+    color:#80868b;
+    display:flex;
+    gap:8px;
+    padding-left:10px;
+}
+
+.detail{
+    flex:1;
+    min-width:0;
+    overflow-y:auto;
+    padding:20px;
+}
+
+.empty{
+    height:100%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:#777;
+    text-align:center;
+}
+
+.detail-card{
+    background:white;
+    border:1px solid #ddd;
+    border-radius:10px;
+    padding:20px;
+    max-width:1000px;
+    margin:auto;
+}
+
+.detail-title{
+    font-size:24px;
+    font-weight:bold;
+    margin-bottom:15px;
+}
+
+.field{
+    margin-bottom:15px;
+}
+
+.field label{
+    display:block;
+    font-size:12px;
+    color:#5f6368;
+    margin-bottom:5px;
+}
+
+.field input,
+.field textarea,
+.field select{
+    width:100%;
+    border:1px solid #ccc;
+    border-radius:7px;
+    padding:10px;
+    outline:none;
+}
+
+.field textarea{
+    min-height:260px;
+    resize:vertical;
+}
+
+.readonly-box{
+    white-space:pre-wrap;
+    line-height:1.6;
+    padding:12px;
+    background:#fafafa;
+    border:1px solid #eee;
+    border-radius:7px;
+    min-height:180px;
+}
+
+.action-row{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    margin:12px 0;
+}
+
+.meta{
+    background:#f8f9fa;
+    border-radius:8px;
+    padding:12px;
+    font-size:12px;
+    color:#5f6368;
+}
+
+.link-row{
+    display:flex;
+    gap:8px;
+    margin-bottom:8px;
+}
+
+.link-row input:first-child{
+    width:35%;
+}
+
+.link-row input:last-child{
+    flex:1;
+}
+
+/* =========================
+   MODAL
+========================= */
+
+.modal{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.45);
+    z-index:2000;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    padding:15px;
+}
+
+.modal.show{
+    display:flex;
+}
+
+.modal-box{
+    width:100%;
+    max-width:600px;
+    max-height:90vh;
+    overflow-y:auto;
+    background:white;
+    border-radius:12px;
+    padding:20px;
+    box-shadow:0 10px 40px rgba(0,0,0,.3);
+}
+
+.modal-title{
+    font-size:20px;
+    font-weight:bold;
+    margin-bottom:15px;
+}
+
+.modal-actions{
+    display:flex;
+    justify-content:flex-end;
+    gap:8px;
+    margin-top:15px;
+}
+
+/* =========================
+   SETTINGS
+========================= */
+
+.setting-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:15px;
+    padding:12px 0;
+    border-bottom:1px solid #eee;
+}
+
+.setting-row label{
+    font-weight:bold;
+}
+
+.setting-row small{
+    display:block;
+    color:#777;
+    font-weight:normal;
+    margin-top:3px;
+}
+
+.setting-row select{
+    width:180px;
+    padding:7px;
+}
+
+/* =========================
+   MOBILE
+========================= */
+
+@media(max-width:800px){
+
+    .app-name{
+        display:none;
     }
 
-    .box {
-      max-width: 800px;
-      margin: auto;
-      background: #fff;
-      padding: 25px;
-      border-radius: 12px;
-      box-shadow: 0 2px 12px rgba(0,0,0,.10);
+    .topbar{
+        flex-wrap:wrap;
     }
 
-    h1 {
-      margin-top: 0;
+    .search{
+        order:3;
+        width:100%;
+        max-width:none;
+        margin:0;
     }
 
-    .version {
-      background: #eef3ff;
-      padding: 14px;
-      border-radius: 8px;
-      margin-bottom: 20px;
-      line-height: 1.6;
+    .drive-status{
+        margin-left:auto;
     }
 
-    .status {
-      margin-top: 20px;
-      padding: 16px;
-      background: #f1f3f4;
-      border-radius: 8px;
-      white-space: pre-wrap;
-      line-height: 1.5;
+    .workspace{
+        flex-direction:column;
     }
 
-    .success {
-      color: #188038;
-      font-weight: bold;
+    .note-list{
+        width:100%;
+        min-width:0;
+        height:42%;
+        border-right:0;
+        border-bottom:1px solid #ddd;
     }
 
-    .warning {
-      color: #b06000;
-      font-weight: bold;
+    .detail{
+        height:58%;
+        padding:10px;
     }
 
-    .error {
-      color: #d93025;
-      font-weight: bold;
+    .detail-title{
+        font-size:20px;
     }
-
-    button {
-      padding: 12px 18px;
-      margin-top: 15px;
-      border: 0;
-      border-radius: 7px;
-      cursor: pointer;
-      font-size: 15px;
-      background: #188038;
-      color: white;
-    }
-
-    button:disabled {
-      opacity: .5;
-      cursor: not-allowed;
-    }
-
-    #driveResult {
-      margin-top: 20px;
-      padding: 15px;
-      background: #fafafa;
-      border: 1px solid #ddd;
-      border-radius: 8px;
-      white-space: pre-wrap;
-      overflow-x: auto;
-    }
-
-    .hidden {
-      display: none;
-    }
-
-  </style>
+}
+</style>
 </head>
-
 
 <body>
 
-<div class="box">
+<div class="app">
 
-  <h1>Google Drive Authorization Test</h1>
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
 
-  <div class="version">
+        <div class="sidebar-header">
+            <div class="sidebar-title">Notes Manager</div>
+        </div>
 
-    <strong>Test:</strong>
-    Account Selection Auto-Authorization
-    <br>
+        <div class="sidebar-scroll">
 
-    <strong>Code Updated:</strong>
-    10 September 2026 — 00:53:00 PKT
-    <br>
+            <div class="side-item active" data-view="all">
+                📒
+                <span>All Notes</span>
+                <span class="side-count" id="allCount">0</span>
+            </div>
 
-    <strong>Runtime:</strong>
-    <span id="runtime"></span>
+            <div class="side-item" data-view="favorites">
+                ⭐
+                <span>Favorites</span>
+                <span class="side-count" id="favoriteCount">0</span>
+            </div>
 
-  </div>
+            <div class="section">
+                <div class="section-title">Categories</div>
+                <div id="categoryTree"></div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">Tags</div>
+                <div id="tagTree"></div>
+            </div>
+
+            <div class="side-item" data-view="checklist">
+                ☑️
+                <span>Checklist</span>
+            </div>
+
+            <div class="side-item" data-view="trash">
+                🗑️
+                <span id="trashLabel">Trash</span>
+                <span class="side-count" id="trashCount">0</span>
+            </div>
+
+            <div class="side-item" data-view="settings">
+                ⚙️
+                <span>Settings</span>
+            </div>
+
+        </div>
+    </aside>
+
+    <div class="overlay" id="overlay"></div>
+
+    <!-- MAIN -->
+    <main class="main">
+
+        <div class="topbar">
+
+            <button class="menu-btn" id="menuBtn">☰</button>
+
+            <div class="app-name">
+                Google Drive Notes Manager
+            </div>
+
+            <div class="search">
+                <input
+                    id="searchInput"
+                    type="search"
+                    placeholder="Search notes..."
+                >
+            </div>
+
+            <div class="drive-status">
+                <span class="status-dot" id="statusDot"></span>
+                <span id="driveStatusText">Not Connected</span>
+            </div>
+
+        </div>
+
+        <!-- DRIVE / MAIN ACTIONS -->
+        <div class="toolbar">
+
+            <button class="btn primary" id="connectBtn">
+                Connect Google Drive
+            </button>
+
+            <button class="btn" id="loadBtn">
+                Load Database
+            </button>
+
+            <button class="btn success" id="syncBtn">
+                Synchronize Time
+            </button>
+
+            <button class="btn" id="lastSyncBtn">
+                Last Synchronized Time
+            </button>
+
+            <button class="btn primary" id="addBtn">
+                + Add Note
+            </button>
+
+            <button class="btn" id="editBtn">
+                Edit
+            </button>
+
+            <button class="btn warning" id="favoriteBtn">
+                Favorite
+            </button>
+
+            <button class="btn" id="pinBtn">
+                Pin
+            </button>
+
+            <button class="btn danger" id="deleteBtn">
+                Delete
+            </button>
+
+            <div class="sync-area">
+                <span id="saveStatus">Not loaded</span>
+            </div>
+
+        </div>
+
+        <div class="workspace">
+
+            <!-- NOTE LIST -->
+            <section class="note-list">
+
+                <div class="list-header">
+                    <span id="listTitle">All Notes</span>
+                    <span id="listCount">0</span>
+                </div>
+
+                <div id="noteList"></div>
+
+            </section>
+
+            <!-- DETAIL -->
+            <section class="detail" id="detail">
+
+                <div class="empty">
+                    <div>
+                        <h2>Notes Manager</h2>
+                        <p>Connect Google Drive and Load Database.</p>
+                    </div>
+                </div>
+
+            </section>
+
+        </div>
+
+    </main>
+</div>
 
 
-  <p>
-    Page کھلنے کے بعد Google Account Selection خودکار طور پر
-    کھلنے کی کوشش کرے گی۔
-  </p>
+<!-- =========================
+     NOTE MODAL
+========================= -->
+
+<div class="modal" id="noteModal">
+
+    <div class="modal-box">
+
+        <div class="modal-title" id="noteModalTitle">
+            Add Note
+        </div>
+
+        <div class="field">
+            <label>Title / Heading</label>
+            <input id="noteTitle">
+        </div>
+
+        <div class="field">
+            <label>Content</label>
+            <textarea id="noteContent"></textarea>
+        </div>
+
+        <div class="field">
+            <label>Category</label>
+            <select id="noteCategory"></select>
+        </div>
+
+        <div class="field">
+            <label>Tags</label>
+            <input
+                id="noteTags"
+                placeholder="tag1, tag2, tag3"
+            >
+        </div>
+
+        <div class="field">
+            <label>Note Color</label>
+            <input
+                id="noteColor"
+                type="color"
+                value="#1a73e8"
+            >
+        </div>
+
+        <div class="field">
+            <label>Links</label>
+
+            <div id="linksContainer"></div>
+
+            <button
+                class="btn"
+                type="button"
+                id="addLinkBtn"
+            >
+                + Add Link
+            </button>
+        </div>
+
+        <div class="modal-actions">
+
+            <button class="btn" id="cancelNoteBtn">
+                Cancel
+            </button>
+
+            <button class="btn primary" id="saveNoteBtn">
+                Save Note
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
 
 
-  <div id="status" class="status">
-    Google Identity Services load ہو رہی ہے...
-  </div>
+<!-- =========================
+     SETTINGS MODAL
+========================= -->
 
+<div class="modal" id="settingsModal">
 
-  <button
-    id="driveButton"
-    class="hidden"
-  >
-    Test Drive Access
-  </button>
+    <div class="modal-box">
 
+        <div class="modal-title">
+            Settings
+        </div>
 
-  <div id="driveResult"></div>
+        <div class="setting-row">
+            <div>
+                <label>Sidebar View</label>
+                <small>Compact / Normal / Expanded</small>
+            </div>
+
+            <select id="settingSidebar">
+                <option>Compact</option>
+                <option selected>Normal</option>
+                <option>Expanded</option>
+            </select>
+        </div>
+
+        <div class="setting-row">
+            <div>
+                <label>Theme</label>
+                <small>Day / Night / System</small>
+            </div>
+
+            <select id="settingTheme">
+                <option>Day</option>
+                <option>Night</option>
+                <option>System</option>
+            </select>
+        </div>
+
+        <div class="setting-row">
+            <div>
+                <label>Font Size</label>
+            </div>
+
+            <select id="settingFont">
+                <option>Small</option>
+                <option selected>Normal</option>
+                <option>Large</option>
+                <option>Extra Large</option>
+            </select>
+        </div>
+
+        <div class="setting-row">
+            <div>
+                <label>Note List Style</label>
+            </div>
+
+            <select id="settingListStyle">
+                <option>Compact</option>
+                <option selected>Normal</option>
+                <option>Detailed</option>
+            </select>
+        </div>
+
+        <div class="setting-row">
+            <div>
+                <label>Sort</label>
+            </div>
+
+            <select id="settingSort">
+                <option>Last Modified First</option>
+                <option>Newest</option>
+                <option>Oldest</option>
+                <option>Alphabetical</option>
+            </select>
+        </div>
+
+        <div class="setting-row">
+            <div>
+                <label>Notes Per Page</label>
+            </div>
+
+            <select id="settingPerPage">
+                <option>10</option>
+                <option>20</option>
+                <option>50</option>
+                <option>100</option>
+                <option>All</option>
+            </select>
+        </div>
+
+        <div class="setting-row">
+            <div>
+                <label>Delete Confirmation</label>
+            </div>
+
+            <select id="settingDeleteConfirm">
+                <option value="true">On</option>
+                <option value="false">Off</option>
+            </select>
+        </div>
+
+        <div class="setting-row">
+            <div>
+                <label>Auto Save</label>
+            </div>
+
+            <select id="settingAutoSave">
+                <option value="true">On</option>
+                <option value="false">Off</option>
+            </select>
+        </div>
+
+        <div class="modal-actions">
+
+            <button class="btn" id="closeSettingsBtn">
+                Close
+            </button>
+
+            <button class="btn primary" id="saveSettingsBtn">
+                Save Settings
+            </button>
+
+        </div>
+
+    </div>
 
 </div>
 
 
 <script>
-
-  /*
-  ============================================================
-  CONFIGURATION
-  ============================================================
-  */
-
-  const CLIENT_ID =
-    "262106898132-tsn94p3vvpf34do0ommc6rai2mtc5sh6.apps.googleusercontent.com";
+/* =========================================================
+   NOTES MANAGER
+   GOOGLE DRIVE DIRECT API BACKEND
+========================================================= */
 
 
-  const DRIVE_SCOPE =
-    "https://www.googleapis.com/auth/drive";
+/* =========================================================
+   GOOGLE CONFIG
+========================================================= */
+
+const CLIENT_ID =
+"262106898132-tsn94p3vvpf34do0ommc6rai2mtc5sh6.apps.googleusercontent.com";
+
+const DRIVE_SCOPE =
+"https://www.googleapis.com/auth/drive";
+
+const DATABASE_NAME =
+"MasterDB.json";
+
+/*
+   Optional:
+   اگر بعد میں ایک مخصوص Drive Folder استعمال کرنا ہو
+   تو یہاں Folder ID رکھا جا سکتا ہے۔
+
+   ابھی خالی رہنے دیں۔
+   Code MasterDB.json کو Drive میں نام سے تلاش کرے گا۔
+*/
+const DATABASE_FOLDER_ID = "";
 
 
-  /*
-  ============================================================
-  RUNTIME CLOCK
-  ============================================================
-  */
+/* =========================================================
+   GLOBAL STATE
+========================================================= */
 
-  function updateRuntime() {
+let tokenClient = null;
+let accessToken = null;
 
-    const now = new Date();
+let databaseFileId = null;
 
-    const time =
-      now.toLocaleString(
-        "en-GB",
-        {
-          timeZone: "Asia/Karachi",
+let db = {
+    version: 1,
+    notes: [],
+    categories: [],
+    tags: [],
+    settings: {},
+    checklistLink: "",
+    lastSynchronizedTime: null
+};
 
-          year: "numeric",
-          month: "2-digit",
-          day: "2-digit",
+let selectedNoteId = null;
+let currentView = "all";
+let currentCategoryId = null;
+let currentTag = null;
+let searchText = "";
 
-          hour: "2-digit",
-          minute: "2-digit",
-          second: "2-digit",
+let editingNoteId = null;
 
-          hour12: false
-        }
-      );
-
-    document.getElementById("runtime").textContent =
-      time + " PKT";
-  }
+let saveTimer = null;
 
 
-  updateRuntime();
+/* =========================================================
+   DEFAULT SETTINGS
+========================================================= */
 
-  setInterval(
-    updateRuntime,
-    1000
-  );
+const defaultSettings = {
 
+    sidebarView: "Normal",
 
-  /*
-  ============================================================
-  VARIABLES
-  ============================================================
-  */
+    theme: "Day",
 
-  let tokenClient = null;
+    fontSize: "Normal",
 
-  let accessToken = null;
+    noteListStyle: "Normal",
 
+    sort: "Last Modified First",
 
-  /*
-  ============================================================
-  ELEMENTS
-  ============================================================
-  */
+    notesPerPage: "All",
 
-  const status =
-    document.getElementById("status");
+    deleteConfirmation: true,
 
-  const driveButton =
-    document.getElementById("driveButton");
+    autoSave: true
 
-  const driveResult =
-    document.getElementById("driveResult");
+};
 
 
-  /*
-  ============================================================
-  STATUS FUNCTION
-  ============================================================
-  */
+/* =========================================================
+   HELPERS
+========================================================= */
 
-  function showStatus(
-    message,
-    className = ""
-  ) {
+function $(id){
+    return document.getElementById(id);
+}
 
-    status.className =
-      "status " + className;
+function nowISO(){
+    return new Date().toISOString();
+}
 
-    status.textContent =
-      message;
-  }
+function formatDate(value){
 
-
-  /*
-  ============================================================
-  GOOGLE TOKEN CALLBACK
-  ============================================================
-  */
-
-  function tokenCallback(response) {
-
-    console.log(
-      "Google OAuth callback:",
-      response
-    );
-
-
-    /*
-    ------------------------------------------------------------
-    ERROR
-    ------------------------------------------------------------
-    */
-
-    if (
-      !response ||
-      response.error
-    ) {
-
-      accessToken = null;
-
-      driveButton.classList.add(
-        "hidden"
-      );
-
-
-      showStatus(
-
-        "Google authorization مکمل نہیں ہوئی۔\n\n" +
-
-        "Google نے token واپس نہیں دیا۔\n\n" +
-
-        "Error:\n" +
-
-        JSON.stringify(
-          response,
-          null,
-          2
-        ),
-
-        "warning"
-
-      );
-
-      return;
+    if(!value){
+        return "—";
     }
 
+    const d = new Date(value);
 
-    /*
-    ------------------------------------------------------------
-    SUCCESS
-    ------------------------------------------------------------
-    */
-
-    accessToken =
-      response.access_token;
-
-
-    /*
-    ------------------------------------------------------------
-    IMPORTANT:
-    We do NOT display the actual token.
-    ------------------------------------------------------------
-    */
-
-
-    driveButton.classList.remove(
-      "hidden"
-    );
-
-
-    showStatus(
-
-      "Google Drive Authorization کامیاب! ✓\n\n" +
-
-      "Google Account منتخب ہونے کے بعد OAuth window بند ہو گئی۔\n\n" +
-
-      "Access Token کامیابی سے حاصل ہو گیا۔\n\n" +
-
-      "اب Drive API test کیا جا سکتا ہے۔",
-
-      "success"
-
-    );
-
-  }
-
-
-  /*
-  ============================================================
-  INITIALIZE GOOGLE TOKEN CLIENT
-  ============================================================
-  */
-
-  function initializeGoogle() {
-
-    /*
-    ------------------------------------------------------------
-    Check Google Identity Services
-    ------------------------------------------------------------
-    */
-
-    if (
-      !window.google ||
-      !google.accounts ||
-      !google.accounts.oauth2
-    ) {
-
-      showStatus(
-
-        "Google Identity Services load نہیں ہوئی۔\n\n" +
-
-        "Page کو دوبارہ reload کریں۔",
-
-        "error"
-
-      );
-
-      return;
+    if(isNaN(d.getTime())){
+        return value;
     }
 
+    return d.toLocaleString();
+}
 
-    /*
-    ------------------------------------------------------------
-    Create Token Client
-    ------------------------------------------------------------
-    */
+function uid(prefix="id"){
+    return prefix + "_" +
+        Date.now().toString(36) +
+        "_" +
+        Math.random().toString(36).slice(2,8);
+}
+
+function escapeHTML(value){
+
+    return String(value ?? "")
+        .replace(/&/g,"&amp;")
+        .replace(/</g,"&lt;")
+        .replace(/>/g,"&gt;")
+        .replace(/"/g,"&quot;")
+        .replace(/'/g,"&#039;");
+}
+
+function setStatus(text,type="normal"){
+
+    $("driveStatusText").textContent = text;
+
+    $("statusDot").className =
+        "status-dot " +
+        (type === "connected"
+            ? "connected"
+            : type === "error"
+            ? "error"
+            : "");
+
+}
+
+function setSaveStatus(text){
+    $("saveStatus").textContent = text;
+}
+
+
+/* =========================================================
+   GOOGLE AUTH
+========================================================= */
+
+function initGoogle(){
+
+    if(
+        !window.google ||
+        !google.accounts ||
+        !google.accounts.oauth2
+    ){
+        setTimeout(initGoogle,500);
+        return;
+    }
 
     tokenClient =
-      google.accounts.oauth2.initTokenClient({
+        google.accounts.oauth2.initTokenClient({
 
-        client_id:
-          CLIENT_ID,
+            client_id: CLIENT_ID,
 
-        scope:
-          DRIVE_SCOPE,
+            scope: DRIVE_SCOPE,
 
-        callback:
-          tokenCallback
+            callback: handleTokenResponse
 
-      });
+        });
 
+}
 
-    showStatus(
+function handleTokenResponse(response){
 
-      "Google authorization system تیار ہے۔\n\n" +
+    if(!response){
+        setStatus("Authorization failed","error");
+        return;
+    }
 
-      "Google Account Selection خودکار طور پر کھولی جا رہی ہے..."
+    if(response.error){
 
-    );
+        console.error(response);
 
-
-    /*
-    ============================================================
-    AUTOMATIC ACCOUNT SELECTION
-    ============================================================
-
-    prompt: ""
-
-    مقصد:
-
-    - Existing Google authorization استعمال کرنا
-    - Consent دوبارہ force نہ کرنا
-    - Account selection آنے کی صورت میں صرف account
-      select کرنا
-    - Account selection کے بعد Google window close ہونا
-    - Token callback میں واپس آنا
-
-    ============================================================
-    */
-
-    setTimeout(
-      function() {
-
-        try {
-
-          tokenClient.requestAccessToken({
-
-            prompt: ""
-
-          });
-
-        }
-        catch (error) {
-
-          console.error(
-            "OAuth request error:",
-            error
-          );
-
-
-          showStatus(
-
-            "Google authorization window نہیں کھل سکی۔\n\n" +
-
-            "Error:\n" +
-
-            error.message,
-
+        setStatus(
+            "Authorization failed: " +
+            response.error,
             "error"
-
-          );
-
-        }
-
-      },
-
-      500
-    );
-
-  }
-
-
-  /*
-  ============================================================
-  DRIVE API TEST
-  ============================================================
-  */
-
-  driveButton.addEventListener(
-    "click",
-    async function() {
-
-      if (!accessToken) {
-
-        showStatus(
-
-          "Access Token موجود نہیں ہے۔",
-
-          "warning"
-
         );
 
         return;
-      }
+    }
+
+    accessToken = response.access_token;
+
+    setStatus(
+        "Google Drive Connected",
+        "connected"
+    );
+
+    $("connectBtn").textContent =
+        "Google Drive Connected";
+
+    setSaveStatus("Connected");
+
+}
+
+function connectGoogleDrive(){
+
+    if(!tokenClient){
+
+        alert(
+            "Google authorization system ابھی load نہیں ہوا۔ چند سیکنڈ بعد دوبارہ کوشش کریں۔"
+        );
+
+        initGoogle();
+
+        return;
+    }
+
+    setStatus(
+        "Google Account Selection..."
+    );
+
+    tokenClient.requestAccessToken({
+        prompt:""
+    });
+
+}
 
 
-      driveButton.disabled =
-        true;
+/* =========================================================
+   DRIVE API
+========================================================= */
+
+async function driveFetch(
+    url,
+    options={}
+){
+
+    if(!accessToken){
+        throw new Error(
+            "Google Drive is not connected."
+        );
+    }
+
+    const headers =
+        options.headers || {};
+
+    headers.Authorization =
+        "Bearer " + accessToken;
+
+    headers.Accept =
+        "application/json";
+
+    const response =
+        await fetch(
+            url,
+            {
+                ...options,
+                headers
+            }
+        );
+
+    if(!response.ok){
+
+        let message =
+            "Drive API Error " +
+            response.status;
+
+        try{
+
+            const errorData =
+                await response.json();
+
+            if(
+                errorData.error &&
+                errorData.error.message
+            ){
+                message =
+                    errorData.error.message;
+            }
+
+        }catch(e){}
+
+        throw new Error(message);
+    }
+
+    return response;
+}
 
 
-      driveResult.textContent =
-        "";
+/* =========================================================
+   FIND MASTERDB.JSON
+========================================================= */
+
+async function findDatabaseFile(){
+
+    let q =
+        "name='" +
+        DATABASE_NAME.replace(/'/g,"\\'") +
+        "' and trashed=false";
+
+    if(DATABASE_FOLDER_ID){
+
+        q +=
+            " and '" +
+            DATABASE_FOLDER_ID +
+            "' in parents";
+
+    }
+
+    const url =
+        "https://www.googleapis.com/drive/v3/files" +
+        "?q=" +
+        encodeURIComponent(q) +
+        "&pageSize=20" +
+        "&fields=files(id,name,mimeType,modifiedTime,parents)";
+
+    const response =
+        await driveFetch(url);
+
+    const data =
+        await response.json();
+
+    if(!data.files || !data.files.length){
+
+        throw new Error(
+            "MasterDB.json Google Drive میں نہیں ملی۔"
+        );
+    }
+
+    if(data.files.length > 1){
+
+        console.warn(
+            "Multiple MasterDB.json files found.",
+            data.files
+        );
+
+        /*
+           پہلی matching file استعمال کی جائے گی۔
+           اگر مستقبل میں multiple files ہوں تو
+           DATABASE_FOLDER_ID set کیا جا سکتا ہے۔
+        */
+    }
+
+    databaseFileId =
+        data.files[0].id;
+
+    return data.files[0];
+}
 
 
-      showStatus(
+/* =========================================================
+   LOAD DATABASE
+========================================================= */
 
-        "Google Drive API سے data حاصل کیا جا رہا ہے..."
+async function loadDatabase(){
 
-      );
+    try{
 
+        if(!accessToken){
 
-      try {
+            await ensureConnected();
+
+            if(!accessToken){
+                return;
+            }
+
+        }
+
+        setSaveStatus(
+            "Finding MasterDB.json..."
+        );
+
+        const file =
+            await findDatabaseFile();
+
+        databaseFileId =
+            file.id;
 
         const response =
-          await fetch(
+            await driveFetch(
+                "https://www.googleapis.com/drive/v3/files/" +
+                encodeURIComponent(databaseFileId) +
+                "?alt=media"
+            );
 
-            "https://www.googleapis.com/drive/v3/files" +
+        const text =
+            await response.text();
 
-            "?pageSize=10" +
+        let loaded;
 
-            "&fields=files(id,name,mimeType)",
+        try{
 
+            loaded =
+                JSON.parse(text);
+
+        }catch(error){
+
+            throw new Error(
+                "MasterDB.json valid JSON نہیں ہے۔"
+            );
+
+        }
+
+        db =
+            normalizeDatabase(loaded);
+
+        selectedNoteId = null;
+
+        currentView = "all";
+
+        currentCategoryId = null;
+
+        currentTag = null;
+
+        renderEverything();
+
+        setSaveStatus(
+            "Database Loaded"
+        );
+
+        setStatus(
+            "Google Drive Connected",
+            "connected"
+        );
+
+    }catch(error){
+
+        console.error(error);
+
+        setSaveStatus(
+            "Load failed"
+        );
+
+        setStatus(
+            "Database Load Error",
+            "error"
+        );
+
+        alert(
+            "Database Load Error:\n\n" +
+            error.message
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+   NORMALIZE DATABASE
+========================================================= */
+
+function normalizeDatabase(data){
+
+    const result = {
+
+        version:
+            data?.version || 1,
+
+        notes:
+            Array.isArray(data?.notes)
+                ? data.notes
+                : [],
+
+        categories:
+            Array.isArray(data?.categories)
+                ? data.categories
+                : [],
+
+        tags:
+            Array.isArray(data?.tags)
+                ? data.tags
+                : [],
+
+        settings:
             {
+                ...defaultSettings,
+                ...(data?.settings || {})
+            },
 
-              method: "GET",
+        checklistLink:
+            data?.checklistLink || "",
 
-              headers: {
+        lastSynchronizedTime:
+            data?.lastSynchronizedTime || null
 
-                "Authorization":
-                  "Bearer " + accessToken
+    };
 
-              }
+    result.notes =
+        result.notes.map(note => {
 
-            }
+            return {
 
-          );
+                id:
+                    note.id || uid("note"),
+
+                title:
+                    note.title || "",
+
+                content:
+                    note.content || "",
+
+                categoryId:
+                    note.categoryId || null,
+
+                tags:
+                    Array.isArray(note.tags)
+                        ? note.tags
+                        : [],
+
+                links:
+                    Array.isArray(note.links)
+                        ? note.links
+                        : [],
+
+                color:
+                    note.color || "#1a73e8",
+
+                favorite:
+                    !!note.favorite,
+
+                pinned:
+                    !!note.pinned,
+
+                deleted:
+                    !!note.deleted,
+
+                createdAt:
+                    note.createdAt || nowISO(),
+
+                modifiedAt:
+                    note.modifiedAt || nowISO(),
+
+                lastViewedAt:
+                    note.lastViewedAt || null,
+
+                viewCount:
+                    Number(note.viewCount || 0),
+
+                binNumber:
+                    note.binNumber || null
+
+            };
+
+        });
+
+    return result;
+}
 
 
-        const data =
-          await response.json();
+/* =========================================================
+   SAVE DATABASE
+========================================================= */
 
+async function saveDatabase(){
 
-        /*
-        --------------------------------------------------------
-        API ERROR
-        --------------------------------------------------------
-        */
+    if(!accessToken){
 
-        if (!response.ok) {
+        alert(
+            "پہلے Connect Google Drive کریں۔"
+        );
 
-          throw new Error(
+        return false;
+    }
 
+    if(!databaseFileId){
+
+        try{
+
+            await findDatabaseFile();
+
+        }catch(error){
+
+            alert(error.message);
+
+            return false;
+        }
+
+    }
+
+    try{
+
+        setSaveStatus(
+            "Saving to Google Drive..."
+        );
+
+        const body =
             JSON.stringify(
-              data,
-              null,
-              2
-            )
+                db,
+                null,
+                2
+            );
 
-          );
+        const response =
+            await fetch(
+                "https://www.googleapis.com/upload/drive/v3/files/" +
+                encodeURIComponent(databaseFileId) +
+                "?uploadType=media",
+                {
+                    method:"PATCH",
+
+                    headers:{
+                        Authorization:
+                            "Bearer " + accessToken,
+
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    body
+                }
+            );
+
+        if(!response.ok){
+
+            const errorText =
+                await response.text();
+
+            throw new Error(
+                "Save failed: " +
+                errorText
+            );
 
         }
 
+        setSaveStatus(
+            "Saved to Google Drive"
+        );
 
-        /*
-        --------------------------------------------------------
-        SUCCESS
-        --------------------------------------------------------
-        */
+        return true;
 
-        let output =
-          "Google Drive API ACCESS کامیاب! ✓\n\n";
+    }catch(error){
+
+        console.error(error);
+
+        setSaveStatus(
+            "Save failed"
+        );
+
+        setStatus(
+            "Drive Save Error",
+            "error"
+        );
+
+        alert(
+            "Google Drive Save Error:\n\n" +
+            error.message
+        );
+
+        return false;
+    }
+
+}
 
 
-        if (
-          data.files &&
-          data.files.length
-        ) {
+/* =========================================================
+   ENSURE CONNECTED
+========================================================= */
 
-          data.files.forEach(
-            function(
-              file,
-              index
-            ) {
+async function ensureConnected(){
 
-              output +=
+    if(accessToken){
+        return true;
+    }
 
-                (index + 1) +
+    connectGoogleDrive();
 
-                ". " +
+    return false;
+}
 
-                file.name +
 
-                "\n" +
+/* =========================================================
+   SYNCHRONIZE TIME
+========================================================= */
 
-                "ID: " +
+async function synchronizeTime(){
 
-                file.id +
+    if(!accessToken){
 
-                "\n" +
+        alert(
+            "پہلے Google Drive Connect کریں۔"
+        );
 
-                "Type: " +
+        return;
+    }
 
-                file.mimeType +
+    if(!databaseFileId){
 
-                "\n\n";
+        const loaded =
+            await loadDatabase();
+
+        if(!loaded && !databaseFileId){
+
+            /*
+               loadDatabase itself handles error.
+            */
+
+            return;
+        }
+
+    }
+
+    db.lastSynchronizedTime =
+        nowISO();
+
+    const saved =
+        await saveDatabase();
+
+    if(saved){
+
+        renderEverything();
+
+        alert(
+            "Synchronization Time successfully save ہو گیا۔"
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+   LAST SYNC TIME
+========================================================= */
+
+function showLastSyncTime(){
+
+    if(
+        !db.lastSynchronizedTime
+    ){
+
+        alert(
+            "ابھی کوئی Synchronization Time موجود نہیں ہے۔"
+        );
+
+        return;
+    }
+
+    alert(
+        "Last Synchronized Time:\n\n" +
+        formatDate(
+            db.lastSynchronizedTime
+        )
+    );
+
+}
+
+
+/* =========================================================
+   NOTE FILTERING
+========================================================= */
+
+function getVisibleNotes(){
+
+    let notes =
+        db.notes.filter(
+            note => !note.deleted
+        );
+
+    if(currentView === "favorites"){
+
+        notes =
+            notes.filter(
+                note => note.favorite
+            );
+
+    }
+
+    if(currentView === "trash"){
+
+        notes =
+            db.notes.filter(
+                note => note.deleted
+            );
+
+    }
+
+    if(currentCategoryId){
+
+        notes =
+            notes.filter(
+                note =>
+                    note.categoryId ===
+                    currentCategoryId
+            );
+
+    }
+
+    if(currentTag){
+
+        notes =
+            notes.filter(
+                note =>
+                    Array.isArray(note.tags) &&
+                    note.tags.includes(currentTag)
+            );
+
+    }
+
+    if(searchText){
+
+        const query =
+            searchText.toLowerCase();
+
+        notes =
+            notes.filter(note => {
+
+                const text =
+                    [
+                        note.title,
+                        note.content,
+                        ...(note.tags || [])
+                    ]
+                    .join(" ")
+                    .toLowerCase();
+
+                return text.includes(query);
+
+            });
+
+    }
+
+    notes.sort(
+        getSortFunction()
+    );
+
+    return notes;
+}
+
+
+/* =========================================================
+   SORT
+========================================================= */
+
+function getSortFunction(){
+
+    const sort =
+        db.settings.sort ||
+        "Last Modified First";
+
+    if(sort === "Alphabetical"){
+
+        return (a,b) =>
+            a.title.localeCompare(
+                b.title
+            );
+
+    }
+
+    if(sort === "Newest"){
+
+        return (a,b) =>
+            new Date(b.createdAt) -
+            new Date(a.createdAt);
+
+    }
+
+    if(sort === "Oldest"){
+
+        return (a,b) =>
+            new Date(a.createdAt) -
+            new Date(b.createdAt);
+
+    }
+
+    return (a,b) =>
+        new Date(b.modifiedAt) -
+        new Date(a.modifiedAt);
+
+}
+
+
+/* =========================================================
+   RENDER EVERYTHING
+========================================================= */
+
+function renderEverything(){
+
+    renderSidebar();
+
+    renderNoteList();
+
+    renderDetail();
+
+    applySettings();
+
+}
+
+
+/* =========================================================
+   SIDEBAR
+========================================================= */
+
+function renderSidebar(){
+
+    const activeNotes =
+        db.notes.filter(
+            n => !n.deleted
+        );
+
+    const favorites =
+        activeNotes.filter(
+            n => n.favorite
+        );
+
+    const trash =
+        db.notes.filter(
+            n => n.deleted
+        );
+
+    $("allCount").textContent =
+        activeNotes.length;
+
+    $("favoriteCount").textContent =
+        favorites.length;
+
+    $("trashCount").textContent =
+        trash.length;
+
+    renderCategories();
+
+    renderTags();
+
+}
+
+
+/* =========================================================
+   CATEGORIES
+========================================================= */
+
+function renderCategories(){
+
+    const container =
+        $("categoryTree");
+
+    container.innerHTML = "";
+
+    const categories =
+        db.categories;
+
+    const roots =
+        categories.filter(
+            c => !c.parentId
+        );
+
+    roots.forEach(category => {
+
+        renderCategoryNode(
+            category,
+            container,
+            0
+        );
+
+    });
+
+}
+
+function renderCategoryNode(
+    category,
+    container,
+    level
+){
+
+    const children =
+        db.categories.filter(
+            c =>
+                c.parentId ===
+                category.id
+        );
+
+    const count =
+        db.notes.filter(
+            note =>
+                !note.deleted &&
+                note.categoryId ===
+                category.id
+        ).length;
+
+    const item =
+        document.createElement("div");
+
+    item.className =
+        "side-item nested";
+
+    item.style.paddingLeft =
+        (10 + level * 15) + "px";
+
+    item.innerHTML = `
+        <span>📁</span>
+        <span>${escapeHTML(category.name)}</span>
+        <span class="side-count">${count}</span>
+        <button class="side-edit">✎</button>
+    `;
+
+    item.addEventListener(
+        "click",
+        event => {
+
+            if(
+                event.target.classList.contains(
+                    "side-edit"
+                )
+            ){
+                return;
+            }
+
+            currentView = "category";
+
+            currentCategoryId =
+                category.id;
+
+            currentTag = null;
+
+            renderNoteList();
+
+        }
+    );
+
+    item.querySelector(
+        ".side-edit"
+    ).addEventListener(
+        "click",
+        event => {
+
+            event.stopPropagation();
+
+            editCategory(category);
+
+        }
+    );
+
+    container.appendChild(item);
+
+    children.forEach(child => {
+
+        renderCategoryNode(
+            child,
+            container,
+            level + 1
+        );
+
+    });
+
+}
+
+
+/* =========================================================
+   TAGS
+========================================================= */
+
+function renderTags(){
+
+    const container =
+        $("tagTree");
+
+    container.innerHTML = "";
+
+    db.tags.forEach(tag => {
+
+        const count =
+            db.notes.filter(
+                note =>
+                    !note.deleted &&
+                    (note.tags || [])
+                        .includes(tag)
+            ).length;
+
+        const item =
+            document.createElement("div");
+
+        item.className =
+            "side-item nested";
+
+        item.innerHTML = `
+            <span>🏷️</span>
+            <span>${escapeHTML(tag)}</span>
+            <span class="side-count">${count}</span>
+        `;
+
+        item.addEventListener(
+            "click",
+            () => {
+
+                currentTag =
+                    tag;
+
+                currentCategoryId =
+                    null;
+
+                currentView =
+                    "tag";
+
+                renderNoteList();
 
             }
-          );
-
-        }
-        else {
-
-          output +=
-            "No files returned.";
-
-        }
-
-
-        driveResult.textContent =
-          output;
-
-
-        showStatus(
-
-          "Google Drive Authorization کامیاب! ✓\n\n" +
-
-          "Google Drive API بھی کامیابی سے access ہو گئی ہے۔",
-
-          "success"
-
         );
 
-      }
-      catch (error) {
+        container.appendChild(item);
 
-        console.error(
-          error
-        );
+    });
 
-
-        driveResult.textContent =
-          error.message;
+}
 
 
-        showStatus(
+/* =========================================================
+   NOTE LIST
+========================================================= */
 
-          "Google Drive API access ناکام ہوئی۔\n\n" +
+function renderNoteList(){
 
-          error.message,
+    const container =
+        $("noteList");
 
-          "error"
+    container.innerHTML = "";
 
-        );
+    const notes =
+        getVisibleNotes();
 
-      }
-      finally {
+    let title =
+        "All Notes";
 
-        driveButton.disabled =
-          false;
+    if(currentView === "favorites"){
+        title = "Favorites";
+    }
 
-      }
+    if(currentView === "trash"){
+        title = "Trash";
+    }
+
+    if(currentCategoryId){
+
+        const category =
+            db.categories.find(
+                c =>
+                    c.id ===
+                    currentCategoryId
+            );
+
+        title =
+            category
+                ? category.name
+                : "Category";
 
     }
-  );
+
+    if(currentTag){
+        title =
+            "Tag: " + currentTag;
+    }
+
+    if(searchText){
+        title =
+            "Search Results";
+    }
+
+    $("listTitle").textContent =
+        title;
+
+    $("listCount").textContent =
+        notes.length;
+
+    if(!notes.length){
+
+        container.innerHTML = `
+            <div style="
+                padding:30px;
+                text-align:center;
+                color:#777;
+            ">
+                No notes found.
+            </div>
+        `;
+
+        return;
+    }
+
+    notes.forEach(note => {
+
+        const card =
+            document.createElement("div");
+
+        card.className =
+            "note-card" +
+            (
+                note.id === selectedNoteId
+                    ? " selected"
+                    : ""
+            );
+
+        const preview =
+            note.content
+                .replace(/\s+/g," ")
+                .slice(0,120);
+
+        card.innerHTML = `
+
+            <div
+                class="note-marker"
+                style="background:${escapeHTML(note.color)}"
+            ></div>
+
+            <div class="note-card-title">
+                ${escapeHTML(
+                    note.title ||
+                    "Untitled Note"
+                )}
+            </div>
+
+            <div class="note-card-preview">
+                ${escapeHTML(preview)}
+            </div>
+
+            <div class="note-card-meta">
+
+                <span>
+                    ${formatDate(note.modifiedAt)}
+                </span>
+
+                ${
+                    note.favorite
+                        ? "<span>⭐</span>"
+                        : ""
+                }
+
+                ${
+                    note.pinned
+                        ? "<span>📌</span>"
+                        : ""
+                }
+
+            </div>
+        `;
+
+        card.addEventListener(
+            "click",
+            () => selectNote(note.id)
+        );
+
+        container.appendChild(card);
+
+    });
+
+}
 
 
-  /*
-  ============================================================
-  PAGE START
-  ============================================================
-  */
+/* =========================================================
+   SELECT NOTE
+========================================================= */
 
-  window.addEventListener(
+function selectNote(id){
+
+    selectedNoteId =
+        id;
+
+    const note =
+        db.notes.find(
+            n => n.id === id
+        );
+
+    if(!note){
+        return;
+    }
+
+    note.lastViewedAt =
+        nowISO();
+
+    note.viewCount =
+        Number(note.viewCount || 0) + 1;
+
+    renderNoteList();
+
+    renderDetail();
+
+    if(
+        db.settings.autoSave
+    ){
+
+        scheduleSave();
+
+    }
+
+}
+
+
+/* =========================================================
+   DETAIL VIEW
+========================================================= */
+
+function renderDetail(){
+
+    const detail =
+        $("detail");
+
+    if(!selectedNoteId){
+
+        detail.innerHTML = `
+            <div class="empty">
+                <div>
+                    <h2>No Note Selected</h2>
+                    <p>Select a note or create a new note.</p>
+                </div>
+            </div>
+        `;
+
+        return;
+    }
+
+    const note =
+        db.notes.find(
+            n =>
+                n.id ===
+                selectedNoteId
+        );
+
+    if(!note){
+
+        selectedNoteId =
+            null;
+
+        renderDetail();
+
+        return;
+    }
+
+    const category =
+        db.categories.find(
+            c =>
+                c.id ===
+                note.categoryId
+        );
+
+    const linksHTML =
+        (note.links || [])
+            .map(link => {
+
+                if(!link.url){
+                    return "";
+                }
+
+                return `
+                    <div>
+                        🔗
+                        <a
+                            href="${escapeHTML(link.url)}"
+                            target="_blank"
+                            rel="noopener"
+                        >
+                            ${escapeHTML(
+                                link.title ||
+                                link.url
+                            )}
+                        </a>
+                    </div>
+                `;
+
+            })
+            .join("");
+
+    detail.innerHTML = `
+
+        <div class="detail-card">
+
+            <div class="detail-title">
+                ${escapeHTML(
+                    note.title ||
+                    "Untitled Note"
+                )}
+            </div>
+
+            <div class="action-row">
+
+                <button
+                    class="btn primary"
+                    onclick="openEditNote('${note.id}')"
+                >
+                    Edit
+                </button>
+
+                <button
+                    class="btn"
+                    onclick="toggleFavorite('${note.id}')"
+                >
+                    ${
+                        note.favorite
+                            ? "★ Remove Favorite"
+                            : "☆ Favorite"
+                    }
+                </button>
+
+                <button
+                    class="btn"
+                    onclick="togglePin('${note.id}')"
+                >
+                    ${
+                        note.pinned
+                            ? "📌 Unpin"
+                            : "📌 Pin"
+                    }
+                </button>
+
+                ${
+                    note.deleted
+                        ? `
+                            <button
+                                class="btn success"
+                                onclick="restoreNote('${note.id}')"
+                            >
+                                Restore
+                            </button>
+                        `
+                        : `
+                            <button
+                                class="btn danger"
+                                onclick="deleteNote('${note.id}')"
+                            >
+                                Delete
+                            </button>
+                        `
+                }
+
+            </div>
+
+            <div class="field">
+
+                <label>Content</label>
+
+                <div class="readonly-box">
+                    ${escapeHTML(note.content)}
+                </div>
+
+            </div>
+
+            <div class="field">
+
+                <label>Links</label>
+
+                ${
+                    linksHTML ||
+                    "<span>No links</span>"
+                }
+
+            </div>
+
+            <div class="meta">
+
+                <div>
+                    <strong>Created:</strong>
+                    ${formatDate(note.createdAt)}
+                </div>
+
+                <div>
+                    <strong>Last Modified:</strong>
+                    ${formatDate(note.modifiedAt)}
+                </div>
+
+                <div>
+                    <strong>Last Viewed:</strong>
+                    ${formatDate(note.lastViewedAt)}
+                </div>
+
+                <div>
+                    <strong>View Count:</strong>
+                    ${note.viewCount}
+                </div>
+
+                <div>
+                    <strong>Category:</strong>
+                    ${
+                        category
+                            ? escapeHTML(category.name)
+                            : "Uncategorized"
+                    }
+                </div>
+
+                <div>
+                    <strong>Tags:</strong>
+                    ${
+                        (note.tags || [])
+                            .map(
+                                escapeHTML
+                            )
+                            .join(", ") ||
+                        "None"
+                    }
+                </div>
+
+                <div>
+                    <strong>Note Color:</strong>
+                    ${escapeHTML(note.color)}
+                </div>
+
+                ${
+                    note.deleted
+                        ? `
+                            <div>
+                                <strong>Status:</strong>
+                                In Trash
+                            </div>
+                        `
+                        : `
+                            <div>
+                                <strong>Status:</strong>
+                                Active
+                            </div>
+                        `
+                }
+
+            </div>
+
+        </div>
+    `;
+
+}
+
+
+/* =========================================================
+   ADD NOTE
+========================================================= */
+
+function openAddNote(){
+
+    editingNoteId =
+        null;
+
+    $("noteModalTitle").textContent =
+        "Add Note";
+
+    $("noteTitle").value =
+        "";
+
+    $("noteContent").value =
+        "";
+
+    $("noteTags").value =
+        "";
+
+    $("noteColor").value =
+        "#1a73e8";
+
+    populateCategorySelect(
+        null
+    );
+
+    $("linksContainer").innerHTML =
+        "";
+
+    addLinkRow();
+
+    $("noteModal").classList.add(
+        "show"
+    );
+
+}
+
+
+/* =========================================================
+   EDIT NOTE
+========================================================= */
+
+function openEditNote(id){
+
+    const note =
+        db.notes.find(
+            n => n.id === id
+        );
+
+    if(!note){
+        return;
+    }
+
+    editingNoteId =
+        id;
+
+    $("noteModalTitle").textContent =
+        "Edit Note";
+
+    $("noteTitle").value =
+        note.title;
+
+    $("noteContent").value =
+        note.content;
+
+    $("noteTags").value =
+        (note.tags || [])
+            .join(", ");
+
+    $("noteColor").value =
+        note.color ||
+        "#1a73e8";
+
+    populateCategorySelect(
+        note.categoryId
+    );
+
+    $("linksContainer").innerHTML =
+        "";
+
+    (note.links || []).forEach(
+        link =>
+            addLinkRow(
+                link.title,
+                link.url
+            )
+    );
+
+    if(
+        !(note.links || []).length
+    ){
+        addLinkRow();
+    }
+
+    $("noteModal").classList.add(
+        "show"
+    );
+
+}
+
+
+/* =========================================================
+   CATEGORY SELECT
+========================================================= */
+
+function populateCategorySelect(
+    selectedId
+){
+
+    const select =
+        $("noteCategory");
+
+    select.innerHTML = `
+        <option value="">
+            Uncategorized
+        </option>
+    `;
+
+    db.categories.forEach(
+        category => {
+
+            const option =
+                document.createElement(
+                    "option"
+                );
+
+            option.value =
+                category.id;
+
+            option.textContent =
+                getCategoryPath(
+                    category.id
+                );
+
+            if(
+                category.id ===
+                selectedId
+            ){
+                option.selected =
+                    true;
+            }
+
+            select.appendChild(
+                option
+            );
+
+        }
+    );
+
+}
+
+function getCategoryPath(id){
+
+    const parts = [];
+
+    let current =
+        db.categories.find(
+            c => c.id === id
+        );
+
+    while(current){
+
+        parts.unshift(
+            current.name
+        );
+
+        current =
+            db.categories.find(
+                c =>
+                    c.id ===
+                    current.parentId
+            );
+
+    }
+
+    return parts.join(
+        " / "
+    );
+
+}
+
+
+/* =========================================================
+   LINKS
+========================================================= */
+
+function addLinkRow(
+    title="",
+    url=""
+){
+
+    const row =
+        document.createElement(
+            "div"
+        );
+
+    row.className =
+        "link-row";
+
+    row.innerHTML = `
+
+        <input
+            type="text"
+            placeholder="Link title"
+            value="${escapeHTML(title)}"
+        >
+
+        <input
+            type="url"
+            placeholder="https://..."
+            value="${escapeHTML(url)}"
+        >
+
+        <button
+            class="btn danger"
+            type="button"
+        >
+            ×
+        </button>
+
+    `;
+
+    row.querySelector(
+        "button"
+    ).addEventListener(
+        "click",
+        () => row.remove()
+    );
+
+    $("linksContainer")
+        .appendChild(row);
+
+}
+
+
+/* =========================================================
+   SAVE NOTE FROM MODAL
+========================================================= */
+
+async function saveNoteFromModal(){
+
+    const title =
+        $("noteTitle").value.trim();
+
+    const content =
+        $("noteContent").value;
+
+    if(!title && !content){
+
+        alert(
+            "Title یا Content میں کچھ لکھیں۔"
+        );
+
+        return;
+    }
+
+    const tags =
+        $("noteTags")
+            .value
+            .split(",")
+            .map(
+                tag => tag.trim()
+            )
+            .filter(Boolean);
+
+    const links = [];
+
+    document
+        .querySelectorAll(
+            "#linksContainer .link-row"
+        )
+        .forEach(row => {
+
+            const inputs =
+                row.querySelectorAll(
+                    "input"
+                );
+
+            const linkTitle =
+                inputs[0].value.trim();
+
+            const url =
+                inputs[1].value.trim();
+
+            if(url){
+
+                links.push({
+
+                    title:
+                        linkTitle,
+
+                    url:
+                        url
+
+                });
+
+            }
+
+        });
+
+    const categoryId =
+        $("noteCategory").value ||
+        null;
+
+    const color =
+        $("noteColor").value ||
+        "#1a73e8";
+
+    const timestamp =
+        nowISO();
+
+    if(editingNoteId){
+
+        const note =
+            db.notes.find(
+                n =>
+                    n.id ===
+                    editingNoteId
+            );
+
+        if(!note){
+            return;
+        }
+
+        note.title =
+            title;
+
+        note.content =
+            content;
+
+        note.categoryId =
+            categoryId;
+
+        note.tags =
+            tags;
+
+        note.links =
+            links;
+
+        note.color =
+            color;
+
+        note.modifiedAt =
+            timestamp;
+
+    }else{
+
+        const note = {
+
+            id:
+                uid("note"),
+
+            title:
+                title,
+
+            content:
+                content,
+
+            categoryId:
+                categoryId,
+
+            tags:
+                tags,
+
+            links:
+                links,
+
+            color:
+                color,
+
+            favorite:
+                false,
+
+            pinned:
+                false,
+
+            deleted:
+                false,
+
+            createdAt:
+                timestamp,
+
+            modifiedAt:
+                timestamp,
+
+            lastViewedAt:
+                null,
+
+            viewCount:
+                0,
+
+            binNumber:
+                null
+
+        };
+
+        db.notes.unshift(
+            note
+        );
+
+        selectedNoteId =
+            note.id;
+
+    }
+
+    updateTagRegistry();
+
+    $("noteModal")
+        .classList.remove(
+            "show"
+        );
+
+    renderEverything();
+
+    await saveDatabase();
+
+}
+
+
+/* =========================================================
+   TAG REGISTRY
+========================================================= */
+
+function updateTagRegistry(){
+
+    const set =
+        new Set();
+
+    db.notes.forEach(
+        note => {
+
+            (note.tags || [])
+                .forEach(
+                    tag =>
+                        set.add(tag)
+                );
+
+        }
+    );
+
+    db.tags =
+        Array.from(set)
+            .sort(
+                (a,b) =>
+                    a.localeCompare(b)
+            );
+
+}
+
+
+/* =========================================================
+   FAVORITE
+========================================================= */
+
+async function toggleFavorite(
+    id
+){
+
+    const note =
+        db.notes.find(
+            n => n.id === id
+        );
+
+    if(!note){
+        return;
+    }
+
+    note.favorite =
+        !note.favorite;
+
+    note.modifiedAt =
+        nowISO();
+
+    renderEverything();
+
+    await saveDatabase();
+
+}
+
+
+/* =========================================================
+   PIN
+========================================================= */
+
+async function togglePin(id){
+
+    const note =
+        db.notes.find(
+            n => n.id === id
+        );
+
+    if(!note){
+        return;
+    }
+
+    note.pinned =
+        !note.pinned;
+
+    note.modifiedAt =
+        nowISO();
+
+    renderEverything();
+
+    await saveDatabase();
+
+}
+
+
+/* =========================================================
+   DELETE
+========================================================= */
+
+async function deleteNote(id){
+
+    const note =
+        db.notes.find(
+            n => n.id === id
+        );
+
+    if(!note){
+        return;
+    }
+
+    if(
+        db.settings.deleteConfirmation
+    ){
+
+        const yes =
+            confirm(
+                "کیا آپ یہ note Trash میں بھیجنا چاہتے ہیں؟"
+            );
+
+        if(!yes){
+            return;
+        }
+
+    }
+
+    note.deleted =
+        true;
+
+    note.modifiedAt =
+        nowISO();
+
+    note.binNumber =
+        getNextBinNumber();
+
+    /*
+       System Bin tag
+    */
+
+    note.tags =
+        Array.from(
+            new Set([
+                ...(note.tags || []),
+                "Bin",
+                "Bin " + note.binNumber
+            ])
+        );
+
+    updateTagRegistry();
+
+    renderEverything();
+
+    await saveDatabase();
+
+}
+
+
+/* =========================================================
+   NEXT BIN NUMBER
+========================================================= */
+
+function getNextBinNumber(){
+
+    let max =
+        0;
+
+    db.notes.forEach(
+        note => {
+
+            const match =
+                String(
+                    note.binNumber || ""
+                ).match(
+                    /^\d+$/
+                );
+
+            if(match){
+
+                max =
+                    Math.max(
+                        max,
+                        Number(
+                            match[0]
+                        )
+                    );
+
+            }
+
+        }
+    );
+
+    return max + 1;
+}
+
+
+/* =========================================================
+   RESTORE
+========================================================= */
+
+async function restoreNote(id){
+
+    const note =
+        db.notes.find(
+            n => n.id === id
+        );
+
+    if(!note){
+        return;
+    }
+
+    note.deleted =
+        false;
+
+    note.modifiedAt =
+        nowISO();
+
+    /*
+       Bin tag permanent requirement:
+       Bin + Bin number remain.
+    */
+
+    renderEverything();
+
+    await saveDatabase();
+
+}
+
+
+/* =========================================================
+   RESTORE ALL
+========================================================= */
+
+async function restoreAllDeleted(){
+
+    const deleted =
+        db.notes.filter(
+            n => n.deleted
+        );
+
+    if(!deleted.length){
+
+        alert(
+            "Trash خالی ہے۔"
+        );
+
+        return;
+    }
+
+    deleted.forEach(
+        note => {
+
+            note.deleted =
+                false;
+
+            note.modifiedAt =
+                nowISO();
+
+        }
+    );
+
+    renderEverything();
+
+    await saveDatabase();
+
+}
+
+
+/* =========================================================
+   EMPTY TRASH
+   IMPORTANT:
+   یہ permanent delete نہیں ہے۔
+   Notes کو hide/archival state میں رکھا جاتا ہے۔
+========================================================= */
+
+async function emptyTrash(){
+
+    const deleted =
+        db.notes.filter(
+            n => n.deleted
+        );
+
+    if(!deleted.length){
+
+        alert(
+            "Trash پہلے ہی خالی ہے۔"
+        );
+
+        return;
+    }
+
+    /*
+       Permanent deletion intentionally نہیں۔
+       Notes database میں رہیں گے۔
+    */
+
+    deleted.forEach(
+        note => {
+
+            note.trashHidden =
+                true;
+
+            note.modifiedAt =
+                nowISO();
+
+        }
+    );
+
+    renderEverything();
+
+    await saveDatabase();
+
+    alert(
+        "Trash items normal Trash view سے hide کر دیے گئے ہیں۔ Permanent deletion نہیں ہوئی۔"
+    );
+
+}
+
+
+/* =========================================================
+   CATEGORY EDIT
+========================================================= */
+
+function editCategory(category){
+
+    const action =
+        prompt(
+            "Category action:\n\n" +
+            "1 = Rename\n" +
+            "2 = Add Child\n" +
+            "3 = Add Sister\n" +
+            "4 = Remove\n\n" +
+            "Action number:"
+        );
+
+    if(!action){
+        return;
+    }
+
+    if(action === "1"){
+
+        const name =
+            prompt(
+                "New category name:",
+                category.name
+            );
+
+        if(
+            name &&
+            name.trim()
+        ){
+
+            category.name =
+                name.trim();
+
+            saveDatabase();
+            renderEverything();
+
+        }
+
+        return;
+    }
+
+    if(action === "2"){
+
+        const name =
+            prompt(
+                "Child category name:"
+            );
+
+        if(
+            name &&
+            name.trim()
+        ){
+
+            db.categories.push({
+
+                id:
+                    uid("cat"),
+
+                name:
+                    name.trim(),
+
+                parentId:
+                    category.id
+
+            });
+
+            saveDatabase();
+            renderEverything();
+
+        }
+
+        return;
+    }
+
+    if(action === "3"){
+
+        const name =
+            prompt(
+                "Sister category name:"
+            );
+
+        if(
+            name &&
+            name.trim()
+        ){
+
+            db.categories.push({
+
+                id:
+                    uid("cat"),
+
+                name:
+                    name.trim(),
+
+                parentId:
+                    category.parentId ||
+                    null
+
+            });
+
+            saveDatabase();
+            renderEverything();
+
+        }
+
+        return;
+    }
+
+    if(action === "4"){
+
+        const yes =
+            confirm(
+                "Category remove کریں؟ Notes delete نہیں ہوں گے۔"
+            );
+
+        if(!yes){
+            return;
+        }
+
+        /*
+           Child categories کو parent کے ساتھ
+           reassign کیا جاتا ہے۔
+        */
+
+        db.categories.forEach(
+            c => {
+
+                if(
+                    c.parentId ===
+                    category.id
+                ){
+
+                    c.parentId =
+                        category.parentId ||
+                        null;
+
+                }
+
+            }
+        );
+
+        db.notes.forEach(
+            note => {
+
+                if(
+                    note.categoryId ===
+                    category.id
+                ){
+
+                    note.categoryId =
+                        category.parentId ||
+                        null;
+
+                }
+
+            }
+        );
+
+        db.categories =
+            db.categories.filter(
+                c =>
+                    c.id !==
+                    category.id
+            );
+
+        saveDatabase();
+
+        renderEverything();
+
+    }
+
+}
+
+
+/* =========================================================
+   SETTINGS
+========================================================= */
+
+function openSettings(){
+
+    $("settingSidebar").value =
+        db.settings.sidebarView;
+
+    $("settingTheme").value =
+        db.settings.theme;
+
+    $("settingFont").value =
+        db.settings.fontSize;
+
+    $("settingListStyle").value =
+        db.settings.noteListStyle;
+
+    $("settingSort").value =
+        db.settings.sort;
+
+    $("settingPerPage").value =
+        db.settings.notesPerPage;
+
+    $("settingDeleteConfirm").value =
+        String(
+            db.settings.deleteConfirmation
+        );
+
+    $("settingAutoSave").value =
+        String(
+            db.settings.autoSave
+        );
+
+    $("settingsModal")
+        .classList.add(
+            "show"
+        );
+
+}
+
+async function saveSettings(){
+
+    db.settings.sidebarView =
+        $("settingSidebar").value;
+
+    db.settings.theme =
+        $("settingTheme").value;
+
+    db.settings.fontSize =
+        $("settingFont").value;
+
+    db.settings.noteListStyle =
+        $("settingListStyle").value;
+
+    db.settings.sort =
+        $("settingSort").value;
+
+    db.settings.notesPerPage =
+        $("settingPerPage").value;
+
+    db.settings.deleteConfirmation =
+        $("settingDeleteConfirm").value ===
+        "true";
+
+    db.settings.autoSave =
+        $("settingAutoSave").value ===
+        "true";
+
+    applySettings();
+
+    $("settingsModal")
+        .classList.remove(
+            "show"
+        );
+
+    renderEverything();
+
+    await saveDatabase();
+
+}
+
+
+/* =========================================================
+   APPLY SETTINGS
+========================================================= */
+
+function applySettings(){
+
+    const theme =
+        db.settings.theme;
+
+    if(theme === "Night"){
+
+        document.body.style.background =
+            "#202124";
+
+        document.body.style.color =
+            "#e8eaed";
+
+    }else{
+
+        document.body.style.background =
+            "#f4f6f8";
+
+        document.body.style.color =
+            "#202124";
+
+    }
+
+    const font =
+        db.settings.fontSize;
+
+    let size =
+        "16px";
+
+    if(font === "Small"){
+        size = "14px";
+    }
+
+    if(font === "Large"){
+        size = "18px";
+    }
+
+    if(font === "Extra Large"){
+        size = "20px";
+    }
+
+    document.body.style.fontSize =
+        size;
+
+}
+
+
+/* =========================================================
+   SEARCH
+========================================================= */
+
+$("searchInput")
+    .addEventListener(
+        "input",
+        event => {
+
+            searchText =
+                event.target.value
+                    .trim();
+
+            renderNoteList();
+
+        }
+    );
+
+
+/* =========================================================
+   SIDEBAR EVENTS
+========================================================= */
+
+$("menuBtn")
+    .addEventListener(
+        "click",
+        () => {
+
+            $("sidebar")
+                .classList.toggle(
+                    "open"
+                );
+
+            $("overlay")
+                .classList.toggle(
+                    "show"
+                );
+
+        }
+    );
+
+$("overlay")
+    .addEventListener(
+        "click",
+        () => {
+
+            $("sidebar")
+                .classList.remove(
+                    "open"
+                );
+
+            $("overlay")
+                .classList.remove(
+                    "show"
+                );
+
+        }
+    );
+
+document
+    .querySelectorAll(
+        ".side-item[data-view]"
+    )
+    .forEach(
+        item => {
+
+            item.addEventListener(
+                "click",
+                () => {
+
+                    const view =
+                        item.dataset.view;
+
+                    if(view === "settings"){
+
+                        openSettings();
+
+                        return;
+                    }
+
+                    if(view === "checklist"){
+
+                        openChecklist();
+
+                        return;
+                    }
+
+                    currentView =
+                        view;
+
+                    currentCategoryId =
+                        null;
+
+                    currentTag =
+                        null;
+
+                    document
+                        .querySelectorAll(
+                            ".side-item[data-view]"
+                        )
+                        .forEach(
+                            x =>
+                                x.classList.remove(
+                                    "active"
+                                )
+                        );
+
+                    item.classList.add(
+                        "active"
+                    );
+
+                    renderNoteList();
+
+                }
+            );
+
+        }
+    );
+
+
+/* =========================================================
+   MAIN BUTTONS
+========================================================= */
+
+$("connectBtn")
+    .addEventListener(
+        "click",
+        connectGoogleDrive
+    );
+
+$("loadBtn")
+    .addEventListener(
+        "click",
+        loadDatabase
+    );
+
+$("syncBtn")
+    .addEventListener(
+        "click",
+        synchronizeTime
+    );
+
+$("lastSyncBtn")
+    .addEventListener(
+        "click",
+        showLastSyncTime
+    );
+
+$("addBtn")
+    .addEventListener(
+        "click",
+        openAddNote
+    );
+
+$("editBtn")
+    .addEventListener(
+        "click",
+        () => {
+
+            if(!selectedNoteId){
+
+                alert(
+                    "پہلے note select کریں۔"
+                );
+
+                return;
+            }
+
+            openEditNote(
+                selectedNoteId
+            );
+
+        }
+    );
+
+$("favoriteBtn")
+    .addEventListener(
+        "click",
+        () => {
+
+            if(!selectedNoteId){
+
+                alert(
+                    "پہلے note select کریں۔"
+                );
+
+                return;
+            }
+
+            toggleFavorite(
+                selectedNoteId
+            );
+
+        }
+    );
+
+$("pinBtn")
+    .addEventListener(
+        "click",
+        () => {
+
+            if(!selectedNoteId){
+
+                alert(
+                    "پہلے note select کریں۔"
+                );
+
+                return;
+            }
+
+            togglePin(
+                selectedNoteId
+            );
+
+        }
+    );
+
+$("deleteBtn")
+    .addEventListener(
+        "click",
+        () => {
+
+            if(!selectedNoteId){
+
+                alert(
+                    "پہلے note select کریں۔"
+                );
+
+                return;
+            }
+
+            deleteNote(
+                selectedNoteId
+            );
+
+        }
+    );
+
+
+/* =========================================================
+   NOTE MODAL EVENTS
+========================================================= */
+
+$("cancelNoteBtn")
+    .addEventListener(
+        "click",
+        () => {
+
+            $("noteModal")
+                .classList.remove(
+                    "show"
+                );
+
+        }
+    );
+
+$("saveNoteBtn")
+    .addEventListener(
+        "click",
+        saveNoteFromModal
+    );
+
+$("addLinkBtn")
+    .addEventListener(
+        "click",
+        () => addLinkRow()
+    );
+
+
+/* =========================================================
+   SETTINGS EVENTS
+========================================================= */
+
+$("closeSettingsBtn")
+    .addEventListener(
+        "click",
+        () => {
+
+            $("settingsModal")
+                .classList.remove(
+                    "show"
+                );
+
+        }
+    );
+
+$("saveSettingsBtn")
+    .addEventListener(
+        "click",
+        saveSettings
+    );
+
+
+/* =========================================================
+   CHECKLIST
+========================================================= */
+
+function openChecklist(){
+
+    if(db.checklistLink){
+
+        window.open(
+            db.checklistLink,
+            "_blank",
+            "noopener"
+        );
+
+        return;
+    }
+
+    const url =
+        prompt(
+            "Checklist Web App URL درج کریں:"
+        );
+
+    if(
+        url &&
+        url.trim()
+    ){
+
+        db.checklistLink =
+            url.trim();
+
+        saveDatabase();
+
+        window.open(
+            db.checklistLink,
+            "_blank",
+            "noopener"
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+   AUTO SAVE
+========================================================= */
+
+function scheduleSave(){
+
+    clearTimeout(
+        saveTimer
+    );
+
+    saveTimer =
+        setTimeout(
+            () => {
+
+                if(
+                    db.settings.autoSave
+                ){
+
+                    saveDatabase();
+
+                }
+
+            },
+            1200
+        );
+
+}
+
+
+/* =========================================================
+   INITIAL DATABASE STATE
+========================================================= */
+
+db =
+    normalizeDatabase({
+        version:1,
+        notes:[],
+        categories:[],
+        tags:[],
+        settings:defaultSettings,
+        checklistLink:"",
+        lastSynchronizedTime:null
+    });
+
+
+/* =========================================================
+   INITIAL UI
+========================================================= */
+
+renderEverything();
+
+
+/*
+   Sidebar intentionally CLOSED
+   on initial page load.
+*/
+
+
+/* =========================================================
+   GOOGLE INITIALIZATION
+========================================================= */
+
+window.addEventListener(
     "load",
-    function() {
+    () => {
 
-      initializeGoogle();
+        initGoogle();
 
     }
-  );
+);
 
 </script>
 
