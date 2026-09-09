@@ -8,33 +8,44 @@
 
   <!--
   ============================================================
-  GOOGLE DRIVE OAUTH PERSISTENCE TEST
-  VERSION: Silent Authorization Test
+  GOOGLE DRIVE OAUTH TEST
+  ============================================================
 
-  CODE RELEASE DATE:
-  10 September 2026
+  TEST VERSION:
+  Account Selection Auto-Authorization
 
-  CODE UPDATED TIME:
-  Runtime clock below shows exact date/time/seconds.
+  CODE UPDATED:
+  10 September 2026 — 00:53:00 PKT
 
-  PURPOSE:
-  1. Try silent authorization automatically.
-  2. Do NOT show Account Selection if existing authorization
-     and Google login session are available.
-  3. Do NOT force consent on page load.
-  4. No localStorage.
-  5. No sessionStorage.
-  6. No IndexedDB.
-  7. Google Drive API test included.
+  EXPECTED FLOW:
+
+  PAGE OPEN
+       ↓
+  GOOGLE ACCOUNT SELECTION
+       ↓
+  USER CLICKS ACCOUNT
+       ↓
+  GOOGLE WINDOW CLOSES
+       ↓
+  ACCESS TOKEN RECEIVED
+       ↓
+  DRIVE AUTHORIZATION READY
+
+  No:
+  - Continue button
+  - Allow button
+  - Authorize button
+  after account selection.
 
   IMPORTANT:
-  Never put a Google OAuth Client Secret in this file.
+  No Client Secret is used in this frontend.
   ============================================================
   -->
 
   <script src="https://accounts.google.com/gsi/client"></script>
 
   <style>
+
     body {
       font-family: Arial, sans-serif;
       margin: 0;
@@ -64,47 +75,13 @@
       line-height: 1.6;
     }
 
-    button {
-      padding: 12px 18px;
-      margin: 6px 6px 6px 0;
-      border: 0;
-      border-radius: 7px;
-      cursor: pointer;
-      font-size: 15px;
-    }
-
-    #authorizeBtn {
-      background: #1a73e8;
-      color: #fff;
-    }
-
-    #driveBtn {
-      background: #188038;
-      color: #fff;
-    }
-
-    button:disabled {
-      opacity: .5;
-      cursor: not-allowed;
-    }
-
-    #status {
+    .status {
       margin-top: 20px;
-      padding: 15px;
-      border-radius: 8px;
+      padding: 16px;
       background: #f1f3f4;
+      border-radius: 8px;
       white-space: pre-wrap;
       line-height: 1.5;
-    }
-
-    #result {
-      margin-top: 20px;
-      padding: 15px;
-      border: 1px solid #ddd;
-      border-radius: 8px;
-      background: #fafafa;
-      white-space: pre-wrap;
-      overflow-x: auto;
     }
 
     .success {
@@ -117,12 +94,44 @@
       font-weight: bold;
     }
 
-    .small {
-      font-size: 13px;
-      color: #666;
+    .error {
+      color: #d93025;
+      font-weight: bold;
     }
+
+    button {
+      padding: 12px 18px;
+      margin-top: 15px;
+      border: 0;
+      border-radius: 7px;
+      cursor: pointer;
+      font-size: 15px;
+      background: #188038;
+      color: white;
+    }
+
+    button:disabled {
+      opacity: .5;
+      cursor: not-allowed;
+    }
+
+    #driveResult {
+      margin-top: 20px;
+      padding: 15px;
+      background: #fafafa;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      white-space: pre-wrap;
+      overflow-x: auto;
+    }
+
+    .hidden {
+      display: none;
+    }
+
   </style>
 </head>
+
 
 <body>
 
@@ -131,41 +140,41 @@
   <h1>Google Drive Authorization Test</h1>
 
   <div class="version">
-    <strong>OAuth Persistence Test — Silent Authorization</strong><br>
 
-    <strong>Code Version:</strong>
-    Silent Authorization Test<br>
+    <strong>Test:</strong>
+    Account Selection Auto-Authorization
+    <br>
 
-    <strong>Code Release Date:</strong>
-    10 September 2026<br>
+    <strong>Code Updated:</strong>
+    10 September 2026 — 00:53:00 PKT
+    <br>
 
-    <strong>Runtime Updated Time:</strong>
-    <span id="runtimeTime">Loading...</span>
+    <strong>Runtime:</strong>
+    <span id="runtime"></span>
+
   </div>
 
+
   <p>
-    اس version میں page load ہوتے ہی پہلے سے موجود Google authorization
-    کو silently حاصل کرنے کی کوشش کی جائے گی۔
+    Page کھلنے کے بعد Google Account Selection خودکار طور پر
+    کھلنے کی کوشش کرے گی۔
   </p>
 
-  <button id="authorizeBtn" disabled>
-    Authorize Google Drive
-  </button>
 
-  <button id="driveBtn" disabled>
-    Test Drive Access
-  </button>
-
-  <div id="status">
+  <div id="status" class="status">
     Google Identity Services load ہو رہی ہے...
   </div>
 
-  <div id="result"></div>
 
-  <p class="small">
-    Silent authorization ناکام ہونے کی صورت میں ہی manual authorization
-    button استعمال کریں۔
-  </p>
+  <button
+    id="driveButton"
+    class="hidden"
+  >
+    Test Drive Access
+  </button>
+
+
+  <div id="driveResult"></div>
 
 </div>
 
@@ -181,6 +190,7 @@
   const CLIENT_ID =
     "262106898132-tsn94p3vvpf34do0ommc6rai2mtc5sh6.apps.googleusercontent.com";
 
+
   const DRIVE_SCOPE =
     "https://www.googleapis.com/auth/drive";
 
@@ -191,45 +201,50 @@
   ============================================================
   */
 
-  function updateRuntimeClock() {
+  function updateRuntime() {
 
     const now = new Date();
 
-    const formatted =
+    const time =
       now.toLocaleString(
         "en-GB",
         {
           timeZone: "Asia/Karachi",
+
           year: "numeric",
           month: "2-digit",
           day: "2-digit",
+
           hour: "2-digit",
           minute: "2-digit",
           second: "2-digit",
+
           hour12: false
         }
       );
 
-    document.getElementById("runtimeTime").textContent =
-      formatted + " PKT";
+    document.getElementById("runtime").textContent =
+      time + " PKT";
   }
 
-  updateRuntimeClock();
 
-  setInterval(updateRuntimeClock, 1000);
+  updateRuntime();
+
+  setInterval(
+    updateRuntime,
+    1000
+  );
 
 
   /*
   ============================================================
-  RUNTIME VARIABLES
+  VARIABLES
   ============================================================
   */
 
   let tokenClient = null;
 
   let accessToken = null;
-
-  let silentAttemptFinished = false;
 
 
   /*
@@ -238,87 +253,142 @@
   ============================================================
   */
 
-  const authorizeBtn =
-    document.getElementById("authorizeBtn");
-
-  const driveBtn =
-    document.getElementById("driveBtn");
-
-  const statusBox =
+  const status =
     document.getElementById("status");
 
-  const resultBox =
-    document.getElementById("result");
+  const driveButton =
+    document.getElementById("driveButton");
+
+  const driveResult =
+    document.getElementById("driveResult");
 
 
   /*
   ============================================================
-  STATUS
+  STATUS FUNCTION
   ============================================================
   */
 
-  function setStatus(message, type = "") {
+  function showStatus(
+    message,
+    className = ""
+  ) {
 
-    statusBox.className = type;
+    status.className =
+      "status " + className;
 
-    statusBox.textContent = message;
+    status.textContent =
+      message;
   }
 
 
   /*
   ============================================================
-  SUCCESSFUL TOKEN
+  GOOGLE TOKEN CALLBACK
   ============================================================
   */
 
-  function handleTokenSuccess(response) {
+  function tokenCallback(response) {
 
-    silentAttemptFinished = true;
+    console.log(
+      "Google OAuth callback:",
+      response
+    );
 
-    if (!response || response.error) {
+
+    /*
+    ------------------------------------------------------------
+    ERROR
+    ------------------------------------------------------------
+    */
+
+    if (
+      !response ||
+      response.error
+    ) {
 
       accessToken = null;
 
-      driveBtn.disabled = true;
+      driveButton.classList.add(
+        "hidden"
+      );
 
-      authorizeBtn.disabled = false;
 
-      setStatus(
-        "Silent authorization کامیاب نہیں ہوئی۔\n\n" +
-        "اب manual authorization کی ضرورت ہو سکتی ہے۔",
+      showStatus(
+
+        "Google authorization مکمل نہیں ہوئی۔\n\n" +
+
+        "Google نے token واپس نہیں دیا۔\n\n" +
+
+        "Error:\n" +
+
+        JSON.stringify(
+          response,
+          null,
+          2
+        ),
+
         "warning"
+
       );
 
       return;
     }
 
 
+    /*
+    ------------------------------------------------------------
+    SUCCESS
+    ------------------------------------------------------------
+    */
+
     accessToken =
       response.access_token;
 
 
-    driveBtn.disabled = false;
+    /*
+    ------------------------------------------------------------
+    IMPORTANT:
+    We do NOT display the actual token.
+    ------------------------------------------------------------
+    */
 
-    authorizeBtn.disabled = true;
 
-
-    setStatus(
-      "Google Drive Authorization کامیاب!\n\n" +
-      "Access Token خاموشی سے حاصل ہو گیا۔\n\n" +
-      "کوئی Account Selection window نہیں دکھائی جانی چاہیے تھی۔\n\n" +
-      "اب Test Drive Access دبائیں۔",
-      "success"
+    driveButton.classList.remove(
+      "hidden"
     );
+
+
+    showStatus(
+
+      "Google Drive Authorization کامیاب! ✓\n\n" +
+
+      "Google Account منتخب ہونے کے بعد OAuth window بند ہو گئی۔\n\n" +
+
+      "Access Token کامیابی سے حاصل ہو گیا۔\n\n" +
+
+      "اب Drive API test کیا جا سکتا ہے۔",
+
+      "success"
+
+    );
+
   }
 
 
   /*
   ============================================================
-  INITIALIZE GOOGLE
+  INITIALIZE GOOGLE TOKEN CLIENT
   ============================================================
   */
 
   function initializeGoogle() {
+
+    /*
+    ------------------------------------------------------------
+    Check Google Identity Services
+    ------------------------------------------------------------
+    */
 
     if (
       !window.google ||
@@ -326,133 +396,147 @@
       !google.accounts.oauth2
     ) {
 
-      setStatus(
+      showStatus(
+
         "Google Identity Services load نہیں ہوئی۔\n\n" +
+
         "Page کو دوبارہ reload کریں۔",
-        "warning"
+
+        "error"
+
       );
 
       return;
     }
 
 
+    /*
+    ------------------------------------------------------------
+    Create Token Client
+    ------------------------------------------------------------
+    */
+
     tokenClient =
       google.accounts.oauth2.initTokenClient({
 
-        client_id: CLIENT_ID,
+        client_id:
+          CLIENT_ID,
 
-        scope: DRIVE_SCOPE,
+        scope:
+          DRIVE_SCOPE,
 
-        callback: handleTokenSuccess
+        callback:
+          tokenCallback
 
       });
 
 
-    authorizeBtn.disabled = false;
+    showStatus(
 
-
-    setStatus(
       "Google authorization system تیار ہے۔\n\n" +
-      "اب existing authorization کے لیے Silent Authorization کی کوشش کی جا رہی ہے..."
+
+      "Google Account Selection خودکار طور پر کھولی جا رہی ہے..."
+
     );
 
 
     /*
     ============================================================
-    SILENT AUTHORIZATION
+    AUTOMATIC ACCOUNT SELECTION
     ============================================================
 
-    prompt: "none"
+    prompt: ""
 
-    Google کو کہا جاتا ہے کہ کوئی user interaction نہ دکھائے۔
+    مقصد:
 
-    اگر existing Google authorization + active Google session
-    available ہو تو token silently واپس آ سکتا ہے۔
+    - Existing Google authorization استعمال کرنا
+    - Consent دوبارہ force نہ کرنا
+    - Account selection آنے کی صورت میں صرف account
+      select کرنا
+    - Account selection کے بعد Google window close ہونا
+    - Token callback میں واپس آنا
 
-    اگر Google کو user interaction چاہیے تو callback میں error آئے گا۔
     ============================================================
     */
 
-    tokenClient.requestAccessToken({
-      prompt: "none"
-    });
+    setTimeout(
+      function() {
+
+        try {
+
+          tokenClient.requestAccessToken({
+
+            prompt: ""
+
+          });
+
+        }
+        catch (error) {
+
+          console.error(
+            "OAuth request error:",
+            error
+          );
+
+
+          showStatus(
+
+            "Google authorization window نہیں کھل سکی۔\n\n" +
+
+            "Error:\n" +
+
+            error.message,
+
+            "error"
+
+          );
+
+        }
+
+      },
+
+      500
+    );
 
   }
 
 
   /*
   ============================================================
-  MANUAL AUTHORIZATION
+  DRIVE API TEST
   ============================================================
   */
 
-  authorizeBtn.addEventListener(
-    "click",
-    function() {
-
-      if (!tokenClient) {
-
-        setStatus(
-          "Google authorization system ابھی تیار نہیں ہے۔",
-          "warning"
-        );
-
-        return;
-      }
-
-
-      authorizeBtn.disabled = true;
-
-
-      setStatus(
-        "Manual Google authorization شروع ہو رہی ہے..."
-      );
-
-
-      /*
-      ----------------------------------------------------------
-      Existing authorization ہو تو Google اسے reuse کر سکتا ہے۔
-      پہلی دفعہ ضرورت ہو تو Google consent دکھا سکتا ہے۔
-      ----------------------------------------------------------
-      */
-
-      tokenClient.requestAccessToken({
-        prompt: ""
-      });
-
-    }
-  );
-
-
-  /*
-  ============================================================
-  TEST DRIVE ACCESS
-  ============================================================
-  */
-
-  driveBtn.addEventListener(
+  driveButton.addEventListener(
     "click",
     async function() {
 
       if (!accessToken) {
 
-        setStatus(
-          "Access Token موجود نہیں ہے۔\n\n" +
-          "پہلے authorization حاصل کریں۔",
+        showStatus(
+
+          "Access Token موجود نہیں ہے۔",
+
           "warning"
+
         );
 
         return;
       }
 
 
-      driveBtn.disabled = true;
+      driveButton.disabled =
+        true;
 
-      resultBox.textContent = "";
+
+      driveResult.textContent =
+        "";
 
 
-      setStatus(
+      showStatus(
+
         "Google Drive API سے data حاصل کیا جا رہا ہے..."
+
       );
 
 
@@ -460,17 +544,26 @@
 
         const response =
           await fetch(
+
             "https://www.googleapis.com/drive/v3/files" +
+
             "?pageSize=10" +
+
             "&fields=files(id,name,mimeType)",
+
             {
+
               method: "GET",
 
               headers: {
+
                 "Authorization":
                   "Bearer " + accessToken
+
               }
+
             }
+
           );
 
 
@@ -478,41 +571,68 @@
           await response.json();
 
 
+        /*
+        --------------------------------------------------------
+        API ERROR
+        --------------------------------------------------------
+        */
+
         if (!response.ok) {
 
           throw new Error(
+
             JSON.stringify(
               data,
               null,
               2
             )
+
           );
 
         }
 
 
+        /*
+        --------------------------------------------------------
+        SUCCESS
+        --------------------------------------------------------
+        */
+
         let output =
-          "Google Drive API ACCESS کامیاب!\n\n";
+          "Google Drive API ACCESS کامیاب! ✓\n\n";
 
 
         if (
           data.files &&
-          data.files.length > 0
+          data.files.length
         ) {
 
           data.files.forEach(
-            function(file, index) {
+            function(
+              file,
+              index
+            ) {
 
               output +=
+
                 (index + 1) +
+
                 ". " +
+
                 file.name +
+
                 "\n" +
+
                 "ID: " +
+
                 file.id +
+
                 "\n" +
+
                 "Type: " +
+
                 file.mimeType +
+
                 "\n\n";
 
             }
@@ -527,35 +647,47 @@
         }
 
 
-        resultBox.textContent =
+        driveResult.textContent =
           output;
 
 
-        setStatus(
-          "Google Drive Authorization کامیاب!\n\n" +
-          "Drive API بھی کامیابی سے access ہو گئی ہے۔",
+        showStatus(
+
+          "Google Drive Authorization کامیاب! ✓\n\n" +
+
+          "Google Drive API بھی کامیابی سے access ہو گئی ہے۔",
+
           "success"
+
         );
 
       }
       catch (error) {
 
-        console.error(error);
+        console.error(
+          error
+        );
 
 
-        resultBox.textContent =
+        driveResult.textContent =
           error.message;
 
 
-        setStatus(
-          "Google Drive API access ناکام ہوئی۔",
-          "warning"
+        showStatus(
+
+          "Google Drive API access ناکام ہوئی۔\n\n" +
+
+          error.message,
+
+          "error"
+
         );
 
       }
       finally {
 
-        driveBtn.disabled = false;
+        driveButton.disabled =
+          false;
 
       }
 
@@ -565,7 +697,7 @@
 
   /*
   ============================================================
-  PAGE LOAD
+  PAGE START
   ============================================================
   */
 
@@ -573,14 +705,7 @@
     "load",
     function() {
 
-      /*
-       * Google GIS script کو load ہونے کا تھوڑا وقت دیں۔
-       */
-
-      setTimeout(
-        initializeGoogle,
-        500
-      );
+      initializeGoogle();
 
     }
   );
