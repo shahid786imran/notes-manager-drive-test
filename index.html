@@ -1,14 +1,134 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Notes Manager Drive Test</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Google Drive Test</title>
+
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 25px;
+    }
+
+    button {
+      padding: 12px 18px;
+      font-size: 16px;
+    }
+
+    #status {
+      margin-top: 20px;
+      padding: 12px;
+    }
+  </style>
 </head>
+
 <body>
 
-  <h1>Notes Manager Drive Test</h1>
+  <h2>Google Drive Database Test</h2>
 
-  <p>GitHub Pages is working.</p>
+  <button id="connectBtn">
+    Connect Google Drive
+  </button>
+
+  <div id="status">
+    Not connected
+  </div>
+
+<script>
+
+  /*
+    =====================================================
+    GOOGLE OAUTH CLIENT ID
+    =====================================================
+  */
+
+  const CLIENT_ID =
+    "PASTE_YOUR_CLIENT_ID_HERE";
+
+
+  /*
+    =====================================================
+    GOOGLE DRIVE PERMISSION
+    =====================================================
+  */
+
+  const DRIVE_SCOPE =
+    "https://www.googleapis.com/auth/drive";
+
+
+  let accessToken = null;
+
+
+  const status =
+    document.getElementById("status");
+
+
+  const connectBtn =
+    document.getElementById("connectBtn");
+
+
+  function setStatus(message) {
+    status.textContent = message;
+  }
+
+
+  connectBtn.addEventListener("click", function () {
+
+    setStatus("Connecting to Google...");
+
+
+    const tokenClient =
+      google.accounts.oauth2.initTokenClient({
+
+        client_id: CLIENT_ID,
+
+        scope: DRIVE_SCOPE,
+
+        callback: function (response) {
+
+          if (response.error) {
+
+            console.error(response);
+
+            setStatus(
+              "Google authorization failed: " +
+              (response.error_description ||
+               response.error)
+            );
+
+            return;
+          }
+
+
+          accessToken =
+            response.access_token;
+
+
+          setStatus(
+            "SUCCESS! Google Drive connected."
+          );
+
+
+          console.log(
+            "Access Token received."
+          );
+
+        }
+
+      });
+
+
+    tokenClient.requestAccessToken({
+      prompt: "consent"
+    });
+
+  });
+
+</script>
 
 </body>
 </html>
