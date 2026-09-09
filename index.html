@@ -1,1060 +1,1626 @@
 <!DOCTYPE html>
-<html lang="en">
-
+<html lang="ur" dir="rtl">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <title>Google Drive Database Test</title>
+<title>روزانہ ریکارڈ</title>
 
-  <script
-    src="https://accounts.google.com/gsi/client"
-    async
-    defer>
-  </script>
+<style>
+* {
+    box-sizing: border-box;
+}
 
-  <style>
+body {
+    margin: 0;
+    font-family: Arial, Tahoma, sans-serif;
+    background: #f3f5f7;
+    color: #222;
+}
 
-    body {
-      font-family: Arial, sans-serif;
-      padding: 25px;
-      max-width: 800px;
-      margin: auto;
+.container {
+    width: min(1100px, 95%);
+    margin: 18px auto;
+}
+
+.top-area {
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 12px;
+    padding: 15px;
+    margin-bottom: 16px;
+}
+
+.current-time {
+    font-size: 20px;
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 14px;
+}
+
+.buttons {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+button {
+    border: 0;
+    border-radius: 8px;
+    padding: 13px 20px;
+    font-size: 15px;
+    cursor: pointer;
+    color: white;
+}
+
+button:disabled {
+    opacity: .6;
+    cursor: not-allowed;
+}
+
+#authorizeButton {
+    background: #555;
+}
+
+#recordButton {
+    background: #16833b;
+}
+
+#readButton {
+    background: #1976d2;
+}
+
+.workspace {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    gap: 16px;
+}
+
+.panel {
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.panel-title {
+    padding: 14px;
+    font-weight: bold;
+    border-bottom: 1px solid #ddd;
+    background: #fafafa;
+}
+
+.file-list {
+    padding: 8px;
+    max-height: 600px;
+    overflow-y: auto;
+}
+
+.file-item {
+    padding: 13px;
+    margin-bottom: 7px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background: #f8f9fa;
+    cursor: pointer;
+}
+
+.file-item:hover {
+    background: #edf5ff;
+}
+
+.file-item.active {
+    background: #dcecff;
+    border-color: #1976d2;
+}
+
+.file-name {
+    font-weight: bold;
+}
+
+.file-meta {
+    font-size: 12px;
+    color: #777;
+    margin-top: 5px;
+}
+
+.data-area {
+    padding: 15px;
+    min-height: 400px;
+}
+
+.empty {
+    min-height: 330px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: #888;
+    line-height: 1.8;
+}
+
+.record {
+    border: 1px solid #ddd;
+    border-radius: 9px;
+    margin-bottom: 10px;
+    overflow: hidden;
+}
+
+.record-time {
+    padding: 10px 13px;
+    background: #f5f6f7;
+    border-bottom: 1px solid #ddd;
+    font-weight: bold;
+}
+
+.record-value {
+    padding: 12px;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.status {
+    margin-top: 14px;
+    padding: 11px;
+    border-radius: 8px;
+    display: none;
+    line-height: 1.6;
+}
+
+.status.show {
+    display: block;
+}
+
+.status.info {
+    background: #eaf3fc;
+    color: #195c91;
+}
+
+.status.success {
+    background: #e8f7ed;
+    color: #176b32;
+}
+
+.status.error {
+    background: #fdeaea;
+    color: #a52222;
+}
+
+.code-info {
+    margin-top: 12px;
+    text-align: center;
+    color: #888;
+    font-size: 11px;
+}
+
+@media (max-width: 700px) {
+
+    .container {
+        width: 96%;
+        margin: 10px auto;
     }
 
-    h2 {
-      margin-bottom: 20px;
+    .buttons {
+        display: grid;
+        grid-template-columns: 1fr;
     }
 
     button {
-      padding: 12px 18px;
-      font-size: 16px;
-      margin: 5px 5px 5px 0;
-      cursor: pointer;
+        width: 100%;
     }
 
-    button:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
+    .workspace {
+        grid-template-columns: 1fr;
     }
 
-    #status {
-      margin-top: 20px;
-      padding: 14px;
-      background: #f1f1f1;
-      border-radius: 6px;
-      white-space: pre-wrap;
+    .file-list {
+        max-height: 320px;
     }
 
-    #data {
-      margin-top: 20px;
-      padding: 15px;
-      background: #fafafa;
-      border: 1px solid #ddd;
-      border-radius: 6px;
-      white-space: pre-wrap;
-      overflow-x: auto;
+    .data-area {
+        min-height: 300px;
     }
 
-  </style>
-
+    .current-time {
+        font-size: 18px;
+    }
+}
+</style>
 </head>
-
 
 <body>
 
-  <h2>Google Drive Database Test</h2>
+<div class="container">
+
+    <div class="top-area">
+
+        <div
+            id="currentTime"
+            class="current-time">
+            وقت حاصل کیا جا رہا ہے...
+        </div>
+
+        <div class="buttons">
+
+            <button
+                id="authorizeButton">
+                گوگل سے منسلک کریں
+            </button>
+
+            <button
+                id="recordButton"
+                disabled>
+                ریکارڈ محفوظ کریں
+            </button>
+
+            <button
+                id="readButton"
+                disabled>
+                ریکارڈ پڑھیں
+            </button>
+
+        </div>
+
+        <div
+            id="status"
+            class="status">
+        </div>
+
+        <div class="code-info">
+            نسخہ 2.0.0 — 09-09-2026
+        </div>
+
+    </div>
 
 
-  <button id="connectBtn">
-    Connect Google Drive
-  </button>
+    <div class="workspace">
+
+        <div class="panel">
+
+            <div class="panel-title">
+                روزانہ کی فائلیں
+            </div>
+
+            <div
+                id="fileList"
+                class="file-list">
+
+                <div class="empty">
+                    ریکارڈ پڑھنے کے لیے
+                    "ریکارڈ پڑھیں" دبائیں۔
+                </div>
+
+            </div>
+
+        </div>
 
 
-  <button id="readBtn" disabled>
-    Read Master.json
-  </button>
+        <div class="panel">
+
+            <div
+                id="dataTitle"
+                class="panel-title">
+                ریکارڈ
+            </div>
+
+            <div
+                id="dataArea"
+                class="data-area">
+
+                <div class="empty">
+                    کسی روزانہ فائل کو منتخب کرنے پر
+                    اس کا ریکارڈ یہاں ظاہر ہوگا۔
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
 
 
-  <button id="createBtn" disabled>
-    Create Test File
-  </button>
-
-
-  <button id="updateBtn" disabled>
-    Update Master.json
-  </button>
-
-
-  <button id="deleteBtn" disabled>
-    Delete Test File
-  </button>
-
-
-  <div id="status">
-    Not connected
-  </div>
-
-
-  <pre id="data"></pre>
-
+<script src="https://accounts.google.com/gsi/client"></script>
 
 <script>
 
-
-/* =========================================================
-   GOOGLE DRIVE CONFIGURATION
-   ========================================================= */
-
+/* ============================================================
+   GOOGLE DRIVE SETTINGS
+   ============================================================ */
 
 const CLIENT_ID =
-  "262106898132-tsn94p3vvpf34do0ommc6rai2mtc5sh6.apps.googleusercontent.com";
+"262106898132-tsn94p3vvpf34do0ommc6rai2mtc5sh6.apps.googleusercontent.com";
+
+const DATABASE_FOLDER_ID =
+"1iFxVl1IH0PrEZw5uDUlnJuaablUI77nx";
+
+const MASTER_DB_FILE_ID =
+"1i3LtPybAqhvumBsy0HXJyUCjmFBIdGP7";
 
 
 const DRIVE_SCOPE =
-  "https://www.googleapis.com/auth/drive";
+"https://www.googleapis.com/auth/drive";
 
 
-/* ---------------------------------------------------------
-   MASTER DATABASE FILE
-   --------------------------------------------------------- */
-
-
-const MASTER_FILE_ID =
-  "1i3LtPybAqhvumBsy0HXJyUCjmFBIdGP7";
-
-
-/* ---------------------------------------------------------
-   NOTES MANAGER TEST DATABASE FOLDER
-   --------------------------------------------------------- */
-
-
-const DATABASE_FOLDER_ID =
-  "1iFxVl1IH0PrEZw5uDUlnJuaablUI77nx";
-
-
-/* =========================================================
-   VARIABLES
-   ========================================================= */
-
+/* ============================================================
+   GLOBAL VARIABLES
+   ============================================================ */
 
 let accessToken = null;
 
+let tokenClient = null;
 
-/*
-   ID of the test file created during the current session.
+let isAuthorized = false;
 
-   This is intentionally NOT hard-coded because every time
-   we create a new test file, Google Drive gives it a new ID.
-*/
+let allDailyFiles = [];
 
 
-let createdTestFileId = null;
+/* ============================================================
+   CURRENT TIME
+   ============================================================ */
+
+function updateClock() {
+
+    const now = new Date();
+
+    const date =
+        now.toLocaleDateString(
+            "ur-PK",
+            {
+                year: "numeric",
+                month: "2-digit",
+                day: "2-digit"
+            }
+        );
+
+    const time =
+        now.toLocaleTimeString(
+            "ur-PK",
+            {
+                hour: "2-digit",
+                minute: "2-digit",
+                second: "2-digit"
+            }
+        );
+
+    document.getElementById("currentTime")
+        .textContent =
+        date + " — " + time;
+}
+
+updateClock();
+
+setInterval(updateClock, 1000);
 
 
-/* =========================================================
-   ELEMENTS
-   ========================================================= */
+/* ============================================================
+   STATUS
+   ============================================================ */
 
+function showStatus(message, type = "info") {
 
-const status =
-  document.getElementById("status");
+    const box =
+        document.getElementById("status");
 
+    box.textContent = message;
 
-const data =
-  document.getElementById("data");
-
-
-const connectBtn =
-  document.getElementById("connectBtn");
-
-
-const readBtn =
-  document.getElementById("readBtn");
-
-
-const createBtn =
-  document.getElementById("createBtn");
-
-
-const updateBtn =
-  document.getElementById("updateBtn");
-
-
-const deleteBtn =
-  document.getElementById("deleteBtn");
-
-
-/* =========================================================
-   STATUS FUNCTION
-   ========================================================= */
-
-
-function setStatus(message) {
-
-  status.textContent = message;
-
+    box.className =
+        "status show " + type;
 }
 
 
-/* =========================================================
-   CONNECT GOOGLE DRIVE
-   ========================================================= */
+function clearStatus() {
+
+    const box =
+        document.getElementById("status");
+
+    box.className = "status";
+
+    box.textContent = "";
+}
 
 
-connectBtn.addEventListener(
-  "click",
-  function () {
+/* ============================================================
+   BUTTON STATE
+   ============================================================ */
+
+function enableDriveButtons() {
+
+    document.getElementById("recordButton")
+        .disabled = false;
+
+    document.getElementById("readButton")
+        .disabled = false;
+}
 
 
-    setStatus(
-      "Connecting to Google..."
-    );
+/* ============================================================
+   GOOGLE AUTHORIZATION
+   ============================================================ */
+
+function initializeGoogleAuthorization() {
+
+    if (
+        typeof google === "undefined" ||
+        !google.accounts ||
+        !google.accounts.oauth2
+    ) {
+
+        showStatus(
+            "گوگل اجازت کا نظام ابھی دستیاب نہیں۔",
+            "error"
+        );
+
+        return;
+    }
 
 
-    const tokenClient =
-      google.accounts.oauth2.initTokenClient({
+    tokenClient =
+        google.accounts.oauth2.initTokenClient({
 
-        client_id:
-          CLIENT_ID,
+            client_id: CLIENT_ID,
 
-        scope:
-          DRIVE_SCOPE,
+            scope: DRIVE_SCOPE,
 
+            callback: function(response) {
 
-        callback:
-          function (response) {
+                if (response.error) {
 
+                    console.error(response);
 
-            if (response.error) {
+                    showStatus(
+                        "گوگل اجازت حاصل نہیں ہو سکی۔",
+                        "error"
+                    );
 
-
-              console.error(response);
-
-
-              setStatus(
-
-                "Google authorization failed:\n" +
-
-                (
-                  response.error_description ||
-                  response.error
-                )
-
-              );
+                    return;
+                }
 
 
-              return;
+                accessToken =
+                    response.access_token;
 
+                isAuthorized = true;
+
+                enableDriveButtons();
+
+
+                document.getElementById(
+                    "authorizeButton"
+                ).textContent =
+                    "گوگل منسلک ہے ✓";
+
+
+                showStatus(
+                    "گوگل ڈرائیو کامیابی سے منسلک ہو گئی۔",
+                    "success"
+                );
             }
 
-
-            accessToken =
-              response.access_token;
-
-
-            setStatus(
-              "SUCCESS! Google Drive connected."
-            );
-
-
-            readBtn.disabled =
-              false;
-
-
-            createBtn.disabled =
-              false;
-
-
-            updateBtn.disabled =
-              false;
-
-
-            deleteBtn.disabled =
-              false;
-
-          }
-
-      });
-
-
-    tokenClient.requestAccessToken({
-
-      prompt:
-        "consent"
-
-    });
-
-  }
-);
-
-
-/* =========================================================
-   READ MASTER.JSON FUNCTION
-   ========================================================= */
-
-
-async function readMasterFile() {
-
-
-  const response =
-    await fetch(
-
-      "https://www.googleapis.com/drive/v3/files/" +
-      MASTER_FILE_ID +
-      "?alt=media",
-
-      {
-
-        method:
-          "GET",
-
-        headers: {
-
-          "Authorization":
-            "Bearer " +
-            accessToken
-
-        }
-
-      }
-
-    );
-
-
-  if (!response.ok) {
-
-
-    const errorText =
-      await response.text();
-
-
-    throw new Error(
-
-      "HTTP " +
-      response.status +
-      "\n" +
-      errorText
-
-    );
-
-  }
-
-
-  const text =
-    await response.text();
-
-
-  let json;
-
-
-  try {
-
-    json =
-      JSON.parse(text);
-
-  }
-
-  catch {
-
-    throw new Error(
-      "Master.json contains invalid JSON."
-    );
-
-  }
-
-
-  return json;
-
-}
-
-
-/* =========================================================
-   READ BUTTON
-   ========================================================= */
-
-
-readBtn.addEventListener(
-  "click",
-  async function () {
-
-
-    if (!accessToken) {
-
-      setStatus(
-        "Please connect Google Drive first."
-      );
-
-      return;
-
-    }
-
-
-    setStatus(
-      "Reading Master.json..."
-    );
-
-
-    data.textContent =
-      "";
-
-
-    try {
-
-
-      const json =
-        await readMasterFile();
-
-
-      setStatus(
-        "SUCCESS! Master.json loaded."
-      );
-
-
-      data.textContent =
-        JSON.stringify(
-          json,
-          null,
-          2
-        );
-
-
-    }
-
-    catch (error) {
-
-
-      console.error(error);
-
-
-      setStatus(
-
-        "READ FAILED:\n" +
-        error.message
-
-      );
-
-    }
-
-  }
-);
-
-
-/* =========================================================
-   CREATE TEST FILE
-   ========================================================= */
-
-
-createBtn.addEventListener(
-  "click",
-  async function () {
-
-
-    if (!accessToken) {
-
-      setStatus(
-        "Please connect Google Drive first."
-      );
-
-      return;
-
-    }
-
-
-    setStatus(
-      "Creating test file inside Notes Manager Test DB..."
-    );
-
-
-    try {
-
-
-      const testData = {
-
-
-        version:
-          1,
-
-
-        updatedAt:
-          new Date().toISOString(),
-
-
-        test:
-          "Google Drive CREATE test successful",
-
-
-        notes: [
-
-          {
-
-            id:
-              1,
-
-            title:
-              "Create Test Note",
-
-            content:
-              "This file was created by the Notes Manager test web app."
-
-          }
-
-        ]
-
-      };
-
-
-      /* ---------------------------------------------------
-         FILE METADATA
-         --------------------------------------------------- */
-
-
-      const metadata = {
-
-
-        name:
-          "Drive CRUD Test.json",
-
-
-        mimeType:
-          "application/json",
-
-
-        /*
-          IMPORTANT:
-          This places the file inside the
-          Notes Manager Test DB folder.
-        */
-
-
-        parents: [
-          DATABASE_FOLDER_ID
-        ]
-
-      };
-
-
-      /* ---------------------------------------------------
-         MULTIPART FORM
-         --------------------------------------------------- */
-
-
-      const form =
-        new FormData();
-
-
-      form.append(
-
-        "metadata",
-
-        new Blob(
-
-          [
-            JSON.stringify(metadata)
-          ],
-
-          {
-            type:
-              "application/json"
-          }
-
-        )
-
-      );
-
-
-      form.append(
-
-        "file",
-
-        new Blob(
-
-          [
-            JSON.stringify(
-              testData,
-              null,
-              2
-            )
-          ],
-
-          {
-            type:
-              "application/json"
-          }
-
-        )
-
-      );
-
-
-      /* ---------------------------------------------------
-         CREATE FILE
-         --------------------------------------------------- */
-
-
-      const response =
-        await fetch(
-
-          "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart",
-
-          {
-
-            method:
-              "POST",
-
-            headers: {
-
-              "Authorization":
-                "Bearer " +
-                accessToken
-
-            },
-
-            body:
-              form
-
-          }
-
-        );
-
-
-      if (!response.ok) {
-
-
-        const errorText =
-          await response.text();
-
-
-        throw new Error(
-
-          "HTTP " +
-          response.status +
-          "\n" +
-          errorText
-
-        );
-
-      }
-
-
-      const result =
-        await response.json();
-
-
-      /*
-        IMPORTANT:
-        Store the ID of the file we just created.
-      */
-
-
-      createdTestFileId =
-        result.id;
-
-
-      setStatus(
-
-        "SUCCESS! Test file created inside Notes Manager Test DB.\n\n" +
-
-        "File Name: " +
-        result.name +
-
-        "\nFile ID: " +
-        result.id
-
-      );
-
-
-      data.textContent =
-        JSON.stringify(
-          testData,
-          null,
-          2
-        );
-
-
-      /*
-        Delete is now enabled because we have
-        the newly-created file ID.
-      */
-
-
-      deleteBtn.disabled =
-        false;
-
-
-    }
-
-    catch (error) {
-
-
-      console.error(error);
-
-
-      setStatus(
-
-        "CREATE FAILED:\n" +
-        error.message
-
-      );
-
-    }
-
-  }
-);
-
-
-/* =========================================================
-   UPDATE MASTER.JSON
-   ========================================================= */
-
-
-updateBtn.addEventListener(
-  "click",
-  async function () {
-
-
-    if (!accessToken) {
-
-      setStatus(
-        "Please connect Google Drive first."
-      );
-
-      return;
-
-    }
-
-
-    setStatus(
-      "Reading Master.json before update..."
-    );
-
-
-    try {
-
-
-      const json =
-        await readMasterFile();
-
-
-      /* ---------------------------------------------------
-         TEST FIELDS
-         --------------------------------------------------- */
-
-
-      json.updatedAt =
-        new Date().toISOString();
-
-
-      json.writeTest =
-        "Google Drive UPDATE test successful";
-
-
-      json.writeTestTime =
-        new Date().toLocaleString();
-
-
-      /* ---------------------------------------------------
-         CONVERT TO JSON
-         --------------------------------------------------- */
-
-
-      const jsonText =
-        JSON.stringify(
-          json,
-          null,
-          2
-        );
-
-
-      const fileBlob =
-        new Blob(
-
-          [
-            jsonText
-          ],
-
-          {
-            type:
-              "application/json"
-          }
-
-        );
-
-
-      /* ---------------------------------------------------
-         UPDATE EXISTING MASTER FILE
-         --------------------------------------------------- */
-
-
-      const response =
-        await fetch(
-
-          "https://www.googleapis.com/upload/drive/v3/files/" +
-          MASTER_FILE_ID +
-          "?uploadType=media",
-
-          {
-
-            method:
-              "PATCH",
-
-            headers: {
-
-              "Authorization":
-                "Bearer " +
-                accessToken,
-
-              "Content-Type":
-                "application/json"
-
-            },
-
-            body:
-              fileBlob
-
-          }
-
-        );
-
-
-      if (!response.ok) {
-
-
-        const errorText =
-          await response.text();
-
-
-        throw new Error(
-
-          "HTTP " +
-          response.status +
-          "\n" +
-          errorText
-
-        );
-
-      }
-
-
-      const result =
-        await response.json();
-
-
-      setStatus(
-
-        "SUCCESS! Master.json UPDATED successfully.\n\n" +
-
-        "File ID: " +
-        (
-          result.id ||
-          MASTER_FILE_ID
-        )
-
-      );
-
-
-      data.textContent =
-        JSON.stringify(
-          json,
-          null,
-          2
-        );
-
-
-    }
-
-    catch (error) {
-
-
-      console.error(error);
-
-
-      setStatus(
-
-        "UPDATE FAILED:\n" +
-        error.message
-
-      );
-
-    }
-
-  }
-);
-
-
-/* =========================================================
-   DELETE TEST FILE
-   ========================================================= */
-
-
-deleteBtn.addEventListener(
-  "click",
-  async function () {
-
-
-    if (!accessToken) {
-
-      setStatus(
-        "Please connect Google Drive first."
-      );
-
-      return;
-
-    }
+        });
 
 
     /*
-      Do not allow deletion if no test file was
-      created during this session.
+       پہلے خاموشی سے اجازت لینے کی کوشش۔
+
+       اگر پہلے سے اجازت موجود ہے تو
+       عموماً دوبارہ اجازت کی کھڑکی نہیں آئے گی۔
+
+       اگر خاموش اجازت ممکن نہ ہو تو
+       پہلی مرتبہ صارف سے اجازت لی جائے گی۔
     */
 
+    try {
 
-    if (!createdTestFileId) {
+        tokenClient.requestAccessToken({
+            prompt: ""
+        });
 
-      setStatus(
+    } catch (error) {
 
-        "No newly created test file is available to delete.\n\n" +
+        console.log(
+            "Silent authorization unavailable:",
+            error
+        );
 
-        "Please click Create Test File first."
+    }
+}
 
-      );
 
-      return;
+/* ============================================================
+   MANUAL AUTHORIZATION
+   ============================================================ */
+
+document
+.getElementById("authorizeButton")
+.addEventListener("click", function() {
+
+    if (!tokenClient) {
+
+        showStatus(
+            "گوگل اجازت کا نظام ابھی تیار نہیں۔",
+            "error"
+        );
+
+        return;
+    }
+
+
+    tokenClient.requestAccessToken({
+        prompt: ""
+    });
+
+});
+
+
+/* ============================================================
+   WAIT FOR GOOGLE SCRIPT
+   ============================================================ */
+
+window.addEventListener(
+    "load",
+    function() {
+
+        setTimeout(
+            initializeGoogleAuthorization,
+            500
+        );
+
+    }
+);
+
+
+/* ============================================================
+   DRIVE API REQUEST
+   ============================================================ */
+
+async function driveRequest(
+    url,
+    options = {}
+) {
+
+    if (!accessToken) {
+
+        throw new Error(
+            "Google authorization required."
+        );
+    }
+
+
+    const headers = {
+
+        "Authorization":
+            "Bearer " + accessToken
+
+    };
+
+
+    if (options.body) {
+
+        headers["Content-Type"] =
+            options.contentType ||
+            "application/json";
 
     }
 
 
-    const confirmed =
-      confirm(
+    const response =
+        await fetch(
+            url,
+            {
+                ...options,
+                headers: {
+                    ...headers,
+                    ...(options.headers || {})
+                }
+            }
+        );
 
-        "Delete the newly created test file only?\n\n" +
 
-        "Master.json will NOT be deleted."
+    if (!response.ok) {
 
-      );
+        let errorText = "";
 
+        try {
 
-    if (!confirmed) {
+            errorText =
+                await response.text();
 
-      setStatus(
-        "Delete cancelled."
-      );
+        } catch (_) {}
 
-      return;
-
+        throw new Error(
+            "Google Drive error " +
+            response.status +
+            ": " +
+            errorText
+        );
     }
 
 
-    setStatus(
-      "Deleting test file..."
+    return response;
+}
+
+
+/* ============================================================
+   GET TODAY'S DATE
+   ============================================================ */
+
+function getTodayFileName() {
+
+    const now = new Date();
+
+    const year =
+        now.getFullYear();
+
+    const month =
+        String(
+            now.getMonth() + 1
+        ).padStart(2, "0");
+
+    const day =
+        String(
+            now.getDate()
+        ).padStart(2, "0");
+
+
+    return (
+        year +
+        "-" +
+        month +
+        "-" +
+        day +
+        ".json"
     );
+}
+
+
+/* ============================================================
+   EXACT CURRENT TIMESTAMP
+   ============================================================ */
+
+function getCurrentTimestamp() {
+
+    const now = new Date();
+
+    return {
+
+        iso:
+            now.toISOString(),
+
+        localDate:
+            now.toLocaleDateString(
+                "en-GB",
+                {
+                    year: "numeric",
+                    month: "2-digit",
+                    day: "2-digit"
+                }
+            ),
+
+        localTime:
+            now.toLocaleTimeString(
+                "en-GB",
+                {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    second: "2-digit"
+                }
+            )
+
+    };
+}
+
+
+/* ============================================================
+   FIND DAILY FILE
+   ============================================================ */
+
+async function findDailyFile(
+    fileName
+) {
+
+    const query =
+        "'" +
+        DATABASE_FOLDER_ID +
+        "' in parents and " +
+        "name = '" +
+        fileName.replace(/'/g, "\\'") +
+        "' and trashed = false";
+
+
+    const url =
+        "https://www.googleapis.com/drive/v3/files" +
+        "?q=" +
+        encodeURIComponent(query) +
+        "&spaces=drive" +
+        "&fields=files(id,name,mimeType,modifiedTime,createdTime)";
+
+
+    const response =
+        await driveRequest(url);
+
+
+    const result =
+        await response.json();
+
+
+    return result.files || [];
+}
+
+
+/* ============================================================
+   CREATE DAILY FILE
+   ============================================================ */
+
+async function createDailyFile(
+    fileName,
+    initialData
+) {
+
+    const metadata = {
+
+        name: fileName,
+
+        mimeType:
+            "application/json",
+
+        parents: [
+            DATABASE_FOLDER_ID
+        ]
+
+    };
+
+
+    const boundary =
+        "-------NotesManagerBoundary" +
+        Date.now();
+
+
+    const body =
+        "--" + boundary + "\r\n" +
+
+        "Content-Type: application/json; charset=UTF-8\r\n\r\n" +
+
+        JSON.stringify(metadata) +
+
+        "\r\n--" + boundary + "\r\n" +
+
+        "Content-Type: application/json\r\n\r\n" +
+
+        JSON.stringify(initialData) +
+
+        "\r\n--" + boundary + "--";
+
+
+    const response =
+        await driveRequest(
+
+            "https://www.googleapis.com/upload/drive/v3/files" +
+            "?uploadType=multipart",
+
+            {
+
+                method: "POST",
+
+                contentType:
+                    "multipart/related; boundary=" +
+                    boundary,
+
+                body: body
+
+            }
+        );
+
+
+    return await response.json();
+}
+
+
+/* ============================================================
+   READ FILE CONTENT
+   ============================================================ */
+
+async function readFileContent(
+    fileId
+) {
+
+    const response =
+        await driveRequest(
+
+            "https://www.googleapis.com/drive/v3/files/" +
+            encodeURIComponent(fileId) +
+            "?alt=media"
+
+        );
+
+
+    const text =
+        await response.text();
+
+
+    if (!text.trim()) {
+
+        return [];
+
+    }
 
 
     try {
 
+        return JSON.parse(text);
 
-      const fileIdToDelete =
-        createdTestFileId;
+    } catch (error) {
+
+        throw new Error(
+            "فائل میں درست JSON موجود نہیں۔"
+        );
+
+    }
+}
 
 
-      const response =
-        await fetch(
+/* ============================================================
+   UPDATE FILE CONTENT
+   ============================================================ */
 
-          "https://www.googleapis.com/drive/v3/files/" +
-          fileIdToDelete,
+async function updateFileContent(
+    fileId,
+    data
+) {
 
-          {
+    const response =
+        await driveRequest(
 
-            method:
-              "DELETE",
+            "https://www.googleapis.com/upload/drive/v3/files/" +
+            encodeURIComponent(fileId) +
+            "?uploadType=media",
 
-            headers: {
+            {
 
-              "Authorization":
-                "Bearer " +
-                accessToken
+                method: "PATCH",
+
+                contentType:
+                    "application/json",
+
+                body:
+                    JSON.stringify(data, null, 2)
+
+            }
+        );
+
+
+    return await response.json();
+}
+
+
+/* ============================================================
+   RECORD BUTTON
+   ============================================================ */
+
+document
+.getElementById("recordButton")
+.addEventListener(
+    "click",
+    async function() {
+
+        if (!accessToken) {
+
+            showStatus(
+                "پہلے گوگل ڈرائیو سے منسلک ہوں۔",
+                "error"
+            );
+
+            return;
+        }
+
+
+        const button =
+            this;
+
+        button.disabled = true;
+
+
+        try {
+
+            /*
+               اہم بات:
+
+               وقت اسی لمحے حاصل کیا جا رہا ہے
+               جب ریکارڈ بٹن دبایا گیا۔
+            */
+
+            const timestamp =
+                getCurrentTimestamp();
+
+
+            const fileName =
+                getTodayFileName();
+
+
+            showStatus(
+                "آج کی فائل تلاش کی جا رہی ہے...",
+                "info"
+            );
+
+
+            const files =
+                await findDailyFile(
+                    fileName
+                );
+
+
+            let fileId;
+
+
+            if (files.length === 0) {
+
+                /*
+                   آج کی فائل موجود نہیں۔
+
+                   نئی فائل اسی موجودہ فولڈر میں
+                   بنائی جائے گی۔
+                */
+
+                const firstRecord = {
+
+                    timestamp:
+                        timestamp.iso,
+
+                    date:
+                        timestamp.localDate,
+
+                    time:
+                        timestamp.localTime
+
+                };
+
+
+                const newFile =
+                    await createDailyFile(
+
+                        fileName,
+
+                        {
+                            version: 1,
+
+                            fileDate:
+                                fileName.replace(
+                                    ".json",
+                                    ""
+                                ),
+
+                            records: [
+                                firstRecord
+                            ]
+
+                        }
+
+                    );
+
+
+                fileId =
+                    newFile.id;
+
+
+                showStatus(
+                    "آج کی نئی فائل کامیابی سے محفوظ ہو گئی۔",
+                    "success"
+                );
+
+
+            } else {
+
+                /*
+                   آج کی فائل پہلے سے موجود ہے۔
+
+                   اسی فائل میں نیا ریکارڈ شامل ہوگا۔
+                */
+
+                fileId =
+                    files[0].id;
+
+
+                const existingData =
+                    await readFileContent(
+                        fileId
+                    );
+
+
+                let data;
+
+
+                if (
+                    Array.isArray(
+                        existingData
+                    )
+                ) {
+
+                    data = {
+
+                        version: 1,
+
+                        fileDate:
+                            fileName.replace(
+                                ".json",
+                                ""
+                            ),
+
+                        records:
+                            existingData
+
+                    };
+
+                } else {
+
+                    data =
+                        existingData || {};
+
+                    if (
+                        !Array.isArray(
+                            data.records
+                        )
+                    ) {
+
+                        data.records = [];
+
+                    }
+
+                }
+
+
+                /*
+                   نیا ریکارڈ شروع میں شامل کیا جا رہا ہے
+                   تاکہ تازہ ترین ریکارڈ پہلے رہے۔
+                */
+
+                data.records.unshift({
+
+                    timestamp:
+                        timestamp.iso,
+
+                    date:
+                        timestamp.localDate,
+
+                    time:
+                        timestamp.localTime
+
+                });
+
+
+                data.version =
+                    (data.version || 0) + 1;
+
+
+                data.updatedAt =
+                    new Date().toISOString();
+
+
+                await updateFileContent(
+                    fileId,
+                    data
+                );
+
+
+                showStatus(
+                    "نیا ریکارڈ آج کی فائل میں کامیابی سے شامل ہو گیا۔",
+                    "success"
+                );
 
             }
 
-          }
 
-        );
+        } catch (error) {
 
+            console.error(error);
 
-      if (!response.ok) {
+            showStatus(
+                "ریکارڈ محفوظ نہیں ہو سکا: " +
+                error.message,
+                "error"
+            );
 
+        } finally {
 
-        const errorText =
-          await response.text();
+            button.disabled = false;
 
-
-        throw new Error(
-
-          "HTTP " +
-          response.status +
-          "\n" +
-          errorText
-
-        );
-
-      }
-
-
-      setStatus(
-
-        "SUCCESS! Test file deleted.\n\n" +
-
-        "Deleted File ID: " +
-        fileIdToDelete +
-
-        "\n\n" +
-
-        "Master.json was NOT deleted."
-
-      );
-
-
-      data.textContent =
-        "Delete operation successful.";
-
-
-      /*
-        Clear the stored ID so the same file
-        cannot accidentally be deleted again.
-      */
-
-
-      createdTestFileId =
-        null;
-
-
-      deleteBtn.disabled =
-        true;
-
+        }
 
     }
-
-    catch (error) {
-
-
-      console.error(error);
-
-
-      setStatus(
-
-        "DELETE FAILED:\n" +
-        error.message
-
-      );
-
-    }
-
-  }
 );
 
+
+/* ============================================================
+   READ ALL DAILY FILES
+   ============================================================ */
+
+document
+.getElementById("readButton")
+.addEventListener(
+    "click",
+    async function() {
+
+        if (!accessToken) {
+
+            showStatus(
+                "پہلے گوگل ڈرائیو سے منسلک ہوں۔",
+                "error"
+            );
+
+            return;
+        }
+
+
+        const button =
+            this;
+
+        button.disabled = true;
+
+
+        try {
+
+            showStatus(
+                "روزانہ کی فائلیں حاصل کی جا رہی ہیں...",
+                "info"
+            );
+
+
+            const query =
+                "'" +
+                DATABASE_FOLDER_ID +
+                "' in parents and " +
+                "trashed = false";
+
+
+            const url =
+                "https://www.googleapis.com/drive/v3/files" +
+
+                "?q=" +
+                encodeURIComponent(query) +
+
+                "&spaces=drive" +
+
+                "&pageSize=1000" +
+
+                "&orderBy=name desc" +
+
+                "&fields=files(id,name,mimeType,size,createdTime,modifiedTime)";
+
+
+            const response =
+                await driveRequest(url);
+
+
+            const result =
+                await response.json();
+
+
+            /*
+               صرف روزانہ JSON فائلیں دکھانی ہیں۔
+
+               MasterDB.json اور دوسرے غیر متعلقہ
+               فائلیں فہرست میں شامل نہیں ہوں گی۔
+            */
+
+            allDailyFiles =
+                (result.files || [])
+                .filter(
+                    function(file) {
+
+                        return (
+                            /^\d{4}-\d{2}-\d{2}\.json$/
+                            .test(file.name)
+                        );
+
+                    }
+                )
+                .sort(
+                    function(a, b) {
+
+                        return b.name.localeCompare(
+                            a.name
+                        );
+
+                    }
+                );
+
+
+            displayFileList(
+                allDailyFiles
+            );
+
+
+            showStatus(
+                allDailyFiles.length +
+                " روزانہ فائلیں مل گئی ہیں۔",
+                "success"
+            );
+
+
+        } catch (error) {
+
+            console.error(error);
+
+            showStatus(
+                "فائلیں پڑھنے میں مسئلہ آیا: " +
+                error.message,
+                "error"
+            );
+
+        } finally {
+
+            button.disabled = false;
+
+        }
+
+    }
+);
+
+
+/* ============================================================
+   DISPLAY FILE LIST
+   ============================================================ */
+
+function displayFileList(
+    files
+) {
+
+    const list =
+        document.getElementById(
+            "fileList"
+        );
+
+
+    list.innerHTML = "";
+
+
+    if (!files.length) {
+
+        list.innerHTML =
+            '<div class="empty">' +
+            'اس فولڈر میں ابھی کوئی روزانہ فائل موجود نہیں۔' +
+            '</div>';
+
+        return;
+    }
+
+
+    files.forEach(
+        function(file) {
+
+            const item =
+                document.createElement(
+                    "div"
+                );
+
+
+            item.className =
+                "file-item";
+
+
+            const dateText =
+                file.name
+                    .replace(
+                        ".json",
+                        ""
+                    );
+
+
+            item.innerHTML =
+
+                '<div class="file-name">' +
+                    "📄 " +
+                    dateText +
+                '</div>' +
+
+                '<div class="file-meta">' +
+                    "ترمیم: " +
+                    formatDateTime(
+                        file.modifiedTime
+                    ) +
+                '</div>';
+
+
+            item.addEventListener(
+                "click",
+                function() {
+
+                    document
+                        .querySelectorAll(
+                            ".file-item"
+                        )
+                        .forEach(
+                            function(other) {
+
+                                other.classList
+                                    .remove(
+                                        "active"
+                                    );
+
+                            }
+                        );
+
+
+                    item.classList.add(
+                        "active"
+                    );
+
+
+                    openDailyFile(
+                        file
+                    );
+
+                }
+            );
+
+
+            list.appendChild(
+                item
+            );
+
+        }
+    );
+
+}
+
+
+/* ============================================================
+   OPEN SELECTED FILE
+   ============================================================ */
+
+async function openDailyFile(
+    file
+) {
+
+    const title =
+        document.getElementById(
+            "dataTitle"
+        );
+
+    const area =
+        document.getElementById(
+            "dataArea"
+        );
+
+
+    title.textContent =
+        file.name;
+
+
+    area.innerHTML =
+        '<div class="empty">' +
+        'فائل کا ڈیٹا پڑھا جا رہا ہے...' +
+        '</div>';
+
+
+    try {
+
+        const data =
+            await readFileContent(
+                file.id
+            );
+
+
+        displayFileData(
+            data,
+            file
+        );
+
+
+        showStatus(
+            file.name +
+            " کامیابی سے کھل گئی۔",
+            "success"
+        );
+
+
+    } catch (error) {
+
+        console.error(error);
+
+        area.innerHTML =
+            '<div class="empty">' +
+            'فائل کا ڈیٹا پڑھا نہیں جا سکا۔' +
+            '</div>';
+
+
+        showStatus(
+            "فائل کھولنے میں مسئلہ: " +
+            error.message,
+            "error"
+        );
+
+    }
+
+}
+
+
+/* ============================================================
+   DISPLAY FILE DATA
+   ============================================================ */
+
+function displayFileData(
+    data,
+    file
+) {
+
+    const area =
+        document.getElementById(
+            "dataArea"
+        );
+
+
+    area.innerHTML = "";
+
+
+    let records = [];
+
+
+    if (
+        Array.isArray(data)
+    ) {
+
+        records =
+            data;
+
+    } else if (
+        data &&
+        Array.isArray(
+            data.records
+        )
+    ) {
+
+        records =
+            data.records;
+
+    }
+
+
+    if (!records.length) {
+
+        area.innerHTML =
+            '<div class="empty">' +
+            'اس فائل میں کوئی ریکارڈ موجود نہیں۔' +
+            '</div>';
+
+        return;
+    }
+
+
+    records.forEach(
+        function(record, index) {
+
+            const box =
+                document.createElement(
+                    "div"
+                );
+
+
+            box.className =
+                "record";
+
+
+            const time =
+                record.time ||
+                formatDateTime(
+                    record.timestamp
+                );
+
+
+            const body =
+                document.createElement(
+                    "div"
+                );
+
+
+            body.className =
+                "record-value";
+
+
+            /*
+               timestamp/date/time کو دوبارہ
+               بطور مکمل JSON دکھانے کے بجائے
+               اصل ریکارڈ کو واضح انداز میں دکھایا جا رہا ہے۔
+            */
+
+            const copy =
+                {
+                    ...record
+                };
+
+
+            delete copy.timestamp;
+            delete copy.date;
+            delete copy.time;
+
+
+            let valueText;
+
+
+            if (
+                Object.keys(copy).length
+            ) {
+
+                valueText =
+                    JSON.stringify(
+                        copy,
+                        null,
+                        2
+                    );
+
+            } else {
+
+                valueText =
+                    "یہ وقت کا ریکارڈ ہے۔";
+
+            }
+
+
+            box.innerHTML =
+                '<div class="record-time">' +
+                    "ریکارڈ " +
+                    (index + 1) +
+                    " — " +
+                    time +
+                '</div>';
+
+
+            body.textContent =
+                valueText;
+
+
+            box.appendChild(
+                body
+            );
+
+
+            area.appendChild(
+                box
+            );
+
+        }
+    );
+
+}
+
+
+/* ============================================================
+   FORMAT DATE TIME
+   ============================================================ */
+
+function formatDateTime(
+    value
+) {
+
+    if (!value) {
+        return "نامعلوم";
+    }
+
+
+    try {
+
+        return new Date(value)
+            .toLocaleString(
+                "ur-PK",
+                {
+                    year: "numeric",
+                    month: "2-digit",
+                    day: "2-digit",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    second: "2-digit"
+                }
+            );
+
+    } catch (_) {
+
+        return value;
+
+    }
+
+}
 
 </script>
 
 </body>
-
 </html>
