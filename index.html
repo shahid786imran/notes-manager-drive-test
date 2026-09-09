@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <title>Google Drive Test</title>
+  <title>Google Drive Database Test</title>
 
   <script src="https://accounts.google.com/gsi/client" async defer></script>
 
@@ -17,11 +17,24 @@
     button {
       padding: 12px 18px;
       font-size: 16px;
+      margin-right: 8px;
+      margin-top: 8px;
     }
 
     #status {
       margin-top: 20px;
       padding: 12px;
+      background: #f1f1f1;
+      white-space: pre-wrap;
+    }
+
+    #data {
+      margin-top: 20px;
+      padding: 15px;
+      background: #fafafa;
+      border: 1px solid #ddd;
+      white-space: pre-wrap;
+      overflow-x: auto;
     }
   </style>
 </head>
@@ -34,41 +47,40 @@
     Connect Google Drive
   </button>
 
+  <button id="readBtn" disabled>
+    Read Master.json
+  </button>
+
   <div id="status">
     Not connected
   </div>
 
+  <pre id="data"></pre>
+
 <script>
 
-  /*
-    =====================================================
-    GOOGLE OAUTH CLIENT ID
-    =====================================================
-  */
-
   const CLIENT_ID =
-    "262106898132-tsn94p3vvpf34do0ommc6rai2mtc5sh6.apps.googleusercontent.com";
-
-
-  /*
-    =====================================================
-    GOOGLE DRIVE PERMISSION
-    =====================================================
-  */
+    "PASTE_YOUR_EXISTING_CLIENT_ID_HERE";
 
   const DRIVE_SCOPE =
     "https://www.googleapis.com/auth/drive";
 
+  const FILE_ID =
+    "1dx0IrwUD0Is1GGOmfNsxkqpTD7fC4IW1";
 
   let accessToken = null;
-
 
   const status =
     document.getElementById("status");
 
+  const data =
+    document.getElementById("data");
 
   const connectBtn =
     document.getElementById("connectBtn");
+
+  const readBtn =
+    document.getElementById("readBtn");
 
 
   function setStatus(message) {
@@ -79,7 +91,6 @@
   connectBtn.addEventListener("click", function () {
 
     setStatus("Connecting to Google...");
-
 
     const tokenClient =
       google.accounts.oauth2.initTokenClient({
@@ -103,19 +114,14 @@
             return;
           }
 
-
           accessToken =
             response.access_token;
-
 
           setStatus(
             "SUCCESS! Google Drive connected."
           );
 
-
-          console.log(
-            "Access Token received."
-          );
+          readBtn.disabled = false;
 
         }
 
@@ -125,6 +131,104 @@
     tokenClient.requestAccessToken({
       prompt: "consent"
     });
+
+  });
+
+
+  readBtn.addEventListener("click", async function () {
+
+    if (!accessToken) {
+
+      setStatus(
+        "Please connect Google Drive first."
+      );
+
+      return;
+    }
+
+
+    setStatus(
+      "Reading Master.json from Google Drive..."
+    );
+
+    data.textContent = "";
+
+
+    try {
+
+      const response = await fetch(
+        "https://www.googleapis.com/drive/v3/files/" +
+        FILE_ID +
+        "?alt=media",
+        {
+          method: "GET",
+
+          headers: {
+            "Authorization":
+              "Bearer " + accessToken
+          }
+        }
+      );
+
+
+      if (!response.ok) {
+
+        const errorText =
+          await response.text();
+
+        throw new Error(
+          "HTTP " +
+          response.status +
+          "\n" +
+          errorText
+        );
+      }
+
+
+      const text =
+        await response.text();
+
+
+      let json;
+
+      try {
+
+        json =
+          JSON.parse(text);
+
+      } catch {
+
+        throw new Error(
+          "Master.json contains invalid JSON."
+        );
+      }
+
+
+      setStatus(
+        "SUCCESS! Master.json loaded from Google Drive."
+      );
+
+
+      data.textContent =
+        JSON.stringify(json, null, 2);
+
+
+      console.log(
+        "Master.json:",
+        json
+      );
+
+
+    } catch (error) {
+
+      console.error(error);
+
+      setStatus(
+        "READ FAILED:\n" +
+        error.message
+      );
+
+    }
 
   });
 
