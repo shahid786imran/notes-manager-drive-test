@@ -2,581 +2,451 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Notes Manager</title>
-
-<script src="https://accounts.google.com/gsi/client"></script>
-<script src="https://apis.google.com/js/api.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Google Drive Notes Manager</title>
 
 <style>
 :root{
-  --primary:#4f46e5;
-  --primary-soft:#eef2ff;
-  --bg:#f3f4f6;
+  --bg:#f4f6fa;
   --card:#fff;
-  --border:#e5e7eb;
-  --text:#1f2937;
-  --muted:#6b7280;
+  --text:#17202a;
+  --muted:#687385;
+  --border:#dce2ea;
+  --accent:#2563eb;
   --danger:#dc2626;
-  --success:#15803d;
-  --sidebar-width:270px;
-  --radius:10px;
+  --favorite:#eab308;
+  --success:#16a34a;
+  --sidebar-width:250px;
 }
 
 *{box-sizing:border-box}
-html,body{margin:0;padding:0}
+
+html,body{
+  margin:0;
+  padding:0;
+  min-height:100%;
+}
+
 body{
   font-family:Arial,Helvetica,sans-serif;
   background:var(--bg);
   color:var(--text);
-  font-size:15px;
 }
-button,input,textarea,select{font:inherit}
-button{cursor:pointer}
 
-#app{min-height:100vh}
+/* =========================
+   FIXED HEADER
+========================= */
 
-.topbar{
+.top-header{
   position:sticky;
   top:0;
-  z-index:100;
-  height:58px;
-  background:#fff;
-  border-bottom:1px solid var(--border);
+  z-index:5000;
+  min-height:58px;
   display:flex;
   align-items:center;
   gap:8px;
-  padding:8px 12px;
+  padding:9px 12px;
+  background:var(--card);
+  border-bottom:1px solid var(--border);
 }
 
-.menu-btn{
-  border:1px solid var(--border);
-  background:#fff;
-  border-radius:8px;
-  padding:8px 11px;
-}
-
-.app-title{
-  font-weight:700;
+.top-header button{
   white-space:nowrap;
 }
 
-.connection{
-  margin-left:auto;
-  font-size:12px;
-  color:var(--muted);
-}
-
-.connection.ok{color:var(--success)}
-.connection.err{color:var(--danger)}
-
-.add-note{
-  border:0;
-  background:var(--primary);
-  color:#fff;
-  border-radius:8px;
-  padding:9px 13px;
-  font-weight:600;
-}
-
-.layout{
-  display:grid;
-  grid-template-columns:minmax(250px,340px) minmax(300px,420px) minmax(0,1fr);
-  min-height:calc(100vh - 58px);
-}
-
-/* SIDEBAR */
-.sidebar{
-  background:#fff;
-  border-right:1px solid var(--border);
-  overflow:auto;
-  padding:12px;
-}
-
-.sidebar.closed{display:none}
-
-.side-section{
-  margin-bottom:7px;
-}
-
-.side-item{
-  position:relative;
-  display:flex;
-  align-items:center;
-  gap:8px;
-  min-height:38px;
-  padding:7px 9px;
-  border-radius:7px;
-  cursor:pointer;
-}
-
-.side-item:hover,
-.side-item.active{
-  background:#f3f4f6;
-}
-
-.side-count{
+.status{
   margin-left:auto;
   color:var(--muted);
-  font-size:12px;
-}
-
-.side-edit{
-  display:none;
-  border:0;
-  background:transparent;
-  padding:3px;
-}
-
-.side-item:hover .side-edit,
-.side-item.selected .side-edit{
-  display:block;
-}
-
-.tree{
-  margin-left:10px;
-  border-left:1px solid var(--border);
-}
-
-.tree-node{
-  padding-left:8px;
-}
-
-.tree-row{
-  display:flex;
-  align-items:center;
-  min-height:34px;
-  border-bottom:1px solid #f1f1f1;
-}
-
-.tree-toggle{
-  width:24px;
-  border:0;
-  background:transparent;
-}
-
-.tree-label{
-  flex:1;
-  padding:7px 4px;
-  cursor:pointer;
-}
-
-.sidebar-tools{
-  display:flex;
-  gap:5px;
-  margin:4px 0 8px;
-}
-
-.small-btn{
-  border:1px solid var(--border);
-  background:#fff;
-  border-radius:7px;
-  padding:6px 8px;
-}
-
-/* NOTE LIST */
-.notes-panel{
-  background:#f8f9fa;
-  border-right:1px solid var(--border);
-  overflow:auto;
-}
-
-.list-header{
-  padding:14px;
-  background:#fff;
-  border-bottom:1px solid var(--border);
-}
-
-.list-title-row{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:8px;
-}
-
-.list-title{
-  font-size:18px;
-  font-weight:700;
-}
-
-.search{
-  width:100%;
-  margin-top:10px;
-  border:1px solid var(--border);
-  border-radius:8px;
-  padding:10px 11px;
-  outline:none;
-  background:#fff;
-}
-
-.bulk-bar{
-  display:none;
-  position:sticky;
-  top:0;
-  z-index:20;
-  background:#fff;
-  border-bottom:1px solid var(--border);
-  padding:8px;
-  gap:5px;
-  flex-wrap:wrap;
-}
-
-.bulk-bar.show{display:flex}
-
-.bulk-bar button{
-  border:1px solid var(--border);
-  background:#fff;
-  border-radius:7px;
-  padding:7px 9px;
-}
-
-.note-list{padding:8px}
-
-.note-row{
-  background:#fff;
-  border:1px solid var(--border);
-  border-radius:9px;
-  margin-bottom:7px;
-  padding:9px 10px 9px 14px;
-  position:relative;
-  cursor:pointer;
-}
-
-.note-row::before{
-  content:"";
-  position:absolute;
-  left:0;
-  top:0;
-  bottom:0;
-  width:4px;
-  border-radius:9px 0 0 9px;
-  background:var(--note-color,#9ca3af);
-}
-
-.note-row.selected{
-  background:#eef2ff;
-}
-
-.note-row.pinned{
-  background:#fffdf5;
-}
-
-.note-title{
-  font-size:15px;
-  font-weight:700;
-  margin-bottom:3px;
-}
-
-.note-preview{
-  color:#4b5563;
   font-size:13px;
-  line-height:1.35;
-  display:-webkit-box;
-  -webkit-box-orient:vertical;
-  -webkit-line-clamp:2;
-  overflow:hidden;
 }
 
-.note-meta{
-  margin-top:7px;
+/* =========================
+   SIDEBAR
+========================= */
+
+.sidebar{
+  position:fixed;
+  z-index:4000;
+  top:58px;
+  left:0;
+  bottom:0;
+  width:var(--sidebar-width);
+  background:var(--card);
+  border-right:1px solid var(--border);
+  overflow-y:auto;
+  transform:translateX(-105%);
+  transition:transform .2s ease;
+  padding:10px;
+}
+
+.sidebar.open{
+  transform:translateX(0);
+}
+
+.sidebar-button{
+  display:block;
+  width:100%;
+  text-align:left;
+  margin-bottom:5px;
+}
+
+.sidebar-section{
+  margin-top:12px;
+}
+
+.section-button{
+  width:100%;
+  text-align:left;
+  font-weight:bold;
+}
+
+.section-content{
+  padding:5px 2px 5px 8px;
+}
+
+.hidden{
+  display:none!important;
+}
+
+.tree-row,
+.tag-row{
   display:flex;
-  gap:7px;
   align-items:center;
-  flex-wrap:wrap;
-  color:#6b7280;
+  gap:5px;
+  min-height:30px;
+  font-size:14px;
+}
+
+.tree-name,
+.tag-name{
+  flex:1;
+  cursor:pointer;
+}
+
+.count{
+  color:var(--muted);
   font-size:12px;
 }
 
-.icon-action{
-  color:#9ca3af;
-  font-size:17px;
-  cursor:pointer;
-  border:0;
-  background:transparent;
-  padding:1px;
-}
+/* =========================
+   MAIN
+========================= */
 
-.icon-action.active-pin{color:#374151}
-.icon-action.active-fav{color:#eab308}
-
-.note-date{
-  margin-top:4px;
-  font-size:11px;
-  color:#6b7280;
-}
-
-/* DATA PANEL */
-.data-panel{
-  background:#e5e7eb;
-  overflow:auto;
-  padding:14px;
-}
-
-.document{
-  max-width:900px;
-  margin:0 auto;
-}
-
-.color-line{
-  height:8px;
-  border-radius:6px 6px 0 0;
-  background:var(--note-color,#4f46e5);
+.main{
+  display:grid;
+  grid-template-columns:minmax(300px,40%) 1fr;
+  gap:12px;
+  padding:12px;
 }
 
 .card{
-  background:#fff;
+  background:var(--card);
   border:1px solid var(--border);
-  border-radius:9px;
-  margin-bottom:9px;
+  border-radius:12px;
   padding:12px;
-  box-shadow:0 1px 2px rgba(0,0,0,.03);
 }
 
-.actions{
+.search-row{
   display:flex;
-  gap:5px;
-  flex-wrap:wrap;
-}
-
-.action-btn{
-  border:1px solid var(--border);
-  background:#fff;
-  border-radius:7px;
-  padding:7px 9px;
-  color:#374151;
-}
-
-.action-btn:hover{background:#f9fafb}
-
-.note-heading{
-  font-size:23px;
-  font-weight:700;
-  line-height:1.2;
-}
-
-.content-editor{
-  min-height:280px;
-  outline:none;
-  line-height:1.55;
-  word-break:break-word;
-}
-
-.content-editor[contenteditable="false"]{
-  cursor:default;
-}
-
-.toolbar{
-  display:flex;
-  gap:5px;
-  flex-wrap:wrap;
-  margin-bottom:9px;
-  padding-bottom:8px;
-  border-bottom:1px solid var(--border);
-}
-
-.toolbar button{
-  border:1px solid var(--border);
-  background:#fff;
-  border-radius:6px;
-  padding:5px 8px;
-}
-
-.link-header{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  margin-bottom:8px;
-}
-
-.link-title{
-  font-weight:700;
-}
-
-.link-row{
-  border-top:1px solid var(--border);
-  padding:8px 0;
-  display:flex;
-  align-items:center;
-  gap:8px;
-}
-
-.link-row a{
-  color:#2563eb;
-  text-decoration:none;
-  font-weight:600;
-}
-
-.link-open{
-  margin-left:auto;
-  font-size:12px;
-  color:#2563eb;
-}
-
-.meta-grid{
-  display:grid;
-  grid-template-columns:repeat(2,minmax(0,1fr));
-  gap:6px 14px;
-  font-size:12px;
-}
-
-.meta-cell{
-  padding:5px 0;
-  border-bottom:1px solid #f0f0f0;
-}
-
-.meta-label{
-  color:#6b7280;
-}
-
-.meta-value{
-  font-weight:600;
-}
-
-/* MODAL */
-.modal-backdrop{
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,.35);
-  z-index:500;
-  display:none;
-  align-items:center;
-  justify-content:center;
-  padding:14px;
-}
-
-.modal-backdrop.show{display:flex}
-
-.modal{
-  background:#fff;
-  border-radius:11px;
-  width:min(600px,100%);
-  max-height:90vh;
-  overflow:auto;
-  padding:16px;
-}
-
-.modal h3{margin:0 0 12px}
-
-.form-row{
-  margin-bottom:10px;
-}
-
-.form-row label{
-  display:block;
-  font-size:12px;
-  color:#6b7280;
-  margin-bottom:4px;
-}
-
-.form-row input,
-.form-row textarea,
-.form-row select{
-  width:100%;
-  border:1px solid var(--border);
-  border-radius:7px;
-  padding:9px;
-  outline:none;
-}
-
-.modal-actions{
-  display:flex;
-  justify-content:flex-end;
   gap:7px;
-  margin-top:14px;
+  margin-bottom:9px;
 }
 
-.primary{
-  border:0;
-  background:var(--primary);
-  color:#fff;
-  border-radius:7px;
-  padding:8px 12px;
+.search-row input{
+  flex:1;
+  min-width:0;
 }
 
-.secondary{
+input,
+textarea,
+select{
   border:1px solid var(--border);
-  background:#fff;
-  border-radius:7px;
-  padding:8px 12px;
+  border-radius:8px;
+  padding:9px;
+  background:white;
+  color:var(--text);
 }
 
-.danger{
-  border:0;
+/* =========================
+   BUTTONS
+========================= */
+
+button{
+  border:1px solid var(--border);
+  background:white;
+  color:var(--text);
+  border-radius:8px;
+  padding:8px 11px;
+  cursor:pointer;
+}
+
+button:hover{
+  filter:brightness(.97);
+}
+
+.btn-danger{
+  color:white;
   background:var(--danger);
-  color:#fff;
-  border-radius:7px;
-  padding:8px 12px;
+  border-color:var(--danger);
+}
+
+.btn-success{
+  color:white;
+  background:var(--success);
+  border-color:var(--success);
+}
+
+/* =========================
+   NOTES LIST
+========================= */
+
+.note-list{
+  display:flex;
+  flex-direction:column;
+}
+
+.note-row{
+  position:relative;
+  border:1px solid var(--border);
+  border-left:6px solid #cbd5e1;
+  border-radius:9px;
+  padding:9px;
+  margin:6px 0;
+  cursor:pointer;
+}
+
+.note-row.selected{
+  outline:2px solid var(--accent);
+}
+
+.note-actions{
+  display:flex;
+  gap:5px;
+  margin-bottom:5px;
+}
+
+.mini-button{
+  padding:3px 7px;
+  font-size:13px;
+}
+
+.pin-active{
+  background:var(--danger);
+  color:white;
+  border-color:var(--danger);
+}
+
+.favorite-active{
+  background:var(--favorite);
+  color:white;
+  border-color:var(--favorite);
+}
+
+.note-title{
+  font-weight:bold;
+  font-size:16px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+.note-description{
+  color:var(--muted);
+  font-size:13px;
+  margin:4px 0;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+.note-meta{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  color:var(--muted);
+  font-size:12px;
 }
 
 .empty{
-  padding:35px 15px;
   text-align:center;
-  color:#6b7280;
+  color:var(--muted);
+  padding:35px 10px;
 }
 
-/* MOBILE */
+/* =========================
+   PANEL
+========================= */
+
+.color-bar{
+  height:15px;
+  border-radius:9px;
+  margin-bottom:10px;
+}
+
+.action-card{
+  display:flex;
+  flex-wrap:wrap;
+  gap:7px;
+  padding:10px;
+  background:#f8fafc;
+  border:1px solid var(--border);
+  border-radius:10px;
+  margin-bottom:12px;
+}
+
+.view-title{
+  font-size:26px;
+  font-weight:bold;
+  margin:10px 0;
+}
+
+.body-view{
+  min-height:220px;
+  line-height:1.65;
+  overflow-wrap:anywhere;
+}
+
+.body-view a{
+  color:var(--accent);
+}
+
+.edit-title{
+  width:100%;
+  border:0;
+  border-bottom:1px solid var(--border);
+  border-radius:0;
+  font-size:25px;
+  font-weight:bold;
+  padding:8px 2px;
+  outline:none;
+}
+
+.editor-toolbar{
+  display:flex;
+  flex-wrap:wrap;
+  gap:5px;
+  margin:8px 0;
+}
+
+.editor-body{
+  min-height:250px;
+  border:1px solid var(--border);
+  border-radius:9px;
+  padding:12px;
+  outline:none;
+  line-height:1.65;
+}
+
+.links-card{
+  margin-top:14px;
+  padding:12px;
+  border:1px solid var(--border);
+  border-radius:10px;
+}
+
+.link-inputs{
+  display:grid;
+  grid-template-columns:1fr 1fr auto;
+  gap:7px;
+  margin-top:8px;
+}
+
+.link-row{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  border:1px solid var(--border);
+  border-radius:8px;
+  padding:9px;
+  margin-top:6px;
+  cursor:pointer;
+}
+
+.link-row:hover{
+  background:#f8fafc;
+}
+
+.link-title{
+  flex:1;
+  color:var(--accent);
+  font-weight:500;
+}
+
+/* =========================
+   METADATA
+========================= */
+
+.metadata{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:6px;
+  margin-top:14px;
+}
+
+.metadata-item{
+  border-bottom:1px solid var(--border);
+  padding:7px 3px;
+  font-size:13px;
+}
+
+.metadata-label{
+  display:block;
+  color:var(--muted);
+  font-size:11px;
+  margin-bottom:2px;
+}
+
+/* =========================
+   SETTINGS
+========================= */
+
+.settings-box{
+  padding:12px;
+}
+
+.setting-row{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+  padding:10px 0;
+  border-bottom:1px solid var(--border);
+}
+
+/* =========================
+   MOBILE
+========================= */
+
 @media(max-width:900px){
-  .layout{
-    display:block;
-  }
-
-  .sidebar{
-    position:fixed;
-    z-index:300;
-    top:58px;
-    left:0;
-    bottom:0;
-    width:min(86vw,310px);
-    box-shadow:5px 0 20px rgba(0,0,0,.12);
-  }
-
-  .sidebar.closed{display:none}
-
-  .notes-panel{
-    border-right:0;
-  }
-
-  .data-panel{
-    border-top:1px solid var(--border);
-    min-height:500px;
-  }
-}
-
-@media(max-width:560px){
-  body{font-size:14px}
-
-  .topbar{
-    padding:7px;
-  }
-
-  .app-title{font-size:14px}
-
-  .connection{display:none}
-
-  .add-note{
-    padding:8px 9px;
-  }
-
-  .data-panel{
-    padding:8px;
-  }
-
-  .card{
-    padding:10px;
-  }
-
-  .note-heading{
-    font-size:20px;
-  }
-
-  .meta-grid{
+  .main{
     grid-template-columns:1fr;
   }
 
-  .action-btn{
-    padding:7px 8px;
+  .status{
+    display:none;
+  }
+
+  .link-inputs{
+    grid-template-columns:1fr;
+  }
+}
+
+@media(max-width:600px){
+  .top-header{
+    overflow-x:auto;
+  }
+
+  .top-header button{
     font-size:12px;
+    padding:7px 8px;
+  }
+
+  .metadata{
+    grid-template-columns:1fr;
+  }
+
+  .sidebar{
+    width:280px;
   }
 }
 </style>
@@ -584,3411 +454,2653 @@ button{cursor:pointer}
 
 <body>
 
-<div id="app">
+<!-- =====================================================
+     FIXED TOP HEADER
+===================================================== -->
 
-<header class="topbar">
-  <button class="menu-btn" id="sidebarBtn">☰ Show</button>
-  <div class="app-title">Notes Manager</div>
-  <div class="connection" id="connectionStatus">Not connected</div>
-  <button class="add-note" id="addNoteBtn">＋ Add Note</button>
+<header class="top-header">
+
+<button id="sidebarToggle">
+☰ Show / Hide
+</button>
+
+<button id="connectGoogle">
+Connect to Google Drive
+</button>
+
+<button id="reloadDatabase">
+Reload Database
+</button>
+
+<button id="updateDatabase">
+Update <span id="saveCountdown">—</span>
+</button>
+
+<div id="connectionStatus" class="status">
+Not Connected
+</div>
+
 </header>
 
-<div class="layout">
+<!-- =====================================================
+     SIDEBAR
+===================================================== -->
 
-<!-- SIDEBAR -->
-<aside class="sidebar closed" id="sidebar">
+<aside id="sidebar" class="sidebar">
 
-  <div class="side-section">
-    <div class="side-item active" data-section="all">
-      <span>📝</span>
-      <span>All Notes</span>
-      <span class="side-count" id="allCount">0</span>
-    </div>
+<button class="sidebar-button" data-view="all">
+🗂 All Notes
+</button>
 
-    <div class="side-item" data-section="favorites">
-      <span>⭐</span>
-      <span>Favorites</span>
-      <span class="side-count" id="favCount">0</span>
-    </div>
-  </div>
+<button class="sidebar-button" data-view="favorites">
+⭐ Favorites
+</button>
 
-  <div class="side-section">
+<button class="sidebar-button" data-view="pinned">
+📌 Pinned
+</button>
 
-    <div class="side-item" id="categoriesToggle">
-      <span>📁</span>
-      <span>Categories</span>
-      <span class="side-count" id="categoryCount">0</span>
-      <button class="side-edit" id="categoryManage">✏️</button>
-    </div>
+<div class="sidebar-section">
 
-    <div class="sidebar-tools" id="categoryTools" style="display:none">
-      <button class="small-btn" id="addRootCategory">＋ Category</button>
-      <button class="small-btn" id="categoryMenuBtn">Manage</button>
-    </div>
+<button id="categoryToggle" class="section-button">
+▸ 📁 Category
+</button>
 
-    <div id="categoryTree" class="tree" style="display:none"></div>
+<div id="categoryContainer" class="section-content hidden"></div>
 
-  </div>
+</div>
 
-  <div class="side-section">
+<div class="sidebar-section">
 
-    <div class="side-item" id="tagsToggle">
-      <span>🏷️</span>
-      <span>Tags</span>
-      <span class="side-count" id="tagCount">0</span>
-      <button class="side-edit" id="tagManage">✏️</button>
-    </div>
+<button id="tagsToggle" class="section-button">
+▸ 🏷 Tags
+</button>
 
-    <div class="sidebar-tools" id="tagTools" style="display:none">
-      <button class="small-btn" id="addTag">＋ Tag</button>
-    </div>
+<div id="tagsContainer" class="section-content hidden"></div>
 
-    <div id="tagList" style="display:none"></div>
+</div>
 
-  </div>
+<div class="sidebar-section">
 
-  <div class="side-section">
-    <div class="side-item" data-section="checklist">
-      <span>☑️</span>
-      <span>Checklist</span>
-    </div>
-  </div>
+<button id="trashToggle" class="section-button">
+▸ ♻ Recycle Bin
+</button>
 
-  <div class="side-section">
-    <div class="side-item" data-section="trash">
-      <span>🗑️</span>
-      <span id="trashLabel">Recycle Bin</span>
-      <span class="side-count" id="trashCount">0</span>
-    </div>
-  </div>
+<div id="trashContainer" class="section-content hidden"></div>
 
-  <div class="side-section">
-    <div class="side-item" id="settingsBtn">
-      <span>⚙️</span>
-      <span>Settings</span>
-    </div>
-  </div>
+</div>
+
+<div class="sidebar-section">
+
+<button id="settingsToggle" class="section-button">
+⚙ Settings
+</button>
+
+</div>
 
 </aside>
 
+<!-- =====================================================
+     MAIN
+===================================================== -->
+
+<main class="main">
+
 <!-- NOTE LIST -->
-<section class="notes-panel">
 
-  <div class="list-header">
-    <div class="list-title-row">
-      <div class="list-title" id="listTitle">All Notes</div>
-      <div id="listCount">0 Notes</div>
-    </div>
+<section class="card">
 
-    <input
-      id="searchInput"
-      class="search"
-      placeholder="Search notes..."
-      autocomplete="off"
-    >
-  </div>
+<div class="search-row">
 
-  <div class="bulk-bar" id="bulkBar">
-    <span id="selectedCount" style="padding:7px">0 selected</span>
-    <button id="bulkPin">📌 Pin</button>
-    <button id="bulkFavorite">⭐ Favorite</button>
-    <button id="bulkCategory">📁 Category</button>
-    <button id="bulkTags">🏷️ Tags</button>
-    <button id="bulkColor">🎨 Color</button>
-    <button id="bulkDuplicate">📋 Duplicate</button>
-    <button id="bulkDelete">🗑️ Delete</button>
-  </div>
+<input
+id="searchInput"
+type="search"
+placeholder="Search notes..."
+>
 
-  <div class="note-list" id="noteList"></div>
+<button id="addNote">
+＋ Add Note
+</button>
+
+</div>
+
+<div id="bulkActions" class="action-card hidden">
+
+<button id="bulkFavorite">
+⭐ Favorite
+</button>
+
+<button id="bulkPin">
+📌 Pin
+</button>
+
+<button id="bulkRecycle" class="btn-danger">
+♻ Recycle
+</button>
+
+</div>
+
+<div id="noteList" class="note-list"></div>
 
 </section>
 
 <!-- DATA PANEL -->
-<main class="data-panel">
 
-  <div class="document" id="documentPanel">
-    <div class="empty">
-      Select a note.
-    </div>
-  </div>
+<section id="dataPanel" class="card">
+
+<div class="empty">
+Select a note to view it.
+</div>
+
+</section>
 
 </main>
 
-</div>
-</div>
-
-<div class="modal-backdrop" id="modalBackdrop">
-  <div class="modal" id="modal"></div>
-</div>
-
 <script>
-/* ============================================================
+
+/* =========================================================
    GOOGLE DRIVE CONFIGURATION
-   ============================================================ */
+========================================================= */
 
 const CONFIG = {
+
   CLIENT_ID:
-    "262106898132-tsn94p3vvpf34do0ommc6rai2mtc5sh6.apps.googleusercontent.com",
+  "262106898132-tsn94p3vvpf34do0ommc6rai2mtc5sh6.apps.googleusercontent.com",
 
   FOLDER_ID:
-    "1iFxVl1IH0PrEZw5uDUlnJuaablUI77nx",
+  "1iFxVl1IH0PrEZw5uDUlnJuaablUI77nx",
 
   DB_FILE_ID:
-    "1i3LtPybAqhvumBsy0HXJyUCjmFBIdGP7",
+  "1i3LtPybAqhvumBsy0HXJyUCjmFBIdGP7",
 
   DB_FILE_NAME:
-    "MasterDB.json",
+  "MasterDB.json",
 
   SCOPES:
-    "https://www.googleapis.com/auth/drive"
+  "https://www.googleapis.com/auth/drive"
+
 };
 
 
-/* ============================================================
-   STATE
-   ============================================================ */
+/* =========================================================
+   APPLICATION STATE
+========================================================= */
 
-const DEFAULT_DB = {
-  version: 1,
-
-  settings: {
-    sidebarDefault: "closed",
-    sidebarDensity: "compact",
-    categoryDefault: "collapsed",
-    tagsDefault: "collapsed",
-    dividerLines: true,
-    categoryIndentation: "compact",
-
-    noteDisplayStyle: "normal",
-    notesPerPage: "20",
-
-    sorting: "lastModified",
-    searchMode: "all",
-
-    autoSave: true,
-    autoSaveInterval: 1500,
-
-    saveConfirmation: true,
-    notificationDuration: 1800,
-
-    dateFormat: "DD MMM YYYY",
-    timeFormat: "12",
-
-    layoutMode: "automatic",
-
-    confirmDelete: true,
-    confirmEmptyTrash: true,
-    confirmCategoryRemoval: true,
-    confirmTagRemoval: true
-  },
-
-  categories: [],
-
-  tags: [],
-
-  notes: [],
-
-  trashState: {
-    label: "Recycle Bin",
-    hidden: false
-  },
-
-  checklist: {
-    url: ""
-  },
-
-  counters: {
-    binSequence: 0
-  }
-};
-
-let db = structuredClone(DEFAULT_DB);
 let accessToken = null;
-let tokenClient = null;
-let gapiReady = false;
 
-let currentSection = "all";
-let selectedNoteId = null;
-let selectedIds = new Set();
+let database = null;
+
+let currentNoteId = null;
+
+let selectedNotes = new Set();
+
+let currentView = "all";
 
 let searchText = "";
-let currentPage = 1;
 
 let saveTimer = null;
-let saveInProgress = false;
-let saveAgain = false;
 
-let expandedCategories = new Set();
+let countdown = 10;
+
+let changesPending = false;
 
 
-/* ============================================================
+/* =========================================================
+   DEFAULT DATABASE
+========================================================= */
+
+function createEmptyDatabase(){
+
+  return {
+
+    version: 1,
+
+    nextNoteId: 1,
+
+    notes: [],
+
+    categories: [
+
+      {
+        id: "root",
+        name: "Uncategorized",
+        parentId: null
+      }
+
+    ],
+
+    tags: [],
+
+    settings: {
+
+      sidebarView: "compact",
+
+      theme: "system",
+
+      fontSize: "normal",
+
+      notesPerPage: "all",
+
+      confirmDelete: true,
+
+      trashName: "Recycle Bin"
+
+    }
+
+  };
+
+}
+
+
+/* =========================================================
+   INITIALIZE
+========================================================= */
+
+function ensureDatabase(){
+
+  if(!database){
+    database = createEmptyDatabase();
+  }
+
+  if(!Array.isArray(database.notes)){
+    database.notes = [];
+  }
+
+  if(!Array.isArray(database.categories)){
+    database.categories = [];
+  }
+
+  if(!database.categories.some(c => c.id === "root")){
+
+    database.categories.unshift({
+
+      id:"root",
+      name:"Uncategorized",
+      parentId:null
+
+    });
+
+  }
+
+  if(!Array.isArray(database.tags)){
+    database.tags = [];
+  }
+
+  if(!database.settings){
+    database.settings = createEmptyDatabase().settings;
+  }
+
+}
+
+
+/* =========================================================
    HELPERS
-   ============================================================ */
+========================================================= */
 
-const $ = id => document.getElementById(id);
+function escapeHTML(value){
 
-function uid(prefix="id"){
-  return prefix + "_" +
-    Date.now().toString(36) + "_" +
-    Math.random().toString(36).slice(2,8);
+  return String(value ?? "")
+  .replace(/&/g,"&amp;")
+  .replace(/</g,"&lt;")
+  .replace(/>/g,"&gt;")
+  .replace(/"/g,"&quot;")
+  .replace(/'/g,"&#039;");
+
 }
 
-function nowISO(){
+
+function getNow(){
+
   return new Date().toISOString();
+
 }
 
-function escapeHTML(value=""){
-  return String(value)
-    .replace(/&/g,"&amp;")
-    .replace(/</g,"&lt;")
-    .replace(/>/g,"&gt;")
-    .replace(/"/g,"&quot;")
-    .replace(/'/g,"&#039;");
-}
-
-function stripHTML(html=""){
-  const d=document.createElement("div");
-  d.innerHTML=html;
-  return d.textContent || d.innerText || "";
-}
 
 function formatDate(value){
-  if(!value) return "—";
 
-  const d=new Date(value);
+  if(!value){
+    return "—";
+  }
 
-  if(Number.isNaN(d.getTime())) return "—";
-
-  const date =
-    String(d.getDate()).padStart(2,"0") + " " +
-    d.toLocaleString("en-US",{month:"short"}) + " " +
-    d.getFullYear();
-
-  let time;
-
-  if(db.settings.timeFormat==="24"){
-    time=d.toLocaleTimeString([],{
+  return new Date(value).toLocaleString(
+    undefined,
+    {
+      day:"2-digit",
+      month:"short",
+      year:"numeric",
       hour:"2-digit",
-      minute:"2-digit",
-      hour12:false
-    });
-  }else{
-    time=d.toLocaleTimeString([],{
-      hour:"2-digit",
-      minute:"2-digit",
-      hour12:true
-    });
-  }
-
-  return date + " · " + time;
-}
-
-function showMessage(message, type="ok"){
-  const el=$("connectionStatus");
-
-  el.textContent=message;
-  el.className="connection " + (type==="ok" ? "ok" : "err");
-
-  if(db.settings.notificationDuration){
-    setTimeout(()=>{
-      if(el.textContent===message){
-        el.textContent=accessToken ? "Google Drive connected" : "Not connected";
-      }
-    },db.settings.notificationDuration);
-  }
-}
-
-function confirmAction(message, setting){
-  if(db.settings[setting]===false) return true;
-  return confirm(message);
-}
-
-
-/* ============================================================
-   GOOGLE API
-   ============================================================ */
-
-async function initGoogle(){
-
-  try{
-
-    await new Promise((resolve,reject)=>{
-      gapi.load("client",async()=>{
-        try{
-          await gapi.client.init({
-            discoveryDocs:[
-              "https://www.googleapis.com/discovery/v1/apis/drive/v3/rest"
-            ]
-          });
-
-          gapiReady=true;
-          resolve();
-        }catch(e){
-          reject(e);
-        }
-      });
-    });
-
-    tokenClient=google.accounts.oauth2.initTokenClient({
-      client_id:CONFIG.CLIENT_ID,
-      scope:CONFIG.SCOPES,
-      callback:async response=>{
-        if(response.error){
-          showMessage("Google authorization failed","err");
-          return;
-        }
-
-        accessToken=response.access_token;
-
-        gapi.client.setToken({
-          access_token:accessToken
-        });
-
-        showMessage("Google Drive connected","ok");
-
-        await loadDatabase();
-      }
-    });
-
-    $("connectionStatus").textContent="Click Show → Connect";
-
-  }catch(error){
-    console.error(error);
-    showMessage("Google API initialization failed","err");
-  }
-}
-
-function connectGoogle(){
-
-  if(!tokenClient){
-    alert("Google API ابھی تیار نہیں ہوا۔");
-    return;
-  }
-
-  tokenClient.requestAccessToken({
-    prompt:"consent"
-  });
-}
-
-
-/* ============================================================
-   GOOGLE DRIVE JSON
-   ============================================================ */
-
-async function loadDatabase(){
-
-  if(!accessToken){
-    connectGoogle();
-    return;
-  }
-
-  try{
-
-    const response=await fetch(
-      `https://www.googleapis.com/drive/v3/files/${CONFIG.DB_FILE_ID}?alt=media`,
-      {
-        headers:{
-          Authorization:"Bearer "+accessToken
-        }
-      }
-    );
-
-    if(!response.ok){
-      throw new Error("Drive JSON read failed: "+response.status);
+      minute:"2-digit"
     }
-
-    const remote=await response.json();
-
-    db={
-      ...structuredClone(DEFAULT_DB),
-      ...remote,
-      settings:{
-        ...DEFAULT_DB.settings,
-        ...(remote.settings||{})
-      }
-    };
-
-    db.notes=Array.isArray(db.notes)?db.notes:[];
-    db.categories=Array.isArray(db.categories)?db.categories:[];
-    db.tags=Array.isArray(db.tags)?db.tags:[];
-    db.checklist=db.checklist||{url:""};
-    db.trashState=db.trashState||{
-      label:"Recycle Bin",
-      hidden:false
-    };
-
-    renderAll();
-
-    showMessage("MasterDB.json loaded","ok");
-
-  }catch(error){
-
-    console.error(error);
-
-    alert(
-      "Google Drive سے MasterDB.json read نہیں ہو سکی۔\n\n"+
-      error.message
-    );
-
-    showMessage("Drive read failed","err");
-  }
-}
-
-async function saveDatabase(){
-
-  if(!accessToken){
-    connectGoogle();
-    return false;
-  }
-
-  if(saveInProgress){
-    saveAgain=true;
-    return false;
-  }
-
-  saveInProgress=true;
-
-  try{
-
-    const blob=new Blob(
-      [JSON.stringify(db,null,2)],
-      {type:"application/json"}
-    );
-
-    const metadata={
-      name:CONFIG.DB_FILE_NAME,
-      mimeType:"application/json"
-    };
-
-    const form=new FormData();
-
-    form.append(
-      "metadata",
-      new Blob(
-        [JSON.stringify(metadata)],
-        {type:"application/json"}
-      )
-    );
-
-    form.append("file",blob);
-
-    const response=await fetch(
-      `https://www.googleapis.com/upload/drive/v3/files/${CONFIG.DB_FILE_ID}?uploadType=multipart`,
-      {
-        method:"PATCH",
-        headers:{
-          Authorization:"Bearer "+accessToken
-        },
-        body:form
-      }
-    );
-
-    if(!response.ok){
-      throw new Error("Drive write failed: "+response.status);
-    }
-
-    showMessage("Saved to Google Drive","ok");
-
-    if(saveAgain){
-      saveAgain=false;
-      saveInProgress=false;
-      return await saveDatabase();
-    }
-
-    saveInProgress=false;
-
-    return true;
-
-  }catch(error){
-
-    console.error(error);
-
-    saveInProgress=false;
-
-    showMessage("Drive save failed","err");
-
-    alert("Google Drive میں save نہیں ہو سکا۔\n\n"+error.message);
-
-    return false;
-  }
-}
-
-function scheduleSave(){
-
-  if(db.settings.autoSave===false) return;
-
-  clearTimeout(saveTimer);
-
-  saveTimer=setTimeout(
-    ()=>saveDatabase(),
-    Number(db.settings.autoSaveInterval)||1500
   );
+
 }
 
-async function deleteDatabaseFile(){
 
-  if(!accessToken){
-    connectGoogle();
+function getCategoryName(categoryId){
+
+  const category =
+  database.categories.find(
+    c => c.id === categoryId
+  );
+
+  return category
+    ? category.name
+    : "Uncategorized";
+
+}
+
+
+function getCategoryPath(categoryId){
+
+  let result = [];
+
+  let current =
+  database.categories.find(
+    c => c.id === categoryId
+  );
+
+  while(current){
+
+    result.unshift(current.name);
+
+    current =
+    database.categories.find(
+      c => c.id === current.parentId
+    );
+
+  }
+
+  return result.length
+    ? result.join(" / ")
+    : "Uncategorized";
+
+}
+
+
+function getChildCategoryIds(categoryId){
+
+  const result = [categoryId];
+
+  let changed = true;
+
+  while(changed){
+
+    changed = false;
+
+    database.categories.forEach(category => {
+
+      if(
+        result.includes(category.parentId) &&
+        !result.includes(category.id)
+      ){
+
+        result.push(category.id);
+
+        changed = true;
+
+      }
+
+    });
+
+  }
+
+  return result;
+
+}
+
+
+function getWordCount(html){
+
+  const temporary =
+  document.createElement("div");
+
+  temporary.innerHTML = html || "";
+
+  const text =
+  temporary.innerText.trim();
+
+  if(!text){
+    return 0;
+  }
+
+  return text.split(/\s+/).length;
+
+}
+
+
+function getDescription(html){
+
+  const temporary =
+  document.createElement("div");
+
+  temporary.innerHTML = html || "";
+
+  return temporary.innerText
+    .replace(/\s+/g," ")
+    .trim()
+    .slice(0,150);
+
+}
+
+
+function getObjectSize(object){
+
+  return new Blob([
+    JSON.stringify(object)
+  ]).size;
+
+}
+
+
+/* =========================================================
+   RENDER EVERYTHING
+========================================================= */
+
+function render(){
+
+  ensureDatabase();
+
+  renderNoteList();
+
+  renderCategories();
+
+  renderTags();
+
+  renderTrash();
+
+  renderCurrentPanel();
+
+}
+
+
+/* =========================================================
+   NOTE LIST
+========================================================= */
+
+function getVisibleNotes(){
+
+  let notes =
+  database.notes.filter(
+    note => !note.deleted
+  );
+
+  if(currentView === "favorites"){
+
+    notes =
+    notes.filter(
+      note => note.favorite
+    );
+
+  }
+
+  if(currentView === "pinned"){
+
+    notes =
+    notes.filter(
+      note => note.pinned
+    );
+
+  }
+
+  if(currentView.startsWith("category:")){
+
+    const id =
+    currentView.replace("category:","");
+
+    const ids =
+    getChildCategoryIds(id);
+
+    notes =
+    notes.filter(
+      note => ids.includes(note.categoryId)
+    );
+
+  }
+
+  if(currentView.startsWith("tag:")){
+
+    const tag =
+    currentView.replace("tag:","");
+
+    notes =
+    notes.filter(
+      note => (note.tags || []).includes(tag)
+    );
+
+  }
+
+  if(searchText){
+
+    const query =
+    searchText.toLowerCase();
+
+    notes =
+    notes.filter(note => {
+
+      const text = [
+
+        note.title,
+
+        note.content,
+
+        getCategoryName(note.categoryId),
+
+        ...(note.tags || [])
+
+      ].join(" ").toLowerCase();
+
+      return text.includes(query);
+
+    });
+
+  }
+
+  notes.sort((a,b) => {
+
+    if(a.pinned !== b.pinned){
+
+      return b.pinned - a.pinned;
+
+    }
+
+    return new Date(b.modified || 0)
+      - new Date(a.modified || 0);
+
+  });
+
+  return notes;
+
+}
+
+
+function renderNoteList(){
+
+  const container =
+  document.getElementById("noteList");
+
+  const notes =
+  getVisibleNotes();
+
+  if(!notes.length){
+
+    container.innerHTML =
+    `<div class="empty">
+      No notes found.
+    </div>`;
+
+    updateBulkActions();
+
+    return;
+
+  }
+
+  container.innerHTML =
+  notes.map(note => {
+
+    const tags =
+    (note.tags || [])
+    .map(tag =>
+      `<span>🏷 ${escapeHTML(tag)}</span>`
+    )
+    .join(" ");
+
+    return `
+
+    <article
+
+      class="note-row
+      ${selectedNotes.has(note.id) ? "selected" : ""}"
+
+      data-note-id="${escapeHTML(note.id)}"
+
+      style="
+        border-left-color:
+        ${escapeHTML(note.color || "#cbd5e1")}
+      "
+
+    >
+
+      <div class="note-actions">
+
+        <button
+          class="mini-button
+          ${note.pinned ? "pin-active" : ""}"
+          data-action="pin"
+          data-id="${escapeHTML(note.id)}"
+        >
+          📌
+        </button>
+
+        <button
+          class="mini-button
+          ${note.favorite ? "favorite-active" : ""}"
+          data-action="favorite"
+          data-id="${escapeHTML(note.id)}"
+        >
+          ★
+        </button>
+
+      </div>
+
+      <div class="note-title">
+
+        ${escapeHTML(
+          note.title || "[No Heading]"
+        )}
+
+      </div>
+
+      <div class="note-description">
+
+        ${escapeHTML(
+          getDescription(note.content)
+        )}
+
+      </div>
+
+      <div class="note-meta">
+
+        <span>
+          📁 ${escapeHTML(
+            getCategoryName(note.categoryId)
+          )}
+        </span>
+
+        <span>🏷</span>
+
+        ${tags || "<span>None</span>"}
+
+      </div>
+
+    </article>
+
+    `;
+
+  }).join("");
+
+  updateBulkActions();
+
+}
+
+
+/* =========================================================
+   CATEGORIES
+========================================================= */
+
+function renderCategories(){
+
+  const container =
+  document.getElementById("categoryContainer");
+
+  function draw(parentId, depth){
+
+    return database.categories
+
+      .filter(c => c.parentId === parentId)
+
+      .map(category => {
+
+        const ids =
+        getChildCategoryIds(category.id);
+
+        const count =
+        database.notes.filter(
+          note =>
+          !note.deleted &&
+          ids.includes(note.categoryId)
+        ).length;
+
+        return `
+
+        <div>
+
+          <div
+            class="tree-row"
+            style="padding-left:${depth * 14}px"
+          >
+
+            <span
+              class="tree-name"
+              data-category-id="${escapeHTML(category.id)}"
+            >
+              📁 ${escapeHTML(category.name)}
+            </span>
+
+            <span class="count">
+              ${count}
+            </span>
+
+          </div>
+
+          ${draw(category.id,depth+1)}
+
+        </div>
+
+        `;
+
+      }).join("");
+
+  }
+
+  container.innerHTML =
+  draw(null,0);
+
+}
+
+
+/* =========================================================
+   TAGS
+========================================================= */
+
+function renderTags(){
+
+  const container =
+  document.getElementById("tagsContainer");
+
+  const counts = {};
+
+  database.notes
+  .filter(note => !note.deleted)
+  .forEach(note => {
+
+    (note.tags || []).forEach(tag => {
+
+      counts[tag] =
+      (counts[tag] || 0) + 1;
+
+    });
+
+  });
+
+  const tags =
+  Object.keys(counts).sort();
+
+  if(!tags.length){
+
+    container.innerHTML =
+    `<div class="empty">No tags</div>`;
+
+    return;
+
+  }
+
+  container.innerHTML =
+  tags.map(tag => `
+
+    <div class="tag-row">
+
+      <span
+        class="tag-name"
+        data-tag-name="${escapeHTML(tag)}"
+      >
+        🏷 ${escapeHTML(tag)}
+      </span>
+
+      <span class="count">
+        ${counts[tag]}
+      </span>
+
+    </div>
+
+  `).join("");
+
+}
+
+
+/* =========================================================
+   TRASH
+========================================================= */
+
+function renderTrash(){
+
+  const container =
+  document.getElementById("trashContainer");
+
+  const count =
+  database.notes.filter(
+    note => note.deleted
+  ).length;
+
+  container.innerHTML = `
+
+    <div class="tree-row">
+
+      <span>
+        ♻ ${escapeHTML(
+          database.settings.trashName ||
+          "Recycle Bin"
+        )}
+      </span>
+
+      <span class="count">
+        ${count}
+      </span>
+
+    </div>
+
+    <button
+      id="restoreAll"
+      style="margin-top:7px;width:100%"
+    >
+      Restore All
+    </button>
+
+  `;
+
+  document.getElementById("restoreAll")
+    .onclick = restoreAllDeleted;
+
+}
+
+
+/* =========================================================
+   CURRENT NOTE PANEL
+========================================================= */
+
+function renderCurrentPanel(){
+
+  const panel =
+  document.getElementById("dataPanel");
+
+  const note =
+  database.notes.find(
+    n => n.id === currentNoteId
+  );
+
+  if(!note){
+
+    panel.innerHTML =
+    `<div class="empty">
+      Select a note to view it.
+    </div>`;
+
+    return;
+
+  }
+
+  /*
+     Last Viewed is updated when the note
+     is opened.
+  */
+
+  note.lastViewed = getNow();
+
+  note.totalViews =
+  Number(note.totalViews || 0) + 1;
+
+  panel.innerHTML = `
+
+    <div
+      class="color-bar"
+      style="
+        background:
+        ${escapeHTML(note.color || "#2563eb")}
+      "
+    ></div>
+
+    <div class="action-card">
+
+      <button id="editNoteButton">
+        ✎ Edit
+      </button>
+
+      <button id="panelRecycle" class="btn-danger">
+        ♻ Remove
+      </button>
+
+      <button id="changeColor">
+        🎨 Color
+      </button>
+
+      <button id="restorePanel"
+        class="${note.deleted ? "" : "hidden"}">
+        Restore
+      </button>
+
+    </div>
+
+    <div class="view-title">
+
+      ${escapeHTML(
+        note.title || "[No Heading]"
+      )}
+
+    </div>
+
+    <div class="body-view">
+
+      ${note.content || "<i>No content</i>"}
+
+    </div>
+
+    ${renderLinks(note)}
+
+    ${renderMetadata(note)}
+
+  `;
+
+  document.getElementById("editNoteButton")
+    .onclick = () => openEditor(note.id);
+
+  document.getElementById("panelRecycle")
+    .onclick = () => recycleNote(note.id);
+
+  document.getElementById("changeColor")
+    .onclick = () => changeNoteColor(note.id);
+
+  document.getElementById("restorePanel")
+    .onclick = () => restoreNote(note.id);
+
+}
+
+
+/* =========================================================
+   LINKS DISPLAY
+========================================================= */
+
+function renderLinks(note){
+
+  const links =
+  note.links || [];
+
+  return `
+
+    <div class="links-card">
+
+      <strong>Links</strong>
+
+      ${
+        links.length
+        ?
+        links.map((link,index) => `
+
+          <div
+            class="link-row"
+            data-link-index="${index}"
+          >
+
+            <span class="link-title">
+              🔗 ${escapeHTML(link.title)}
+            </span>
+
+            <button
+              data-delete-link="${index}"
+            >
+              ×
+            </button>
+
+          </div>
+
+        `).join("")
+        :
+        `<div class="empty">
+          No links
+        </div>`
+      }
+
+    </div>
+
+  `;
+
+}
+
+
+/* =========================================================
+   METADATA
+========================================================= */
+
+function renderMetadata(note){
+
+  const tags =
+  (note.tags || []).join(", ") || "None";
+
+  const metadata = [
+
+    ["Created",formatDate(note.created)],
+
+    ["Last Modified",formatDate(note.modified)],
+
+    ["Last Viewed",formatDate(note.lastViewed)],
+
+    ["Last Synced",formatDate(note.lastSynced)],
+
+    ["Category",getCategoryName(note.categoryId)],
+
+    ["Category Path",getCategoryPath(note.categoryId)],
+
+    ["Tags",tags],
+
+    ["Status",note.deleted ? "Deleted" : "Active"],
+
+    ["Favorite",note.favorite ? "Yes" : "No"],
+
+    ["Pin",note.pinned ? "Yes" : "No"],
+
+    ["Word Count",getWordCount(note.content)],
+
+    ["Note Size",
+      getObjectSize(note) + " B"
+    ],
+
+    ["Links Count",
+      (note.links || []).length
+    ],
+
+    ["Attachment Count",
+      (note.attachments || []).length
+    ],
+
+    ["Total Views",
+      note.totalViews || 0
+    ],
+
+    ["Storage / Sync Status",
+      note.lastSynced
+      ? "Google Drive"
+      : "Not Synced"
+    ],
+
+    ["Note ID",note.id]
+
+  ];
+
+  return `
+
+    <div class="metadata">
+
+      ${
+        metadata.map(item => `
+
+          <div class="metadata-item">
+
+            <span class="metadata-label">
+              ${escapeHTML(item[0])}
+            </span>
+
+            ${escapeHTML(String(item[1]))}
+
+          </div>
+
+        `).join("")
+      }
+
+    </div>
+
+  `;
+
+}
+
+
+/* =========================================================
+   EDITOR
+========================================================= */
+
+function openEditor(noteId){
+
+  const note =
+  database.notes.find(
+    n => n.id === noteId
+  );
+
+  if(!note){
     return;
   }
 
-  if(!confirm("MasterDB.json کو Google Drive سے delete کرنا ہے؟")) return;
+  const panel =
+  document.getElementById("dataPanel");
 
-  try{
+  panel.innerHTML = `
 
-    const response=await fetch(
-      `https://www.googleapis.com/drive/v3/files/${CONFIG.DB_FILE_ID}`,
-      {
-        method:"DELETE",
-        headers:{
-          Authorization:"Bearer "+accessToken
-        }
+    <div
+      class="color-bar"
+      style="
+        background:
+        ${escapeHTML(note.color || "#2563eb")}
+      "
+    ></div>
+
+    <div class="action-card">
+
+      <button id="saveEditor" class="btn-success">
+        💾 Save
+      </button>
+
+      <button id="cancelEditor">
+        Cancel
+      </button>
+
+      <button id="editorColor">
+        🎨 Color
+      </button>
+
+    </div>
+
+    <input
+      id="editorTitle"
+      class="edit-title"
+      value="${escapeHTML(note.title || "")}"
+      placeholder="[No Heading]"
+    >
+
+    <div class="editor-toolbar">
+
+      <button
+        data-command="bold"
+        title="Bold"
+      >
+        <b>B</b>
+      </button>
+
+      <button
+        data-command="underline"
+        title="Underline"
+      >
+        <u>U</u>
+      </button>
+
+      <button id="textColor">
+        Text Color
+      </button>
+
+      <button id="insertLink">
+        🔗 Insert Link
+      </button>
+
+    </div>
+
+    <div
+      id="editorBody"
+      class="editor-body"
+      contenteditable="true"
+    >
+      ${note.content || ""}
+    </div>
+
+    <div class="links-card">
+
+      <strong>Links</strong>
+
+      <div class="link-inputs">
+
+        <input
+          id="newLinkTitle"
+          placeholder="Link Title"
+        >
+
+        <input
+          id="newLinkAddress"
+          placeholder="Link Address"
+        >
+
+        <button id="addLink">
+          ＋ Add
+        </button>
+
+      </div>
+
+      <div id="editorLinks"></div>
+
+    </div>
+
+  `;
+
+
+  /*
+     Rich text toolbar
+  */
+
+  document
+  .querySelectorAll("[data-command]")
+  .forEach(button => {
+
+    button.onclick = () => {
+
+      document.execCommand(
+        button.dataset.command,
+        false,
+        null
+      );
+
+      document
+      .getElementById("editorBody")
+      .focus();
+
+    };
+
+  });
+
+
+  /*
+     Text color
+  */
+
+  document.getElementById("textColor")
+    .onclick = () => {
+
+      const color =
+      prompt(
+        "Enter text color:",
+        "#000000"
+      );
+
+      if(color){
+
+        document.execCommand(
+          "foreColor",
+          false,
+          color
+        );
+
       }
-    );
 
-    if(!response.ok){
-      throw new Error("Delete failed: "+response.status);
-    }
+    };
 
-    alert("MasterDB.json deleted.");
 
-  }catch(error){
-    alert(error.message);
+  /*
+     Cursor-position link
+  */
+
+  document.getElementById("insertLink")
+    .onclick = () => {
+
+      const address =
+      prompt(
+        "Enter Link Address:"
+      );
+
+      if(!address){
+        return;
+      }
+
+      document.execCommand(
+        "createLink",
+        false,
+        address
+      );
+
+    };
+
+
+  /*
+     Separate link card
+  */
+
+  function renderEditorLinks(){
+
+    const box =
+    document.getElementById("editorLinks");
+
+    box.innerHTML =
+    (note.links || []).map(
+      (link,index) => `
+
+        <div class="link-row">
+
+          <span class="link-title">
+            ${escapeHTML(link.title)}
+          </span>
+
+          <button
+            data-remove-editor-link="${index}"
+          >
+            ×
+          </button>
+
+        </div>
+
+      `
+    ).join("");
+
+    box
+    .querySelectorAll(
+      "[data-remove-editor-link]"
+    )
+    .forEach(button => {
+
+      button.onclick = () => {
+
+        note.links.splice(
+          Number(
+            button.dataset.removeEditorLink
+          ),
+          1
+        );
+
+        renderEditorLinks();
+
+        markChanges();
+
+      };
+
+    });
+
   }
+
+  renderEditorLinks();
+
+
+  document.getElementById("addLink")
+    .onclick = () => {
+
+      const title =
+      document
+      .getElementById("newLinkTitle")
+      .value.trim();
+
+      const address =
+      document
+      .getElementById("newLinkAddress")
+      .value.trim();
+
+      if(!title || !address){
+
+        alert(
+          "Link Title and Link Address are required."
+        );
+
+        return;
+
+      }
+
+      note.links =
+      note.links || [];
+
+      note.links.push({
+
+        title:title,
+
+        url:address
+
+      });
+
+      document
+      .getElementById("newLinkTitle")
+      .value = "";
+
+      document
+      .getElementById("newLinkAddress")
+      .value = "";
+
+      renderEditorLinks();
+
+      markChanges();
+
+    };
+
+
+  /*
+     Save editor
+  */
+
+  document.getElementById("saveEditor")
+    .onclick = () => {
+
+      note.title =
+      document
+      .getElementById("editorTitle")
+      .value.trim();
+
+      note.content =
+      document
+      .getElementById("editorBody")
+      .innerHTML;
+
+      note.modified =
+      getNow();
+
+      markChanges();
+
+      render();
+
+    };
+
+
+  /*
+     Cancel
+  */
+
+  document.getElementById("cancelEditor")
+    .onclick = () => {
+
+      renderCurrentPanel();
+
+    };
+
+
+  document.getElementById("editorColor")
+    .onclick = () => {
+
+      changeNoteColor(note.id);
+
+    };
+
 }
 
 
-/* ============================================================
-   NOTE MODEL
-   ============================================================ */
+/* =========================================================
+   NOTE CREATION
+========================================================= */
 
 function createNote(){
 
-  const t=nowISO();
+  ensureDatabase();
 
-  return {
-    id:uid("note"),
-    title:"New Note",
+  const id =
+  String(database.nextNoteId++);
+
+  const note = {
+
+    id:id,
+
+    title:"",
+
     content:"",
-    links:[],
 
-    createdAt:t,
-    modifiedAt:t,
-    lastViewedAt:"",
-    lastSyncedAt:t,
+    color:"#2563eb",
 
-    categoryId:null,
-    previousCategoryId:null,
+    categoryId:"root",
 
     tags:[],
 
     favorite:false,
+
     pinned:false,
 
-    color:"#4f46e5",
-
     deleted:false,
-    trashHidden:false,
 
-    views:0,
+    created:getNow(),
 
-    binHistory:[],
+    modified:getNow(),
 
-    attachments:[],
-    status:"Active"
+    lastViewed:null,
+
+    lastSynced:null,
+
+    totalViews:0,
+
+    links:[],
+
+    attachments:[]
+
   };
+
+  database.notes.push(note);
+
+  currentNoteId = id;
+
+  markChanges();
+
+  render();
+
+  openEditor(id);
+
 }
 
-function getNote(id){
-  return db.notes.find(n=>n.id===id);
-}
 
-function activeNotes(){
-  return db.notes.filter(n=>!n.deleted && !n.trashHidden);
-}
+/* =========================================================
+   PIN / FAVORITE
+========================================================= */
 
-function deletedNotes(){
-  return db.notes.filter(n=>n.deleted && !n.trashHidden);
-}
+function toggleNoteProperty(id,property){
 
-function allVisibleNotes(){
+  const note =
+  database.notes.find(
+    n => n.id === id
+  );
 
-  let notes;
-
-  if(currentSection==="favorites"){
-    notes=activeNotes().filter(n=>n.favorite);
-
-  }else if(currentSection==="trash"){
-    notes=deletedNotes();
-
-  }else if(currentSection.startsWith("category:")){
-
-    const id=currentSection.slice(9);
-
-    notes=activeNotes().filter(n=>
-      n.categoryId===id ||
-      isDescendantCategory(n.categoryId,id)
-    );
-
-  }else if(currentSection.startsWith("tag:")){
-
-    const tag=currentSection.slice(4);
-
-    notes=activeNotes().filter(n=>
-      n.tags.includes(tag)
-    );
-
-  }else{
-    notes=activeNotes();
+  if(!note){
+    return;
   }
 
-  if(searchText.trim()){
-    const q=searchText.toLowerCase();
+  note[property] =
+  !note[property];
 
-    notes=notes.filter(n=>{
+  note.modified =
+  getNow();
 
-      const title=n.title||"";
-      const content=stripHTML(n.content||"");
+  markChanges();
 
-      const cat=getCategory(n.categoryId);
-      const categoryName=cat?.name||"";
+  render();
 
-      const tags=n.tags.join(" ");
-
-      if(db.settings.searchMode==="title"){
-        return title.toLowerCase().includes(q);
-      }
-
-      if(db.settings.searchMode==="titleContent"){
-        return (
-          title+" "+content
-        ).toLowerCase().includes(q);
-      }
-
-      return (
-        title+" "+content+" "+
-        categoryName+" "+tags
-      ).toLowerCase().includes(q);
-    });
-  }
-
-  return sortNotes(notes);
 }
 
-function sortNotes(notes){
 
-  const copy=[...notes];
+/* =========================================================
+   RECYCLE
+========================================================= */
 
-  switch(db.settings.sorting){
+function recycleNote(id){
 
-    case "newest":
-      return copy.sort((a,b)=>
-        new Date(b.createdAt)-new Date(a.createdAt)
-      );
+  const note =
+  database.notes.find(
+    n => n.id === id
+  );
 
-    case "oldest":
-      return copy.sort((a,b)=>
-        new Date(a.createdAt)-new Date(b.createdAt)
-      );
+  if(!note){
+    return;
+  }
 
-    case "alphabetical":
-      return copy.sort((a,b)=>
-        (a.title||"").localeCompare(
-          b.title||"",
-          undefined,
-          {sensitivity:"base"}
+  if(
+    database.settings.confirmDelete &&
+    !confirm(
+      "Move this note to Recycle Bin?"
+    )
+  ){
+    return;
+  }
+
+  note.deleted = true;
+
+  /*
+     Permanent Bin tag.
+     It is not removed during restore.
+  */
+
+  note.tags =
+  note.tags || [];
+
+  if(!note.tags.includes("Bin")){
+
+    note.tags.push("Bin");
+
+  }
+
+  note.modified =
+  getNow();
+
+  markChanges();
+
+  render();
+
+}
+
+
+/* =========================================================
+   RESTORE
+========================================================= */
+
+function restoreNote(id){
+
+  const note =
+  database.notes.find(
+    n => n.id === id
+  );
+
+  if(!note){
+    return;
+  }
+
+  note.deleted = false;
+
+  /*
+     Bin tag intentionally remains.
+  */
+
+  note.modified =
+  getNow();
+
+  markChanges();
+
+  render();
+
+}
+
+
+function restoreAllDeleted(){
+
+  database.notes
+  .filter(note => note.deleted)
+  .forEach(note => {
+
+    note.deleted = false;
+
+    note.modified =
+    getNow();
+
+  });
+
+  markChanges();
+
+  render();
+
+}
+
+
+/* =========================================================
+   COLOR
+========================================================= */
+
+function changeNoteColor(id){
+
+  const note =
+  database.notes.find(
+    n => n.id === id
+  );
+
+  if(!note){
+    return;
+  }
+
+  const color =
+  prompt(
+    "Enter Note Color:",
+    note.color || "#2563eb"
+  );
+
+  if(!color){
+    return;
+  }
+
+  note.color = color;
+
+  note.modified =
+  getNow();
+
+  markChanges();
+
+  render();
+
+}
+
+
+/* =========================================================
+   BULK ACTIONS
+========================================================= */
+
+function updateBulkActions(){
+
+  document
+  .getElementById("bulkActions")
+  .classList.toggle(
+    "hidden",
+    selectedNotes.size === 0
+  );
+
+}
+
+
+function bulkSet(property){
+
+  selectedNotes.forEach(id => {
+
+    const note =
+    database.notes.find(
+      n => n.id === id
+    );
+
+    if(note){
+
+      note[property] = true;
+
+      note.modified =
+      getNow();
+
+    }
+
+  });
+
+  markChanges();
+
+  render();
+
+}
+
+
+function bulkRecycle(){
+
+  selectedNotes.forEach(id => {
+
+    const note =
+    database.notes.find(
+      n => n.id === id
+    );
+
+    if(note){
+
+      note.deleted = true;
+
+      note.tags =
+      note.tags || [];
+
+      if(!note.tags.includes("Bin")){
+        note.tags.push("Bin");
+      }
+
+      note.modified =
+      getNow();
+
+    }
+
+  });
+
+  selectedNotes.clear();
+
+  markChanges();
+
+  render();
+
+}
+
+
+/* =========================================================
+   CHANGES / COUNTDOWN
+========================================================= */
+
+function markChanges(){
+
+  changesPending = true;
+
+  document
+  .getElementById("connectionStatus")
+  .textContent =
+  "Changes pending";
+
+  startSaveCountdown();
+
+}
+
+
+function startSaveCountdown(){
+
+  clearInterval(saveTimer);
+
+  countdown = 10;
+
+  document
+  .getElementById("saveCountdown")
+  .textContent =
+  countdown + "s";
+
+  saveTimer =
+  setInterval(async () => {
+
+    countdown--;
+
+    document
+    .getElementById("saveCountdown")
+    .textContent =
+    countdown + "s";
+
+    if(countdown <= 0){
+
+      clearInterval(saveTimer);
+
+      await saveDatabase();
+
+    }
+
+  },1000);
+
+}
+
+
+/* =========================================================
+   GOOGLE IDENTITY SERVICES
+========================================================= */
+
+function loadGoogleIdentityServices(){
+
+  return new Promise(
+    (resolve,reject) => {
+
+      if(
+        window.google &&
+        google.accounts &&
+        google.accounts.oauth2
+      ){
+
+        resolve();
+
+        return;
+
+      }
+
+      const script =
+      document.createElement("script");
+
+      script.src =
+      "https://accounts.google.com/gsi/client";
+
+      script.onload =
+      () => resolve();
+
+      script.onerror =
+      () =>
+      reject(
+        new Error(
+          "Google Identity Services could not load."
         )
       );
 
-    default:
-      return copy.sort((a,b)=>
-        new Date(b.modifiedAt)-new Date(a.modifiedAt)
-      );
-  }
-}
+      document.head.appendChild(script);
 
-
-/* ============================================================
-   CATEGORIES
-   ============================================================ */
-
-function getCategory(id){
-  return db.categories.find(c=>c.id===id);
-}
-
-function categoryChildren(parentId){
-  return db.categories.filter(c=>
-    (c.parentId||null)===(parentId||null)
+    }
   );
+
 }
 
-function isDescendantCategory(categoryId,ancestorId){
 
-  let current=getCategory(categoryId);
+/* =========================================================
+   CONNECT GOOGLE DRIVE
+========================================================= */
 
-  while(current){
+async function connectGoogleDrive(){
 
-    if(current.parentId===ancestorId) return true;
+  try{
 
-    current=getCategory(current.parentId);
+    await loadGoogleIdentityServices();
+
+    const tokenClient =
+    google.accounts.oauth2.initTokenClient({
+
+      client_id:
+      CONFIG.CLIENT_ID,
+
+      scope:
+      CONFIG.SCOPES,
+
+      callback:
+      async response => {
+
+        if(response.error){
+
+          alert(
+            "Google authorization failed."
+          );
+
+          return;
+
+        }
+
+        accessToken =
+        response.access_token;
+
+        document
+        .getElementById("connectionStatus")
+        .textContent =
+        "Google Drive Connected";
+
+        await reloadDatabase();
+
+      }
+
+    });
+
+    tokenClient.requestAccessToken({
+      prompt:"consent"
+    });
+
+  }
+  catch(error){
+
+    console.error(error);
+
+    alert(
+      "Google Drive connection failed:\n\n" +
+      error.message
+    );
+
   }
 
-  return false;
 }
 
-function categoryPath(id){
 
-  const parts=[];
-  let c=getCategory(id);
+/* =========================================================
+   DRIVE API REQUEST
+========================================================= */
 
-  while(c){
-    parts.unshift(c.name);
-    c=getCategory(c.parentId);
+async function driveRequest(
+  url,
+  options={}
+){
+
+  if(!accessToken){
+
+    throw new Error(
+      "Google Drive is not connected."
+    );
+
   }
 
-  return parts.join(" / ");
+  const response =
+  await fetch(
+    url,
+    {
+
+      ...options,
+
+      headers:{
+
+        ...(options.headers || {}),
+
+        Authorization:
+        "Bearer " + accessToken
+
+      }
+
+    }
+  );
+
+  if(!response.ok){
+
+    const text =
+    await response.text();
+
+    throw new Error(
+      response.status +
+      " " +
+      text
+    );
+
+  }
+
+  return response;
+
 }
 
-function categoryColor(id){
 
-  const colors=[
-    "#3b82f6",
-    "#22c55e",
-    "#f97316",
-    "#8b5cf6",
-    "#ec4899",
-    "#06b6d4",
-    "#eab308",
-    "#ef4444"
-  ];
+/* =========================================================
+   LOAD DATABASE
+========================================================= */
 
-  let c=getCategory(id);
+async function reloadDatabase(){
 
-  if(!c) return "#9ca3af";
+  if(!accessToken){
 
-  return c.color || colors[
-    db.categories.findIndex(x=>x.id===c.id)%colors.length
-  ];
-}
+    alert(
+      "First click Connect to Google Drive."
+    );
 
-function categoryNoteCount(id){
-
-  return activeNotes().filter(n=>
-    n.categoryId===id ||
-    isDescendantCategory(n.categoryId,id)
-  ).length;
-}
-
-function addCategory(name,parentId=null){
-
-  name=name.trim();
-
-  if(!name) return;
-
-  if(db.categories.some(c=>
-    c.name.toLowerCase()===name.toLowerCase() &&
-    (c.parentId||null)===(parentId||null)
-  )){
-    alert("یہ Category پہلے سے موجود ہے۔");
     return;
+
   }
 
-  const category={
-    id:uid("cat"),
-    name,
-    parentId,
-    color:categoryColor(null)
+  try{
+
+    document
+    .getElementById("connectionStatus")
+    .textContent =
+    "Loading Database...";
+
+
+    const response =
+    await driveRequest(
+
+      "https://www.googleapis.com/drive/v3/files/" +
+      encodeURIComponent(CONFIG.DB_FILE_ID) +
+      "?alt=media"
+
+    );
+
+
+    const loaded =
+    await response.json();
+
+    database =
+    loaded;
+
+    ensureDatabase();
+
+    changesPending = false;
+
+    clearInterval(saveTimer);
+
+    document
+    .getElementById("saveCountdown")
+    .textContent = "—";
+
+    document
+    .getElementById("connectionStatus")
+    .textContent =
+    "Database Loaded";
+
+    selectedNotes.clear();
+
+    render();
+
+  }
+  catch(error){
+
+    console.error(error);
+
+    document
+    .getElementById("connectionStatus")
+    .textContent =
+    "Load Failed";
+
+    alert(
+      "Database load failed:\n\n" +
+      error.message
+    );
+
+  }
+
+}
+
+
+/* =========================================================
+   CREATE DATABASE FILE IF NECESSARY
+========================================================= */
+
+async function createDatabaseFile(){
+
+  const metadata = {
+
+    name:
+    CONFIG.DB_FILE_NAME,
+
+    parents:[
+      CONFIG.FOLDER_ID
+    ],
+
+    mimeType:
+    "application/json"
+
   };
 
-  db.categories.push(category);
+  const boundary =
+  "notes_manager_boundary";
 
-  if(parentId) expandedCategories.add(parentId);
+  const body =
+  "--" + boundary + "\r\n" +
+  "Content-Type: application/json; charset=UTF-8\r\n\r\n" +
+  JSON.stringify(metadata) +
+  "\r\n--" + boundary + "\r\n" +
+  "Content-Type: application/json\r\n\r\n" +
+  JSON.stringify(database,null,2) +
+  "\r\n--" + boundary + "--";
 
-  scheduleSave();
-  renderAll();
-}
 
-function renameCategory(id){
+  const response =
+  await driveRequest(
 
-  const c=getCategory(id);
-  if(!c)return;
+    "https://www.googleapis.com/upload/drive/v3/files" +
+    "?uploadType=multipart",
 
-  const name=prompt("New Category Name",c.name);
-
-  if(!name || !name.trim()) return;
-
-  c.name=name.trim();
-  scheduleSave();
-  renderAll();
-}
-
-function removeCategory(id){
-
-  const c=getCategory(id);
-  if(!c)return;
-
-  if(!confirmAction(
-    `Category "${c.name}" remove کرنی ہے؟ Notes delete نہیں ہوں گی۔`,
-    "confirmCategoryRemoval"
-  ))return;
-
-  const parent=c.parentId||null;
-
-  db.notes.forEach(n=>{
-    if(n.categoryId===id){
-      n.categoryId=parent;
-      n.modifiedAt=nowISO();
-    }
-  });
-
-  db.categories.forEach(child=>{
-    if(child.parentId===id){
-      child.parentId=parent;
-    }
-  });
-
-  db.categories=db.categories.filter(x=>x.id!==id);
-
-  scheduleSave();
-  renderAll();
-}
-
-
-/* ============================================================
-   TAGS
-   ============================================================ */
-
-function usedTags(){
-
-  const set=new Set();
-
-  activeNotes().forEach(n=>{
-    (n.tags||[]).forEach(t=>set.add(t));
-  });
-
-  return [...set].sort((a,b)=>
-    a.localeCompare(b,undefined,{sensitivity:"base"})
-  );
-}
-
-function addTag(){
-
-  const name=prompt("New Tag");
-
-  if(!name || !name.trim())return;
-
-  const clean=name.trim();
-
-  if(db.tags.some(t=>
-    t.toLowerCase()===clean.toLowerCase()
-  )){
-    alert("یہ Tag پہلے سے موجود ہے۔");
-    return;
-  }
-
-  db.tags.push(clean);
-
-  scheduleSave();
-  renderAll();
-}
-
-function renameTag(tag){
-
-  const newName=prompt("Rename Tag",tag);
-
-  if(!newName || !newName.trim())return;
-
-  const clean=newName.trim();
-
-  if(db.tags.some(t=>
-    t!==tag &&
-    t.toLowerCase()===clean.toLowerCase()
-  )){
-    alert("یہ Tag پہلے سے موجود ہے۔");
-    return;
-  }
-
-  db.tags=db.tags.map(t=>t===tag?clean:t);
-
-  db.notes.forEach(n=>{
-    n.tags=(n.tags||[]).map(t=>t===tag?clean:t);
-  });
-
-  scheduleSave();
-  renderAll();
-}
-
-function removeTag(tag){
-
-  if(!confirmAction(
-    `Tag "${tag}" remove کرنا ہے؟`,
-    "confirmTagRemoval"
-  ))return;
-
-  db.tags=db.tags.filter(t=>t!==tag);
-
-  db.notes.forEach(n=>{
-    n.tags=(n.tags||[]).filter(t=>t!==tag);
-  });
-
-  scheduleSave();
-  renderAll();
-}
-
-
-/* ============================================================
-   DELETE / RESTORE / BIN
-   ============================================================ */
-
-function deleteNote(note){
-
-  if(!confirmAction(
-    "یہ Note Recycle Bin میں بھیجنا ہے؟",
-    "confirmDelete"
-  ))return;
-
-  note.deleted=true;
-  note.status="Deleted";
-  note.modifiedAt=nowISO();
-
-  /*
-   IMPORTANT:
-   Bin is permanent until manually removed.
-  */
-
-  if(!note.tags.includes("Bin")){
-    note.tags.push("Bin");
-  }
-
-  if(!db.tags.includes("Bin")){
-    db.tags.push("Bin");
-  }
-
-  db.counters.binSequence++;
-
-  const binTag="Bin "+db.counters.binSequence;
-
-  if(!note.tags.includes(binTag)){
-    note.tags.push(binTag);
-  }
-
-  if(!db.tags.includes(binTag)){
-    db.tags.push(binTag);
-  }
-
-  if(selectedNoteId===note.id){
-    selectedNoteId=null;
-  }
-
-  scheduleSave();
-  renderAll();
-}
-
-function restoreNote(note){
-
-  note.deleted=false;
-  note.trashHidden=false;
-  note.status="Active";
-
-  /*
-   IMPORTANT:
-   Bin / Bin N tags are NOT removed.
-  */
-
-  note.modifiedAt=nowISO();
-
-  scheduleSave();
-  renderAll();
-}
-
-function emptyTrash(){
-
-  if(!confirmAction(
-    "Recycle Bin empty کرنا ہے؟ Notes permanently delete نہیں ہوں گے، صرف hide ہوں گے۔",
-    "confirmEmptyTrash"
-  ))return;
-
-  db.notes.forEach(n=>{
-    if(n.deleted){
-      n.trashHidden=true;
-    }
-  });
-
-  db.trashState.hidden=true;
-
-  scheduleSave();
-  renderAll();
-}
-
-function restoreTrash(){
-
-  db.notes.forEach(n=>{
-    if(n.deleted){
-      n.trashHidden=false;
-    }
-  });
-
-  db.trashState.hidden=false;
-
-  scheduleSave();
-  renderAll();
-}
-
-
-/* ============================================================
-   RENDER SIDEBAR
-   ============================================================ */
-
-function renderSidebar(){
-
-  $("allCount").textContent=activeNotes().length;
-
-  $("favCount").textContent=
-    activeNotes().filter(n=>n.favorite).length;
-
-  $("trashCount").textContent=
-    deletedNotes().length;
-
-  $("categoryCount").textContent=
-    db.categories.length;
-
-  $("tagCount").textContent=
-    usedTags().length;
-
-  $("trashLabel").textContent=
-    db.trashState.label||"Recycle Bin";
-
-  renderCategoryTree();
-  renderTags();
-}
-
-function renderCategoryTree(){
-
-  const container=$("categoryTree");
-
-  container.innerHTML="";
-
-  function build(parentId=null,level=0){
-
-    const children=categoryChildren(parentId);
-
-    children.forEach(c=>{
-
-      const node=document.createElement("div");
-      node.className="tree-node";
-
-      const row=document.createElement("div");
-      row.className="tree-row";
-
-      const toggle=document.createElement("button");
-      toggle.className="tree-toggle";
-
-      const hasChildren=
-        categoryChildren(c.id).length>0;
-
-      toggle.textContent=
-        hasChildren
-          ? (expandedCategories.has(c.id)?"▾":"▸")
-          : "";
-
-      const label=document.createElement("div");
-      label.className="tree-label";
-      label.style.color=categoryColor(c.id);
-
-      label.innerHTML=
-        `📁 ${escapeHTML(c.name)}
-         <span class="side-count">${categoryNoteCount(c.id)}</span>`;
-
-      label.onclick=()=>{
-
-        if(hasChildren){
-          if(expandedCategories.has(c.id))
-            expandedCategories.delete(c.id);
-          else
-            expandedCategories.add(c.id);
-
-          renderCategoryTree();
-        }
-
-        currentSection="category:"+c.id;
-        currentPage=1;
-        renderAll();
-      };
-
-      toggle.onclick=()=>{
-
-        if(!hasChildren)return;
-
-        if(expandedCategories.has(c.id))
-          expandedCategories.delete(c.id);
-        else
-          expandedCategories.add(c.id);
-
-        renderCategoryTree();
-      };
-
-      row.append(toggle,label);
-
-      const edit=document.createElement("button");
-      edit.className="side-edit";
-      edit.textContent="✏️";
-
-      edit.onclick=e=>{
-        e.stopPropagation();
-        openCategoryMenu(c.id);
-      };
-
-      row.appendChild(edit);
-      node.appendChild(row);
-
-      if(hasChildren && expandedCategories.has(c.id)){
-        const childWrap=document.createElement("div");
-        childWrap.className="tree";
-        childWrap.appendChild(
-          buildFragment(c.id,level+1)
-        );
-        node.appendChild(childWrap);
-      }
-
-      container.appendChild(node);
-    });
-  }
-
-  function buildFragment(parentId,level){
-
-    const frag=document.createDocumentFragment();
-
-    categoryChildren(parentId).forEach(c=>{
-
-      const node=document.createElement("div");
-      node.className="tree-node";
-
-      const row=document.createElement("div");
-      row.className="tree-row";
-
-      const hasChildren=
-        categoryChildren(c.id).length>0;
-
-      const toggle=document.createElement("button");
-      toggle.className="tree-toggle";
-      toggle.textContent=
-        hasChildren
-        ? (expandedCategories.has(c.id)?"▾":"▸")
-        : "";
-
-      toggle.onclick=e=>{
-        e.stopPropagation();
-
-        if(expandedCategories.has(c.id))
-          expandedCategories.delete(c.id);
-        else
-          expandedCategories.add(c.id);
-
-        renderCategoryTree();
-      };
-
-      const label=document.createElement("div");
-      label.className="tree-label";
-      label.style.color=categoryColor(c.id);
-
-      label.innerHTML=
-        `📁 ${escapeHTML(c.name)}
-         <span class="side-count">${categoryNoteCount(c.id)}</span>`;
-
-      label.onclick=()=>{
-        currentSection="category:"+c.id;
-        currentPage=1;
-        renderAll();
-      };
-
-      const edit=document.createElement("button");
-      edit.className="side-edit";
-      edit.textContent="✏️";
-
-      edit.onclick=e=>{
-        e.stopPropagation();
-        openCategoryMenu(c.id);
-      };
-
-      row.append(toggle,label,edit);
-      node.appendChild(row);
-
-      if(hasChildren && expandedCategories.has(c.id)){
-        const child=document.createElement("div");
-        child.className="tree";
-        child.appendChild(buildFragment(c.id,level+1));
-        node.appendChild(child);
-      }
-
-      frag.appendChild(node);
-    });
-
-    return frag;
-  }
-
-  build();
-}
-
-function renderTags(){
-
-  const container=$("tagList");
-
-  container.innerHTML="";
-
-  usedTags().forEach(tag=>{
-
-    const row=document.createElement("div");
-    row.className="side-item";
-
-    row.innerHTML=
-      `<span>🏷️</span>
-       <span>${escapeHTML(tag)}</span>
-       <span class="side-count">
-         ${activeNotes().filter(n=>n.tags.includes(tag)).length}
-       </span>`;
-
-    row.onclick=()=>{
-      currentSection="tag:"+tag;
-      currentPage=1;
-      renderAll();
-    };
-
-    const edit=document.createElement("button");
-    edit.className="side-edit";
-    edit.textContent="✏️";
-
-    edit.onclick=e=>{
-      e.stopPropagation();
-
-      openTagMenu(tag);
-    };
-
-    row.appendChild(edit);
-
-    container.appendChild(row);
-  });
-}
-
-
-/* ============================================================
-   NOTE LIST RENDER
-   ============================================================ */
-
-function renderNoteList(){
-
-  const notes=allVisibleNotes();
-
-  let title="All Notes";
-
-  if(currentSection==="favorites")
-    title="Favorites";
-
-  else if(currentSection==="trash")
-    title=db.trashState.label||"Recycle Bin";
-
-  else if(currentSection.startsWith("category:"))
-    title=getCategory(currentSection.slice(9))?.name||"Category";
-
-  else if(currentSection.startsWith("tag:"))
-    title=currentSection.slice(4);
-
-  $("listTitle").textContent=title;
-  $("listCount").textContent=
-    `${notes.length} ${notes.length===1?"Note":"Notes"}`;
-
-  const list=$("noteList");
-
-  list.innerHTML="";
-
-  if(!notes.length){
-
-    list.innerHTML=
-      `<div class="empty">No notes found.</div>`;
-
-    return;
-  }
-
-  const fragment=document.createDocumentFragment();
-
-  notes.forEach(note=>{
-
-    const row=document.createElement("div");
-
-    row.className=
-      "note-row"+
-      (selectedNoteId===note.id?" selected":"")+
-      (note.pinned?" pinned":"");
-
-    row.style.setProperty(
-      "--note-color",
-      note.color||"#9ca3af"
-    );
-
-    const check=document.createElement("input");
-    check.type="checkbox";
-    check.checked=selectedIds.has(note.id);
-
-    check.onclick=e=>{
-      e.stopPropagation();
-
-      if(check.checked)
-        selectedIds.add(note.id);
-      else
-        selectedIds.delete(note.id);
-
-      renderBulkBar();
-    };
-
-    const title=document.createElement("div");
-    title.className="note-title";
-    title.textContent=
-      note.title || "[No Heading]";
-
-    const preview=document.createElement("div");
-    preview.className="note-preview";
-    preview.textContent=
-      stripHTML(note.content||"") ||
-      "[No Content]";
-
-    const meta=document.createElement("div");
-    meta.className="note-meta";
-
-    const pin=document.createElement("button");
-    pin.className=
-      "icon-action "+
-      (note.pinned?"active-pin":"");
-
-    pin.textContent="📌";
-
-    pin.title=note.pinned?"Unpin":"Pin";
-
-    pin.onclick=e=>{
-      e.stopPropagation();
-      note.pinned=!note.pinned;
-      note.modifiedAt=nowISO();
-      scheduleSave();
-      renderAll();
-    };
-
-    const fav=document.createElement("button");
-    fav.className=
-      "icon-action "+
-      (note.favorite?"active-fav":"");
-
-    fav.textContent="⭐";
-
-    fav.title=
-      note.favorite
-      ?"Remove Favorite"
-      :"Add Favorite";
-
-    fav.onclick=e=>{
-      e.stopPropagation();
-
-      note.favorite=!note.favorite;
-      note.modifiedAt=nowISO();
-
-      scheduleSave();
-      renderAll();
-    };
-
-    meta.append(pin,fav);
-
-    const cat=getCategory(note.categoryId);
-
-    if(cat){
-
-      const catSpan=document.createElement("span");
-
-      catSpan.style.color=categoryColor(cat.id);
-
-      catSpan.textContent=
-        `📁 ${cat.name}`;
-
-      meta.appendChild(catSpan);
-    }
-
-    (note.tags||[]).forEach(tag=>{
-
-      const span=document.createElement("span");
-
-      span.textContent=`🏷️ ${tag}`;
-
-      meta.appendChild(span);
-    });
-
-    const date=document.createElement("div");
-    date.className="note-date";
-
-    date.textContent=formatDate(
-      note.modifiedAt||note.createdAt
-    );
-
-    row.append(check,title,preview,meta,date);
-
-    row.onclick=()=>{
-      selectNote(note.id);
-    };
-
-    fragment.appendChild(row);
-  });
-
-  list.appendChild(fragment);
-
-  renderBulkBar();
-}
-
-function renderBulkBar(){
-
-  const count=selectedIds.size;
-
-  $("bulkBar").classList.toggle(
-    "show",
-    count>0
-  );
-
-  $("selectedCount").textContent=
-    `${count} selected`;
-
-  $("bulkPin").textContent=
-    selectedIds.size &&
-    [...selectedIds].every(id=>getNote(id)?.pinned)
-    ? "📌 Unpin"
-    : "📌 Pin";
-
-  $("bulkFavorite").textContent=
-    selectedIds.size &&
-    [...selectedIds].every(id=>getNote(id)?.favorite)
-    ? "⭐ Unfavorite"
-    : "⭐ Favorite";
-}
-
-
-/* ============================================================
-   SELECT NOTE
-   ============================================================ */
-
-function selectNote(id){
-
-  const note=getNote(id);
-
-  if(!note)return;
-
-  selectedNoteId=id;
-
-  note.lastViewedAt=nowISO();
-  note.views=(note.views||0)+1;
-
-  renderAll();
-
-  scheduleSave();
-}
-
-
-/* ============================================================
-   DATA PANEL
-   ============================================================ */
-
-function renderDataPanel(){
-
-  const panel=$("documentPanel");
-
-  const note=getNote(selectedNoteId);
-
-  if(!note){
-
-    panel.innerHTML=
-      `<div class="empty">Select a note.</div>`;
-
-    return;
-  }
-
-  panel.style.setProperty(
-    "--note-color",
-    note.color||"#4f46e5"
-  );
-
-  const category=getCategory(note.categoryId);
-
-  panel.innerHTML=`
-
-    <div class="color-line"></div>
-
-    <div class="card">
-      <div class="actions">
-
-        <button class="action-btn" onclick="editCurrentNote()">
-          ✏️ Edit
-        </button>
-
-        <button class="action-btn" onclick="toggleCurrentFavorite()">
-          ⭐ ${note.favorite?"Unfavorite":"Favorite"}
-        </button>
-
-        <button class="action-btn" onclick="toggleCurrentPin()">
-          📌 ${note.pinned?"Unpin":"Pin"}
-        </button>
-
-        <button class="action-btn" onclick="openNoteCategoryMenu()">
-          📁 Category
-        </button>
-
-        <button class="action-btn" onclick="openNoteTagsMenu()">
-          🏷️ Tags
-        </button>
-
-        <button class="action-btn" onclick="openColorMenu()">
-          🎨 Color
-        </button>
-
-        <button class="action-btn" onclick="deleteCurrentNote()">
-          🗑️ Delete
-        </button>
-
-        <button class="action-btn" onclick="printCurrentNote()">
-          🖨️ Print
-        </button>
-
-        <button class="action-btn" onclick="shareCurrentByQR()">
-          📱 Share by QR Code
-        </button>
-
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="note-heading">
-        ${escapeHTML(note.title||"[No Heading]")}
-      </div>
-    </div>
-
-    <div class="card">
-
-      <div class="toolbar" id="editorToolbar">
-
-        <button onclick="formatText('bold')"><b>B</b></button>
-
-        <button onclick="formatText('underline')">
-          <u>U</u>
-        </button>
-
-        <button onclick="openTextColor()">
-          🎨 Text
-        </button>
-
-        <button onclick="insertLinkAtCursor()">
-          🔗 Insert Link
-        </button>
-
-      </div>
-
-      <div
-        id="contentEditor"
-        class="content-editor"
-        contenteditable="true"
-        spellcheck="true"
-      >${note.content||""}</div>
-
-    </div>
-
-    <div class="card">
-
-      <div class="link-header">
-        <div class="link-title">🔗 Links</div>
-
-        <button class="small-btn" onclick="openAddLinkMenu()">
-          ➕ Add
-        </button>
-      </div>
-
-      <div id="linksContainer"></div>
-
-    </div>
-
-    <div class="card">
-
-      <div class="link-title" style="margin-bottom:8px">
-        Note Metadata
-      </div>
-
-      <div class="meta-grid">
-
-        ${metadataCell("Created",formatDate(note.createdAt))}
-        ${metadataCell("Last Modified",formatDate(note.modifiedAt))}
-        ${metadataCell("Last Viewed",formatDate(note.lastViewedAt))}
-        ${metadataCell("Last Synced",formatDate(note.lastSyncedAt))}
-
-        ${metadataCell("Category",category?.name||"Uncategorized")}
-        ${metadataCell("Category Path",
-          categoryPath(note.categoryId)||"Uncategorized")}
-
-        ${metadataCell("Tags",
-          note.tags?.length
-          ? note.tags.join(", ")
-          : "None")}
-
-        ${metadataCell("Status",
-          note.deleted?"Deleted":"Active")}
-
-        ${metadataCell("Favorite",
-          note.favorite?"Yes":"No")}
-
-        ${metadataCell("Pin",
-          note.pinned?"Yes":"No")}
-
-        ${metadataCell("Word Count",
-          wordCount(note))}
-
-        ${metadataCell("Note Size",
-          noteSize(note))}
-
-        ${metadataCell("Links Count",
-          (note.links||[]).length)}
-
-        ${metadataCell("Attachment Count",
-          (note.attachments||[]).length)}
-
-        ${metadataCell("Total Views",
-          note.views||0)}
-
-        ${metadataCell("Storage / Sync Status",
-          accessToken?"Google Drive":"Not Connected")}
-
-        ${metadataCell("Note ID",note.id)}
-
-      </div>
-    </div>
-  `;
-
-  const editor=$("contentEditor");
-
-  editor.addEventListener("input",()=>{
-
-    note.content=editor.innerHTML;
-    note.modifiedAt=nowISO();
-
-    scheduleSave();
-  });
-
-  renderLinks(note);
-}
-
-function metadataCell(label,value){
-
-  return `
-    <div class="meta-cell">
-      <div class="meta-label">${escapeHTML(label)}</div>
-      <div class="meta-value">${escapeHTML(String(value))}</div>
-    </div>
-  `;
-}
-
-function wordCount(note){
-
-  const text=stripHTML(note.content||"").trim();
-
-  if(!text)return 0;
-
-  return text.split(/\s+/).length;
-}
-
-function noteSize(note){
-
-  const bytes=
-    new Blob([JSON.stringify(note)]).size;
-
-  if(bytes<1024)return bytes+" B";
-
-  if(bytes<1024*1024)
-    return (bytes/1024).toFixed(1)+" KB";
-
-  return (bytes/(1024*1024)).toFixed(1)+" MB";
-}
-
-
-/* ============================================================
-   LINKS
-   ============================================================ */
-
-function renderLinks(note){
-
-  const container=$("linksContainer");
-
-  if(!container)return;
-
-  container.innerHTML="";
-
-  if(!(note.links||[]).length){
-
-    container.innerHTML=
-      `<div style="color:#6b7280;font-size:12px">
-        No links.
-      </div>`;
-
-    return;
-  }
-
-  note.links.forEach(link=>{
-
-    const row=document.createElement("div");
-    row.className="link-row";
-
-    row.innerHTML=`
-      <span>🔗</span>
-      <a href="${escapeHTML(link.url)}"
-         target="_blank"
-         rel="noopener noreferrer">
-        ${escapeHTML(link.title)}
-      </a>
-
-      <span class="link-open">Open ↗</span>
-
-      <button
-        class="small-btn"
-        onclick="editLink('${link.id}')">
-        ✏️
-      </button>
-
-      <button
-        class="small-btn"
-        onclick="removeLink('${link.id}')">
-        🗑️
-      </button>
-    `;
-
-    container.appendChild(row);
-  });
-}
-
-function openAddLinkMenu(){
-
-  openModal(`
-    <h3>Add Link</h3>
-
-    <div class="form-row">
-      <button class="secondary"
-        onclick="addNormalLink()">
-        🔗 Add Link
-      </button>
-    </div>
-
-    <div class="form-row">
-      <button class="secondary"
-        onclick="addGoogleAttachment()">
-        📎 Google File Attachment
-      </button>
-    </div>
-
-    <div class="form-row">
-      <button class="secondary"
-        onclick="addOtherLink()">
-        🌐 Other
-      </button>
-    </div>
-
-    <div class="modal-actions">
-      <button class="secondary" onclick="closeModal()">
-        Cancel
-      </button>
-    </div>
-  `);
-}
-
-function addNormalLink(){
-  closeModal();
-
-  openModal(`
-    <h3>Add Link</h3>
-
-    <div class="form-row">
-      <label>Link Title</label>
-      <input id="linkTitle">
-    </div>
-
-    <div class="form-row">
-      <label>Link URL</label>
-      <input id="linkURL" placeholder="https://">
-    </div>
-
-    <div class="modal-actions">
-      <button class="secondary" onclick="closeModal()">Cancel</button>
-      <button class="primary" onclick="saveNewLink()">Save</button>
-    </div>
-  `);
-}
-
-function addOtherLink(){
-  addNormalLink();
-}
-
-function saveNewLink(){
-
-  const title=$("linkTitle").value.trim();
-  const url=$("linkURL").value.trim();
-
-  if(!title || !url){
-    alert("Link Title اور URL دونوں required ہیں۔");
-    return;
-  }
-
-  if(!/^https?:\/\//i.test(url)){
-    alert("Valid http/https URL دیں۔");
-    return;
-  }
-
-  const note=getNote(selectedNoteId);
-
-  note.links.push({
-    id:uid("link"),
-    title,
-    url,
-    type:"link"
-  });
-
-  note.modifiedAt=nowISO();
-
-  closeModal();
-  scheduleSave();
-  renderDataPanel();
-}
-
-function addGoogleAttachment(){
-
-  closeModal();
-
-  openModal(`
-    <h3>Google File Attachment</h3>
-
-    <div class="form-row">
-      <label>File Type</label>
-
-      <select id="attachmentType">
-        <option>Google Docs</option>
-        <option>Google Sheets</option>
-        <option>Google Slides</option>
-        <option>PDF</option>
-        <option>Word</option>
-        <option>Excel</option>
-      </select>
-    </div>
-
-    <div class="form-row">
-      <label>File Name</label>
-      <input id="attachmentName">
-    </div>
-
-    <div class="form-row">
-      <label>Google Drive File URL</label>
-      <input id="attachmentURL" placeholder="https://drive.google.com/...">
-    </div>
-
-    <div class="modal-actions">
-      <button class="secondary" onclick="closeModal()">Cancel</button>
-      <button class="primary" onclick="saveAttachment()">Save</button>
-    </div>
-  `);
-}
-
-function saveAttachment(){
-
-  const note=getNote(selectedNoteId);
-
-  const type=$("attachmentType").value;
-  const name=$("attachmentName").value.trim();
-  const url=$("attachmentURL").value.trim();
-
-  if(!name || !url){
-    alert("File Name اور URL required ہیں۔");
-    return;
-  }
-
-  note.attachments.push({
-    id:uid("attachment"),
-    type,
-    name,
-    url
-  });
-
-  note.links.push({
-    id:uid("link"),
-    title:name,
-    url,
-    type:"attachment",
-    attachmentType:type
-  });
-
-  note.modifiedAt=nowISO();
-
-  closeModal();
-  scheduleSave();
-  renderDataPanel();
-}
-
-function editLink(id){
-
-  const note=getNote(selectedNoteId);
-  const link=note.links.find(x=>x.id===id);
-
-  if(!link)return;
-
-  openModal(`
-    <h3>Edit Link</h3>
-
-    <div class="form-row">
-      <label>Link Title</label>
-      <input id="editLinkTitle"
-        value="${escapeHTML(link.title)}">
-    </div>
-
-    <div class="form-row">
-      <label>URL</label>
-      <input id="editLinkURL"
-        value="${escapeHTML(link.url)}">
-    </div>
-
-    <div class="modal-actions">
-      <button class="secondary" onclick="closeModal()">Cancel</button>
-      <button class="primary"
-        onclick="saveEditedLink('${id}')">
-        Save
-      </button>
-    </div>
-  `);
-}
-
-function saveEditedLink(id){
-
-  const note=getNote(selectedNoteId);
-  const link=note.links.find(x=>x.id===id);
-
-  if(!link)return;
-
-  const title=$("editLinkTitle").value.trim();
-  const url=$("editLinkURL").value.trim();
-
-  if(!title || !url)return;
-
-  link.title=title;
-  link.url=url;
-
-  note.modifiedAt=nowISO();
-
-  closeModal();
-  scheduleSave();
-  renderDataPanel();
-}
-
-function removeLink(id){
-
-  const note=getNote(selectedNoteId);
-
-  note.links=
-    note.links.filter(x=>x.id!==id);
-
-  note.modifiedAt=nowISO();
-
-  scheduleSave();
-  renderDataPanel();
-}
-
-
-/* ============================================================
-   EDITOR
-   ============================================================ */
-
-function formatText(command){
-
-  document.execCommand(command,false,null);
-
-  const note=getNote(selectedNoteId);
-
-  if(note){
-
-    note.content=$("contentEditor").innerHTML;
-    note.modifiedAt=nowISO();
-
-    scheduleSave();
-  }
-}
-
-function insertLinkAtCursor(){
-
-  const selection=window.getSelection();
-
-  const selectedText=
-    selection && selection.toString();
-
-  const url=prompt(
-    "Link URL",
-    "https://"
-  );
-
-  if(!url)return;
-
-  if(!/^https?:\/\//i.test(url)){
-    alert("Valid http/https URL دیں۔");
-    return;
-  }
-
-  if(selectedText){
-
-    document.execCommand(
-      "createLink",
-      false,
-      url
-    );
-
-  }else{
-
-    const title=prompt(
-      "Link Text",
-      url
-    );
-
-    if(!title)return;
-
-    document.execCommand(
-      "insertHTML",
-      false,
-      `<a href="${escapeHTML(url)}"
-          target="_blank"
-          rel="noopener noreferrer">
-        ${escapeHTML(title)}
-       </a>`
-    );
-  }
-
-  const note=getNote(selectedNoteId);
-
-  note.content=$("contentEditor").innerHTML;
-  note.modifiedAt=nowISO();
-
-  scheduleSave();
-}
-
-function openTextColor(){
-
-  openModal(`
-    <h3>Text Color</h3>
-
-    <div class="form-row">
-      <label>Select Color</label>
-      <input
-        id="selectedTextColor"
-        type="color"
-        value="#1f2937">
-    </div>
-
-    <div class="modal-actions">
-      <button class="secondary" onclick="closeModal()">
-        Cancel
-      </button>
-
-      <button class="primary" onclick="applyTextColor()">
-        Apply
-      </button>
-    </div>
-  `);
-}
-
-function applyTextColor(){
-
-  const color=$("selectedTextColor").value;
-
-  document.execCommand(
-    "foreColor",
-    false,
-    color
-  );
-
-  const note=getNote(selectedNoteId);
-
-  note.content=$("contentEditor").innerHTML;
-  note.modifiedAt=nowISO();
-
-  closeModal();
-  scheduleSave();
-}
-
-
-/* ============================================================
-   NOTE ACTIONS
-   ============================================================ */
-
-function editCurrentNote(){
-
-  const note=getNote(selectedNoteId);
-
-  if(!note)return;
-
-  openModal(`
-    <h3>Edit Note</h3>
-
-    <div class="form-row">
-      <label>Heading</label>
-      <input id="editHeading"
-        value="${escapeHTML(note.title||"")}">
-    </div>
-
-    <div class="modal-actions">
-      <button class="secondary" onclick="closeModal()">
-        Cancel
-      </button>
-
-      <button class="primary" onclick="saveHeading()">
-        Save
-      </button>
-    </div>
-  `);
-}
-
-function saveHeading(){
-
-  const note=getNote(selectedNoteId);
-
-  note.title=
-    $("editHeading").value.trim();
-
-  note.modifiedAt=nowISO();
-
-  closeModal();
-  scheduleSave();
-  renderAll();
-}
-
-function toggleCurrentFavorite(){
-
-  const note=getNote(selectedNoteId);
-
-  note.favorite=!note.favorite;
-  note.modifiedAt=nowISO();
-
-  scheduleSave();
-  renderAll();
-}
-
-function toggleCurrentPin(){
-
-  const note=getNote(selectedNoteId);
-
-  note.pinned=!note.pinned;
-  note.modifiedAt=nowISO();
-
-  scheduleSave();
-  renderAll();
-}
-
-function deleteCurrentNote(){
-
-  const note=getNote(selectedNoteId);
-
-  if(note)deleteNote(note);
-}
-
-function openNoteCategoryMenu(){
-
-  const note=getNote(selectedNoteId);
-
-  let options=
-    `<option value="">Uncategorized</option>`;
-
-  db.categories.forEach(c=>{
-    options+=`
-      <option value="${c.id}"
-        ${note.categoryId===c.id?"selected":""}>
-        ${escapeHTML(categoryPath(c.id))}
-      </option>
-    `;
-  });
-
-  openModal(`
-    <h3>Category</h3>
-
-    <div class="form-row">
-      <label>Category</label>
-      <select id="noteCategory">
-        ${options}
-      </select>
-    </div>
-
-    <div class="modal-actions">
-      <button class="secondary" onclick="closeModal()">
-        Cancel
-      </button>
-
-      <button class="primary" onclick="saveNoteCategory()">
-        Save
-      </button>
-    </div>
-  `);
-}
-
-function saveNoteCategory(){
-
-  const note=getNote(selectedNoteId);
-
-  note.categoryId=
-    $("noteCategory").value||null;
-
-  note.modifiedAt=nowISO();
-
-  closeModal();
-  scheduleSave();
-  renderAll();
-}
-
-function openNoteTagsMenu(){
-
-  const note=getNote(selectedNoteId);
-
-  const allTags=
-    [...new Set([
-      ...db.tags,
-      ...usedTags()
-    ])];
-
-  openModal(`
-    <h3>Tags</h3>
-
-    <div id="noteTagsOptions"></div>
-
-    <div class="modal-actions">
-      <button class="secondary" onclick="closeModal()">
-        Cancel
-      </button>
-
-      <button class="primary" onclick="saveNoteTags()">
-        Save
-      </button>
-    </div>
-  `);
-
-  const container=$("noteTagsOptions");
-
-  allTags.forEach(tag=>{
-
-    const row=document.createElement("label");
-
-    row.style.display="block";
-    row.style.padding="5px";
-
-    row.innerHTML=`
-      <input
-        type="checkbox"
-        value="${escapeHTML(tag)}"
-        ${note.tags.includes(tag)?"checked":""}>
-      ${escapeHTML(tag)}
-    `;
-
-    container.appendChild(row);
-  });
-}
-
-function saveNoteTags(){
-
-  const note=getNote(selectedNoteId);
-
-  const checks=
-    document.querySelectorAll(
-      "#noteTagsOptions input:checked"
-    );
-
-  note.tags=
-    [...checks].map(x=>x.value);
-
-  note.modifiedAt=nowISO();
-
-  closeModal();
-  scheduleSave();
-  renderAll();
-}
-
-function openColorMenu(){
-
-  const note=getNote(selectedNoteId);
-
-  openModal(`
-    <h3>Note Primary Color</h3>
-
-    <div class="form-row">
-      <label>Color</label>
-      <input
-        id="notePrimaryColor"
-        type="color"
-        value="${escapeHTML(note.color||"#4f46e5")}">
-    </div>
-
-    <div class="modal-actions">
-      <button class="secondary" onclick="closeModal()">
-        Cancel
-      </button>
-
-      <button class="primary" onclick="saveNoteColor()">
-        Apply
-      </button>
-    </div>
-  `);
-}
-
-function saveNoteColor(){
-
-  const note=getNote(selectedNoteId);
-
-  note.color=$("notePrimaryColor").value;
-  note.modifiedAt=nowISO();
-
-  closeModal();
-  scheduleSave();
-  renderAll();
-}
-
-
-/* ============================================================
-   PRINT
-   ============================================================ */
-
-function printCurrentNote(){
-
-  const note=getNote(selectedNoteId);
-
-  if(!note)return;
-
-  const heading=
-    note.title || "[No Heading]";
-
-  const content=
-    note.content || "[No Content]";
-
-  const links=(note.links||[])
-    .map(l=>
-      `<p><a href="${escapeHTML(l.url)}">
-        ${escapeHTML(l.title)}
-       </a></p>`
-    )
-    .join("");
-
-  const w=window.open("","_blank");
-
-  if(!w)return;
-
-  w.document.write(`
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <title>${escapeHTML(heading)}</title>
-      <style>
-        body{
-          font-family:Arial;
-          max-width:800px;
-          margin:40px auto;
-          line-height:1.6;
-        }
-        h1{font-size:28px}
-      </style>
-    </head>
-    <body>
-      <h1>${escapeHTML(heading)}</h1>
-      <div>${content}</div>
-      ${links}
-    </body>
-    </html>
-  `);
-
-  w.document.close();
-
-  setTimeout(()=>{
-    w.print();
-  },300);
-}
-
-
-/* ============================================================
-   QR SHARE
-   ============================================================ */
-
-function qrText(note){
-
-  const heading=
-    note.title
-      ? note.title
-      : "[No Heading]";
-
-  const content=
-    stripHTML(note.content||"")
-      .trim() || "[No Content]";
-
-  /*
-   No Heading: / Content: labels are deliberately used.
-  */
-
-  return (
-    heading +
-    "\n\n" +
-    content
-  );
-}
-
-function shareCurrentByQR(){
-
-  const note=getNote(selectedNoteId);
-
-  if(!note)return;
-
-  openModal(`
-    <h3>Share by QR Code</h3>
-
-    <div
-      id="qrCode"
-      style="
-        display:flex;
-        justify-content:center;
-        padding:15px;
-      ">
-    </div>
-
-    <div
-      style="
-        text-align:center;
-        font-size:12px;
-        color:#6b7280;
-      ">
-      Scan this QR code to read the Note data.
-    </div>
-
-    <div class="modal-actions">
-      <button class="secondary" onclick="closeModal()">
-        Close
-      </button>
-    </div>
-  `);
-
-  new QRCode(
-    $("qrCode"),
     {
-      text:qrText(note),
-      width:230,
-      height:230,
-      correctLevel:QRCode.CorrectLevel.M
+
+      method:"POST",
+
+      headers:{
+        "Content-Type":
+        "multipart/related; boundary=" +
+        boundary
+      },
+
+      body:body
+
     }
+
   );
+
+
+  return await response.json();
+
 }
 
 
-/* ============================================================
-   BULK ACTIONS
-   ============================================================ */
+/* =========================================================
+   SAVE / UPDATE DATABASE
+========================================================= */
 
-function selectedNotes(){
+async function saveDatabase(){
 
-  return [...selectedIds]
-    .map(id=>getNote(id))
-    .filter(Boolean);
-}
+  if(!changesPending){
 
-function bulkToggle(field){
+    document
+    .getElementById("saveCountdown")
+    .textContent = "—";
 
-  const notes=selectedNotes();
+    return;
 
-  if(!notes.length)return;
+  }
 
-  const all=notes.every(n=>n[field]);
+  if(!accessToken){
 
-  notes.forEach(n=>{
-    n[field]=!all;
-    n.modifiedAt=nowISO();
-  });
+    document
+    .getElementById("connectionStatus")
+    .textContent =
+    "Not Connected — Changes Pending";
 
-  scheduleSave();
-  renderAll();
-}
+    return;
 
-$("bulkPin").onclick=()=>{
-  bulkToggle("pinned");
-};
+  }
 
-$("bulkFavorite").onclick=()=>{
-  bulkToggle("favorite");
-};
 
-$("bulkDelete").onclick=()=>{
+  try{
 
-  selectedNotes().forEach(n=>{
-    if(!n.deleted) deleteNote(n);
-  });
+    document
+    .getElementById("connectionStatus")
+    .textContent =
+    "Saving...";
 
-  selectedIds.clear();
 
-  renderAll();
-};
+    /*
+       Last Synced is written BEFORE the
+       database is serialized, so it is
+       actually saved into Google Drive.
+    */
 
-$("bulkDuplicate").onclick=()=>{
+    const syncTime =
+    getNow();
 
-  selectedNotes().forEach(note=>{
+    database.notes.forEach(note => {
 
-    const copy=structuredClone(note);
+      if(
+        note.modified &&
+        !note.deleted
+      ){
 
-    copy.id=uid("note");
-    copy.title=(note.title||"Note")+" Copy";
+        note.lastSynced =
+        syncTime;
 
-    const t=nowISO();
+      }
 
-    copy.createdAt=t;
-    copy.modifiedAt=t;
-    copy.lastViewedAt="";
-    copy.views=0;
-
-    copy.deleted=false;
-    copy.trashHidden=false;
-    copy.status="Active";
-
-    db.notes.push(copy);
-  });
-
-  selectedIds.clear();
-
-  scheduleSave();
-  renderAll();
-};
-
-$("bulkCategory").onclick=()=>{
-
-  const notes=selectedNotes();
-
-  if(!notes.length)return;
-
-  let options=
-    `<option value="">Uncategorized</option>`;
-
-  db.categories.forEach(c=>{
-    options+=`
-      <option value="${c.id}">
-        ${escapeHTML(categoryPath(c.id))}
-      </option>
-    `;
-  });
-
-  openModal(`
-    <h3>Bulk Category</h3>
-
-    <div class="form-row">
-      <select id="bulkCategorySelect">
-        ${options}
-      </select>
-    </div>
-
-    <div class="modal-actions">
-      <button class="secondary" onclick="closeModal()">Cancel</button>
-      <button class="primary" onclick="applyBulkCategory()">Apply</button>
-    </div>
-  `);
-};
-
-function applyBulkCategory(){
-
-  const value=
-    $("bulkCategorySelect").value||null;
-
-  selectedNotes().forEach(n=>{
-    n.categoryId=value;
-    n.modifiedAt=nowISO();
-  });
-
-  selectedIds.clear();
-
-  closeModal();
-  scheduleSave();
-  renderAll();
-}
-
-$("bulkTags").onclick=()=>{
-
-  const tags=usedTags();
-
-  openModal(`
-    <h3>Bulk Tags</h3>
-
-    <div id="bulkTagOptions"></div>
-
-    <div class="modal-actions">
-      <button class="secondary" onclick="closeModal()">Cancel</button>
-      <button class="primary" onclick="applyBulkTags()">Add Tags</button>
-    </div>
-  `);
-
-  const box=$("bulkTagOptions");
-
-  tags.forEach(tag=>{
-
-    const label=document.createElement("label");
-
-    label.style.display="block";
-    label.style.padding="5px";
-
-    label.innerHTML=`
-      <input type="checkbox"
-        value="${escapeHTML(tag)}">
-      ${escapeHTML(tag)}
-    `;
-
-    box.appendChild(label);
-  });
-};
-
-function applyBulkTags(){
-
-  const tags=
-    [...document.querySelectorAll(
-      "#bulkTagOptions input:checked"
-    )].map(x=>x.value);
-
-  selectedNotes().forEach(n=>{
-
-    tags.forEach(tag=>{
-      if(!n.tags.includes(tag))
-        n.tags.push(tag);
     });
 
-    n.modifiedAt=nowISO();
-  });
 
-  selectedIds.clear();
+    const json =
+    JSON.stringify(
+      database,
+      null,
+      2
+    );
 
-  closeModal();
-  scheduleSave();
-  renderAll();
-}
 
-$("bulkColor").onclick=()=>{
+    /*
+       Existing DB_FILE_ID:
+       update directly inside Drive.
+    */
 
-  openModal(`
-    <h3>Bulk Color</h3>
+    const response =
+    await driveRequest(
 
-    <div class="form-row">
-      <input
-        id="bulkColorValue"
-        type="color"
-        value="#4f46e5">
-    </div>
+      "https://www.googleapis.com/upload/drive/v3/files/" +
+      encodeURIComponent(CONFIG.DB_FILE_ID) +
+      "?uploadType=media",
 
-    <div class="modal-actions">
-      <button class="secondary" onclick="closeModal()">Cancel</button>
-      <button class="primary" onclick="applyBulkColor()">Apply</button>
-    </div>
-  `);
-};
+      {
 
-function applyBulkColor(){
+        method:"PATCH",
 
-  const color=$("bulkColorValue").value;
+        headers:{
+          "Content-Type":
+          "application/json"
+        },
 
-  selectedNotes().forEach(n=>{
-    n.color=color;
-    n.modifiedAt=nowISO();
-  });
+        body:json
 
-  selectedIds.clear();
+      }
 
-  closeModal();
-  scheduleSave();
-  renderAll();
-}
+    );
 
 
-/* ============================================================
-   CATEGORY / TAG MENUS
-   ============================================================ */
+    if(response.ok){
 
-function openCategoryMenu(id){
+      changesPending = false;
 
-  const c=getCategory(id);
+      document
+      .getElementById("connectionStatus")
+      .textContent =
+      "Saved to Google Drive";
 
-  if(!c)return;
+      document
+      .getElementById("saveCountdown")
+      .textContent =
+      "—";
 
-  openModal(`
-    <h3>Category: ${escapeHTML(c.name)}</h3>
+      renderCurrentPanel();
 
-    <div class="form-row">
-      <button class="secondary"
-        onclick="categoryAddChild('${id}')">
-        ＋ Add Child
-      </button>
-    </div>
+    }
 
-    <div class="form-row">
-      <button class="secondary"
-        onclick="categoryAddSister('${id}')">
-        ＋ Add Sister
-      </button>
-    </div>
-
-    <div class="form-row">
-      <button class="secondary"
-        onclick="renameCategory('${id}');closeModal()">
-        ✏️ Rename
-      </button>
-    </div>
-
-    <div class="form-row">
-      <button class="danger"
-        onclick="removeCategory('${id}');closeModal()">
-        🗑️ Remove
-      </button>
-    </div>
-
-    <div class="modal-actions">
-      <button class="secondary" onclick="closeModal()">
-        Close
-      </button>
-    </div>
-  `);
-}
-
-function categoryAddChild(id){
-
-  closeModal();
-
-  const name=prompt("Child Category Name");
-
-  if(name)addCategory(name,id);
-}
-
-function categoryAddSister(id){
-
-  const c=getCategory(id);
-
-  closeModal();
-
-  const name=prompt("Sister Category Name");
-
-  if(name)addCategory(name,c.parentId||null);
-}
-
-function openTagMenu(tag){
-
-  openModal(`
-    <h3>Tag: ${escapeHTML(tag)}</h3>
-
-    <div class="form-row">
-      <button class="secondary"
-        onclick="renameTag('${escapeHTML(tag)}');closeModal()">
-        ✏️ Rename
-      </button>
-    </div>
-
-    <div class="form-row">
-      <button class="danger"
-        onclick="removeTag('${escapeHTML(tag)}');closeModal()">
-        🗑️ Remove
-      </button>
-    </div>
-
-    <div class="modal-actions">
-      <button class="secondary" onclick="closeModal()">
-        Close
-      </button>
-    </div>
-  `);
-}
-
-
-/* ============================================================
-   SETTINGS
-   ============================================================ */
-
-function openSettings(){
-
-  openModal(`
-    <h3>Settings</h3>
-
-    <div class="form-row">
-      <label>Sidebar Default State</label>
-      <select id="s_sidebarDefault">
-        <option value="closed">Closed</option>
-        <option value="open">Open</option>
-      </select>
-    </div>
-
-    <div class="form-row">
-      <label>Sidebar Density</label>
-      <select id="s_sidebarDensity">
-        <option value="compact">Compact</option>
-        <option value="normal">Normal</option>
-      </select>
-    </div>
-
-    <div class="form-row">
-      <label>Category Default State</label>
-      <select id="s_categoryDefault">
-        <option value="collapsed">Collapsed</option>
-        <option value="expanded">Expanded</option>
-      </select>
-    </div>
-
-    <div class="form-row">
-      <label>Tags Default State</label>
-      <select id="s_tagsDefault">
-        <option value="collapsed">Collapsed</option>
-        <option value="expanded">Expanded</option>
-      </select>
-    </div>
-
-    <div class="form-row">
-      <label>Note List Display Style</label>
-      <select id="s_noteDisplayStyle">
-        <option value="compact">Compact</option>
-        <option value="normal">Normal</option>
-        <option value="detailed">Detailed</option>
-      </select>
-    </div>
-
-    <div class="form-row">
-      <label>Sorting</label>
-      <select id="s_sorting">
-        <option value="lastModified">Last Modified First</option>
-        <option value="newest">Newest First</option>
-        <option value="oldest">Oldest First</option>
-        <option value="alphabetical">Alphabetical Order</option>
-      </select>
-    </div>
-
-    <div class="form-row">
-      <label>Notes per Page</label>
-      <select id="s_notesPerPage">
-        <option value="10">10</option>
-        <option value="20">20</option>
-        <option value="50">50</option>
-        <option value="100">100</option>
-        <option value="all">All</option>
-      </select>
-    </div>
-
-    <div class="form-row">
-      <label>Search</label>
-      <select id="s_searchMode">
-        <option value="title">Title Only</option>
-        <option value="titleContent">Title + Note Content</option>
-        <option value="all">Title, Content, Categories, Tags</option>
-      </select>
-    </div>
-
-    <div class="form-row">
-      <label>Auto Save</label>
-      <select id="s_autoSave">
-        <option value="true">ON</option>
-        <option value="false">OFF</option>
-      </select>
-    </div>
-
-    <div class="form-row">
-      <label>Auto Save Interval (ms)</label>
-      <input id="s_autoSaveInterval" type="number">
-    </div>
-
-    <div class="form-row">
-      <label>Save Confirmation</label>
-      <select id="s_saveConfirmation">
-        <option value="true">ON</option>
-        <option value="false">OFF</option>
-      </select>
-    </div>
-
-    <div class="form-row">
-      <label>Notification Duration (ms)</label>
-      <input id="s_notificationDuration" type="number">
-    </div>
-
-    <div class="form-row">
-      <label>Time Format</label>
-      <select id="s_timeFormat">
-        <option value="12">12 Hour</option>
-        <option value="24">24 Hour</option>
-      </select>
-    </div>
-
-    <div class="form-row">
-      <label>Layout Mode</label>
-      <select id="s_layoutMode">
-        <option value="automatic">Automatic</option>
-        <option value="mobile">Mobile</option>
-        <option value="desktop">Desktop</option>
-      </select>
-    </div>
-
-    <div class="form-row">
-      <label>Delete Confirmation</label>
-      <select id="s_confirmDelete">
-        <option value="true">ON</option>
-        <option value="false">OFF</option>
-      </select>
-    </div>
-
-    <div class="form-row">
-      <label>Empty Recycle Bin Confirmation</label>
-      <select id="s_confirmEmptyTrash">
-        <option value="true">ON</option>
-        <option value="false">OFF</option>
-      </select>
-    </div>
-
-    <div class="modal-actions">
-      <button class="secondary" onclick="closeModal()">
-        Cancel
-      </button>
-
-      <button class="primary" onclick="saveSettings()">
-        Save Settings
-      </button>
-    </div>
-  `);
-
-  $("s_sidebarDefault").value=db.settings.sidebarDefault;
-  $("s_sidebarDensity").value=db.settings.sidebarDensity;
-  $("s_categoryDefault").value=db.settings.categoryDefault;
-  $("s_tagsDefault").value=db.settings.tagsDefault;
-  $("s_noteDisplayStyle").value=db.settings.noteDisplayStyle;
-  $("s_sorting").value=db.settings.sorting;
-  $("s_notesPerPage").value=db.settings.notesPerPage;
-  $("s_searchMode").value=db.settings.searchMode;
-  $("s_autoSave").value=String(db.settings.autoSave);
-  $("s_autoSaveInterval").value=db.settings.autoSaveInterval;
-  $("s_saveConfirmation").value=String(db.settings.saveConfirmation);
-  $("s_notificationDuration").value=db.settings.notificationDuration;
-  $("s_timeFormat").value=db.settings.timeFormat;
-  $("s_layoutMode").value=db.settings.layoutMode;
-  $("s_confirmDelete").value=String(db.settings.confirmDelete);
-  $("s_confirmEmptyTrash").value=String(db.settings.confirmEmptyTrash);
-}
-
-function saveSettings(){
-
-  db.settings.sidebarDefault=
-    $("s_sidebarDefault").value;
-
-  db.settings.sidebarDensity=
-    $("s_sidebarDensity").value;
-
-  db.settings.categoryDefault=
-    $("s_categoryDefault").value;
-
-  db.settings.tagsDefault=
-    $("s_tagsDefault").value;
-
-  db.settings.noteDisplayStyle=
-    $("s_noteDisplayStyle").value;
-
-  db.settings.sorting=
-    $("s_sorting").value;
-
-  db.settings.notesPerPage=
-    $("s_notesPerPage").value;
-
-  db.settings.searchMode=
-    $("s_searchMode").value;
-
-  db.settings.autoSave=
-    $("s_autoSave").value==="true";
-
-  db.settings.autoSaveInterval=
-    Number($("s_autoSaveInterval").value)||1500;
-
-  db.settings.saveConfirmation=
-    $("s_saveConfirmation").value==="true";
-
-  db.settings.notificationDuration=
-    Number($("s_notificationDuration").value)||1800;
-
-  db.settings.timeFormat=
-    $("s_timeFormat").value;
-
-  db.settings.layoutMode=
-    $("s_layoutMode").value;
-
-  db.settings.confirmDelete=
-    $("s_confirmDelete").value==="true";
-
-  db.settings.confirmEmptyTrash=
-    $("s_confirmEmptyTrash").value==="true";
-
-  closeModal();
-
-  scheduleSave();
-  renderAll();
-}
-
-
-/* ============================================================
-   MODAL
-   ============================================================ */
-
-function openModal(html){
-
-  $("modal").innerHTML=html;
-
-  $("modalBackdrop")
-    .classList.add("show");
-}
-
-function closeModal(){
-
-  $("modalBackdrop")
-    .classList.remove("show");
-
-  $("modal").innerHTML="";
-}
-
-$("modalBackdrop").addEventListener("click",e=>{
-
-  if(e.target===$("modalBackdrop")){
-    closeModal();
   }
-});
+  catch(error){
 
+    console.error(error);
 
-/* ============================================================
-   ADD NOTE
-   ============================================================ */
+    document
+    .getElementById("connectionStatus")
+    .textContent =
+    "Save Failed";
 
-$("addNoteBtn").onclick=()=>{
+    alert(
+      "Google Drive save failed:\n\n" +
+      error.message
+    );
 
-  const note=createNote();
+  }
 
-  db.notes.unshift(note);
-
-  selectedNoteId=note.id;
-  currentSection="all";
-
-  scheduleSave();
-  renderAll();
-
-  setTimeout(()=>{
-    editCurrentNote();
-  },50);
-};
-
-
-/* ============================================================
-   SIDEBAR CONTROLS
-   ============================================================ */
-
-function toggleSidebar(){
-
-  const sidebar=$("sidebar");
-
-  sidebar.classList.toggle("closed");
-
-  const open=!sidebar.classList.contains("closed");
-
-  $("sidebarBtn").textContent=
-    open ? "✕ Hide" : "☰ Show";
 }
 
-$("sidebarBtn").onclick=toggleSidebar;
 
-$("categoriesToggle").onclick=e=>{
+/* =========================================================
+   EVENT HANDLERS
+========================================================= */
 
-  if(e.target.closest(".side-edit"))return;
+document
+.getElementById("sidebarToggle")
+.onclick = () => {
 
-  const tree=$("categoryTree");
-  const tools=$("categoryTools");
+  document
+  .getElementById("sidebar")
+  .classList.toggle("open");
 
-  const open=
-    tree.style.display==="none";
-
-  tree.style.display=open?"block":"none";
-  tools.style.display=open?"flex":"none";
 };
 
-$("tagsToggle").onclick=e=>{
 
-  if(e.target.closest(".side-edit"))return;
+document
+.getElementById("connectGoogle")
+.onclick =
+connectGoogleDrive;
 
-  const list=$("tagList");
-  const tools=$("tagTools");
 
-  const open=
-    list.style.display==="none";
+document
+.getElementById("reloadDatabase")
+.onclick =
+reloadDatabase;
 
-  list.style.display=open?"block":"none";
-  tools.style.display=open?"flex":"none";
+
+document
+.getElementById("updateDatabase")
+.onclick =
+saveDatabase;
+
+
+document
+.getElementById("addNote")
+.onclick =
+createNote;
+
+
+document
+.getElementById("searchInput")
+.oninput = event => {
+
+  searchText =
+  event.target.value;
+
+  currentView =
+  "all";
+
+  renderNoteList();
+
 };
 
-$("categoryManage").onclick=e=>{
-  e.stopPropagation();
 
-  openModal(`
-    <h3>Categories</h3>
+document
+.querySelectorAll(".sidebar-button")
+.forEach(button => {
 
-    <div class="form-row">
-      <button class="primary"
-        onclick="closeModal();addRootCategory.click()">
-        ＋ Add Category
-      </button>
-    </div>
+  button.onclick = () => {
 
-    <div class="modal-actions">
-      <button class="secondary" onclick="closeModal()">
-        Close
-      </button>
-    </div>
-  `);
-};
+    currentView =
+    button.dataset.view;
 
-$("tagManage").onclick=e=>{
-  e.stopPropagation();
+    selectedNotes.clear();
 
-  openModal(`
-    <h3>Tags</h3>
+    render();
 
-    <div class="form-row">
-      <button class="primary"
-        onclick="closeModal();addTag()">
-        ＋ Add Tag
-      </button>
-    </div>
+  };
 
-    <div class="modal-actions">
-      <button class="secondary" onclick="closeModal()">
-        Close
-      </button>
-    </div>
-  `);
-};
-
-$("addRootCategory").onclick=()=>{
-
-  const name=prompt("New Category Name");
-
-  if(name)addCategory(name,null);
-};
-
-$("addTag").onclick=addTag;
-
-$("settingsBtn").onclick=openSettings;
-
-
-/* ============================================================
-   SIDEBAR SECTION NAVIGATION
-   ============================================================ */
-
-document.querySelectorAll(
-  ".side-item[data-section]"
-).forEach(item=>{
-
-  item.addEventListener("click",e=>{
-
-    if(e.target.closest(".side-edit"))return;
-
-    currentSection=item.dataset.section;
-
-    currentPage=1;
-
-    selectedIds.clear();
-
-    renderAll();
-  });
 });
 
 
-/* ============================================================
-   SEARCH
-   ============================================================ */
+document
+.getElementById("categoryToggle")
+.onclick = () => {
 
-$("searchInput").addEventListener(
-  "input",
-  e=>{
-    searchText=e.target.value;
-    currentPage=1;
+  document
+  .getElementById("categoryContainer")
+  .classList.toggle("hidden");
+
+};
+
+
+document
+.getElementById("tagsToggle")
+.onclick = () => {
+
+  document
+  .getElementById("tagsContainer")
+  .classList.toggle("hidden");
+
+};
+
+
+document
+.getElementById("trashToggle")
+.onclick = () => {
+
+  document
+  .getElementById("trashContainer")
+  .classList.toggle("hidden");
+
+};
+
+
+/* =========================================================
+   CATEGORY CLICK
+========================================================= */
+
+document
+.getElementById("categoryContainer")
+.onclick = event => {
+
+  const element =
+  event.target.closest(
+    "[data-category-id]"
+  );
+
+  if(!element){
+    return;
+  }
+
+  currentView =
+  "category:" +
+  element.dataset.categoryId;
+
+  selectedNotes.clear();
+
+  renderNoteList();
+
+};
+
+
+/* =========================================================
+   TAG CLICK
+========================================================= */
+
+document
+.getElementById("tagsContainer")
+.onclick = event => {
+
+  const element =
+  event.target.closest(
+    "[data-tag-name]"
+  );
+
+  if(!element){
+    return;
+  }
+
+  currentView =
+  "tag:" +
+  element.dataset.tagName;
+
+  selectedNotes.clear();
+
+  renderNoteList();
+
+};
+
+
+/* =========================================================
+   NOTE LIST CLICK
+========================================================= */
+
+document
+.getElementById("noteList")
+.onclick = event => {
+
+  const action =
+  event.target.closest(
+    "[data-action]"
+  );
+
+  if(action){
+
+    event.stopPropagation();
+
+    const id =
+    action.dataset.id;
+
+    if(action.dataset.action === "pin"){
+
+      toggleNoteProperty(
+        id,
+        "pinned"
+      );
+
+    }
+
+    if(action.dataset.action === "favorite"){
+
+      toggleNoteProperty(
+        id,
+        "favorite"
+      );
+
+    }
+
+    return;
+
+  }
+
+
+  const row =
+  event.target.closest(
+    "[data-note-id]"
+  );
+
+  if(!row){
+    return;
+  }
+
+  const id =
+  row.dataset.noteId;
+
+  /*
+     Long/secondary selection:
+     Ctrl/Meta click allows multiple selection.
+  */
+
+  if(event.ctrlKey || event.metaKey){
+
+    if(selectedNotes.has(id)){
+
+      selectedNotes.delete(id);
+
+    }
+    else{
+
+      selectedNotes.add(id);
+
+    }
+
     renderNoteList();
+
+    return;
+
+  }
+
+
+  selectedNotes.clear();
+
+  currentNoteId = id;
+
+  render();
+
+};
+
+
+/* =========================================================
+   BULK BUTTONS
+========================================================= */
+
+document
+.getElementById("bulkFavorite")
+.onclick =
+() => bulkSet("favorite");
+
+
+document
+.getElementById("bulkPin")
+.onclick =
+() => bulkSet("pinned");
+
+
+document
+.getElementById("bulkRecycle")
+.onclick =
+bulkRecycle;
+
+
+/* =========================================================
+   LINK OPEN / DELETE
+========================================================= */
+
+document
+.getElementById("dataPanel")
+.addEventListener(
+  "click",
+  event => {
+
+    const deleteButton =
+    event.target.closest(
+      "[data-delete-link]"
+    );
+
+    if(deleteButton){
+
+      event.stopPropagation();
+
+      const note =
+      database.notes.find(
+        n => n.id === currentNoteId
+      );
+
+      if(note){
+
+        note.links.splice(
+          Number(
+            deleteButton.dataset.deleteLink
+          ),
+          1
+        );
+
+        note.modified =
+        getNow();
+
+        markChanges();
+
+        renderCurrentPanel();
+
+      }
+
+      return;
+
+    }
+
+
+    const linkRow =
+    event.target.closest(
+      ".link-row"
+    );
+
+    if(linkRow){
+
+      const note =
+      database.notes.find(
+        n => n.id === currentNoteId
+      );
+
+      const index =
+      Number(
+        linkRow.dataset.linkIndex
+      );
+
+      if(note && note.links[index]){
+
+        window.open(
+          note.links[index].url,
+          "_blank",
+          "noopener"
+        );
+
+      }
+
+    }
+
   }
 );
 
 
-/* ============================================================
-   CHECKLIST
-   ============================================================ */
+/* =========================================================
+   SETTINGS
+========================================================= */
 
-document.querySelector(
-  '[data-section="checklist"]'
-).addEventListener("click",()=>{
+document
+.getElementById("settingsToggle")
+.onclick = () => {
 
-  const url=db.checklist.url;
-
-  if(url){
-    window.open(
-      url,
-      "_blank",
-      "noopener,noreferrer"
-    );
-  }else{
-
-    openModal(`
-      <h3>Checklist Web App</h3>
-
-      <div class="form-row">
-        <label>Web App URL</label>
-        <input id="checklistURL"
-          placeholder="https://script.google.com/...">
-      </div>
-
-      <div class="modal-actions">
-        <button class="secondary" onclick="closeModal()">
-          Cancel
-        </button>
-
-        <button class="primary"
-          onclick="saveChecklistURL()">
-          Save
-        </button>
-      </div>
-    `);
-  }
-});
-
-function saveChecklistURL(){
-
-  const url=$("checklistURL").value.trim();
-
-  if(!/^https?:\/\//i.test(url)){
-    alert("Valid URL دیں۔");
-    return;
-  }
-
-  db.checklist.url=url;
-
-  closeModal();
-
-  scheduleSave();
-}
-
-
-/* ============================================================
-   TRASH CONTROLS
-   ============================================================ */
-
-document.querySelector(
-  '[data-section="trash"]'
-).addEventListener("dblclick",()=>{
-
-  openModal(`
-    <h3>${escapeHTML(db.trashState.label)}</h3>
-
-    <div class="form-row">
-      <button class="secondary"
-        onclick="restoreTrash();closeModal()">
-        Restore Recycle Bin
-      </button>
-    </div>
-
-    <div class="form-row">
-      <button class="danger"
-        onclick="emptyTrash();closeModal()">
-        Empty Recycle Bin
-      </button>
-    </div>
-
-    <div class="modal-actions">
-      <button class="secondary" onclick="closeModal()">
-        Close
-      </button>
-    </div>
-  `);
-});
-
-
-/* ============================================================
-   RENDER ALL
-   ============================================================ */
-
-function renderAll(){
-
-  renderSidebar();
-  renderNoteList();
-  renderDataPanel();
-
-  $("sidebar").classList.toggle(
-    "compact",
-    db.settings.sidebarDensity==="compact"
+  const sidebarView =
+  prompt(
+    "Sidebar View:\n\ncompact\nnormal\nexpanded",
+    database.settings.sidebarView
   );
 
-  document.documentElement.style.setProperty(
-    "--primary",
-    selectedNoteId && getNote(selectedNoteId)
-      ? getNote(selectedNoteId).color || "#4f46e5"
-      : "#4f46e5"
+  if(
+    sidebarView &&
+    ["compact","normal","expanded"]
+    .includes(
+      sidebarView.toLowerCase()
+    )
+  ){
+
+    database.settings.sidebarView =
+    sidebarView.toLowerCase();
+
+  }
+
+
+  const trashName =
+  prompt(
+    "Recycle Bin Name:",
+    database.settings.trashName
   );
-}
+
+  if(trashName){
+
+    database.settings.trashName =
+    trashName;
+
+  }
 
 
-/* ============================================================
-   INITIALIZATION
-   ============================================================ */
+  markChanges();
 
-document.addEventListener("DOMContentLoaded",()=>{
+  render();
 
-  renderAll();
-
-  initGoogle();
-
-  /*
-   The Sidebar remains CLOSED by default,
-   according to the approved requirement.
-  */
-  $("sidebar").classList.add("closed");
-  $("sidebarBtn").textContent="☰ Show";
-});
+};
 
 
-/* ============================================================
-   EXPOSE FUNCTIONS USED BY INLINE UI
-   ============================================================ */
+/* =========================================================
+   BEFORE PAGE CLOSE
+========================================================= */
 
-window.editCurrentNote=editCurrentNote;
-window.toggleCurrentFavorite=toggleCurrentFavorite;
-window.toggleCurrentPin=toggleCurrentPin;
-window.deleteCurrentNote=deleteCurrentNote;
-window.openNoteCategoryMenu=openNoteCategoryMenu;
-window.openNoteTagsMenu=openNoteTagsMenu;
-window.openColorMenu=openColorMenu;
-window.printCurrentNote=printCurrentNote;
-window.shareCurrentByQR=shareCurrentByQR;
+window.addEventListener(
+  "beforeunload",
+  event => {
 
-window.formatText=formatText;
-window.insertLinkAtCursor=insertLinkAtCursor;
-window.openTextColor=openTextColor;
-window.applyTextColor=applyTextColor;
+    if(changesPending){
 
-window.openAddLinkMenu=openAddLinkMenu;
-window.addNormalLink=addNormalLink;
-window.addOtherLink=addOtherLink;
-window.saveNewLink=saveNewLink;
-window.addGoogleAttachment=addGoogleAttachment;
-window.saveAttachment=saveAttachment;
-window.editLink=editLink;
-window.saveEditedLink=saveEditedLink;
-window.removeLink=removeLink;
+      event.preventDefault();
 
-window.saveHeading=saveHeading;
-window.saveNoteCategory=saveNoteCategory;
-window.saveNoteTags=saveNoteTags;
-window.saveNoteColor=saveNoteColor;
+      event.returnValue = "";
 
-window.categoryAddChild=categoryAddChild;
-window.categoryAddSister=categoryAddSister;
-window.renameCategory=renameCategory;
-window.removeCategory=removeCategory;
-window.renameTag=renameTag;
-window.removeTag=removeTag;
+    }
 
-window.applyBulkCategory=applyBulkCategory;
-window.applyBulkTags=applyBulkTags;
-window.applyBulkColor=applyBulkColor;
+  }
+);
 
-window.saveSettings=saveSettings;
-window.closeModal=closeModal;
-window.saveChecklistURL=saveChecklistURL;
 
-window.restoreTrash=restoreTrash;
-window.emptyTrash=emptyTrash;
+/* =========================================================
+   START
+========================================================= */
+
+ensureDatabase();
+
+render();
 
 </script>
 
