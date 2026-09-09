@@ -1,3 +1,105 @@
+
+  const connectBtn =
+    document.getElementById("connectBtn");
+
+  const readBtn =
+    document.getElementById("readBtn");
+
+
+  function setStatus(message) {
+    status.textContent = message;
+  }
+
+
+  connectBtn.addEventListener("click", function () {
+
+    setStatus("Connecting to Google...");
+
+    const tokenClient =
+      google.accounts.oauth2.initTokenClient({
+
+        client_id: CLIENT_ID,
+
+        scope: DRIVE_SCOPE,
+
+        callback: function (response) {
+
+          if (response.error) {
+
+            console.error(response);
+
+            setStatus(
+              "Google authorization failed: " +
+              (response.error_description ||
+               response.error)
+            );
+
+            return;
+          }
+
+          accessToken =
+            response.access_token;
+
+          setStatus(
+            "SUCCESS! Google Drive connected."
+          );
+
+          readBtn.disabled = false;
+
+        }
+
+      });
+
+
+    tokenClient.requestAccessToken({
+      prompt: "consent"
+    });
+
+  });
+
+
+  readBtn.addEventListener("click", async function () {
+
+    if (!accessToken) {
+
+      setStatus(
+        "Please connect Google Drive first."
+      );
+
+      return;
+    }
+
+
+    setStatus(
+      "Reading Master.json from Google Drive..."
+    );
+
+    data.textContent = "";
+
+
+    try {
+
+      const response = await fetch(
+        "https://www.googleapis.com/drive/v3/files/" +
+        FILE_ID +
+        "?alt=media",
+        {
+          method: "GET",
+
+          headers: {
+            "Authorization":
+              "Bearer " + accessToken
+          }
+        }
+      );
+
+
+      if (!response.ok) {
+
+        const errorText =
+          await response.text();
+
+        throw new Error(
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -60,7 +162,7 @@
 <script>
 
   const CLIENT_ID =
-    "PASTE_YOUR_EXISTING_CLIENT_ID_HERE";
+    "262106898132-tsn94p3vvpf34do0ommc6rai2mtc5sh6.apps.googleusercontent.com";
 
   const DRIVE_SCOPE =
     "https://www.googleapis.com/auth/drive";
