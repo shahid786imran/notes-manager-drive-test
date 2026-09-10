@@ -1,0 +1,3662 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Notes Manager</title>
+<style>
+:root{
+    --bg:#f4f6f9;
+    --surface:#ffffff;
+    --surface2:#f8fafc;
+    --text:#172033;
+    --muted:#697386;
+    --border:#dfe4ec;
+    --primary:#2563eb;
+    --primary2:#1d4ed8;
+    --danger:#dc2626;
+    --success:#15803d;
+    --warning:#b45309;
+    --shadow:0 8px 25px rgba(20,30,50,.08);
+    --radius:12px;
+    --font-size:15px;
+    --sidebar-width:290px;
+    --sidebar-border:1px;
+    --note-list-bg:#ffffff;
+    --note-panel-bg:#ffffff;
+    --section-height:38px;
+}
+*{ box-sizing:border-box; }
+html,body{ margin:0; padding:0; min-height:100%; }
+body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:Arial,Helvetica,sans-serif;
+    font-size:var(--font-size);
+}
+button,select,input,textarea{ font:inherit; }
+button{ cursor:pointer; }
+
+/* FLOATING SIDEBAR TOGGLE */
+.floating-toggle{
+    position:fixed; top:10px; left:10px; z-index:3000;
+    width:46px; height:46px;
+    border:1px solid var(--border); border-radius:10px;
+    background:var(--surface); color:var(--text);
+    box-shadow:0 6px 20px rgba(0,0,0,.15);
+    display:flex; align-items:center; justify-content:center;
+    font-size:20px; font-weight:700; padding:0;
+}
+.floating-toggle:hover{ background:#eef2ff; }
+.floating-toggle .hamburger{ display:flex; flex-direction:column; gap:4px; }
+.floating-toggle .hamburger span{
+    width:20px; height:2.5px; background:var(--text); border-radius:2px; display:block;
+}
+.floating-toggle .arrow-icon{ font-size:18px; line-height:1; }
+
+/* TOP AREA */
+.top-area{
+    background:var(--surface);
+    border-bottom:1px solid var(--border);
+    box-shadow:0 2px 8px rgba(0,0,0,.04);
+    padding:8px 10px 8px 66px;
+    position:sticky; top:0; z-index:1000;
+}
+.status-row{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-size:12px;
+    font-weight:600;
+    white-space:nowrap;
+    overflow:hidden;
+    margin-bottom:8px;
+    line-height:1.3;
+}
+.status-item{
+    display:inline-flex;
+    align-items:center;
+    gap:4px;
+    min-width:0;
+    flex-shrink:1;
+    overflow:hidden;
+    text-overflow:ellipsis;
+}
+.status-dot{
+    width:8px; height:8px; border-radius:50%;
+    background:#94a3b8;
+    flex:none;
+    display:inline-block;
+}
+.status-dot.green{ background:#22c55e; }
+.status-dot.red{ background:#dc2626; }
+.status-dot.amber{ background:#f59e0b; }
+.status-time{
+    color:#2563eb;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+    min-width:0;
+}
+.status-change{
+    color:#7c3aed;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+    min-width:0;
+}
+.status-rel{
+    color:#94a3b8;
+    font-weight:500;
+    flex:none;
+}
+.top-buttons{
+    display:flex; gap:6px;
+    flex-wrap:nowrap;
+    overflow-x:auto;
+    padding-bottom:2px;
+    scrollbar-width:thin;
+}
+.top-buttons .btn{
+    flex:0 0 auto;
+    height:34px; min-width:72px; padding:0 10px;
+    border:1px solid var(--border); border-radius:8px;
+    background:var(--surface); color:var(--text);
+    font-size:12px; font-weight:600;
+    display:inline-flex; align-items:center; justify-content:center;
+    white-space:nowrap; transition:.15s ease;
+}
+.top-buttons .btn:hover{ background:#f1f5f9; }
+.top-buttons .btn.primary{ background:var(--primary); color:#fff; border-color:var(--primary); }
+.top-buttons .btn.primary:hover{ background:var(--primary2); }
+.top-buttons .btn.danger{ background:var(--danger); color:#fff; border-color:var(--danger); }
+.top-buttons .btn.success{ background:var(--success); color:#fff; border-color:var(--success); }
+.top-buttons .btn.hidden{ display:none; }
+
+/* SIDEBAR */
+.sidebar-overlay{
+    position:fixed; inset:0; z-index:1900;
+    background:rgba(0,0,0,.22); display:none;
+}
+.sidebar-overlay.open{ display:block; }
+.sidebar{
+    position:fixed; top:0; left:0; bottom:0;
+    width:var(--sidebar-width);
+    z-index:2000;
+    background:var(--surface);
+    border-right:var(--sidebar-border) solid var(--border);
+    box-shadow:10px 0 25px rgba(0,0,0,.08);
+    transform:translateX(-105%);
+    transition:transform .2s ease;
+    overflow-y:auto;
+    overscroll-behavior:contain;
+    padding:10px;
+    padding-top:14px;
+    scrollbar-width:none;
+}
+.sidebar::-webkit-scrollbar{ display:none; }
+.sidebar.open{ transform:translateX(0); }
+.sidebar-title{
+    font-size:15px;
+    font-weight:800;
+    letter-spacing:.4px;
+    text-transform:uppercase;
+    color:var(--primary);
+    padding:8px 9px 10px;
+    margin-bottom:4px;
+    border-bottom:1px solid var(--border);
+}
+.sidebar-section{ margin-bottom:4px; }
+.sidebar-item{
+    position:relative;
+    min-height:var(--section-height);
+    display:flex; align-items:center; gap:8px;
+    padding:0 9px; border-radius:8px;
+    cursor:pointer; color:var(--text);
+}
+.sidebar-item:hover, .sidebar-item.active{ background:#eef2ff; }
+.sidebar-icon{ width:20px; text-align:center; flex:none; }
+.sidebar-label{
+    flex:1; min-width:0;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+}
+.sidebar-count{ color:var(--muted); font-size:11px; flex:none; }
+.bin-badge{
+    background:#dc2626; color:#fff;
+    font-size:10px; font-weight:700;
+    padding:1px 6px; border-radius:999px;
+    flex:none; min-width:18px; text-align:center;
+}
+.sidebar-divider{
+    height:1px; background:#e2e8f0;
+    margin:8px 4px; border:0;
+}
+.sidebar-controls{ display:flex; gap:3px; flex:none; }
+.sidebar-ctrl{
+    width:24px; height:24px; min-width:24px; padding:0;
+    border:1px solid var(--border); border-radius:6px;
+    background:var(--surface); color:var(--text);
+    font-size:11px; display:inline-flex;
+    align-items:center; justify-content:center; line-height:1;
+}
+.sidebar-ctrl:hover{ background:#e2e8f0; }
+.sidebar-ctrl.danger:hover{ background:#fef2f2; border-color:#fecaca; color:#dc2626; }
+.sidebar-collapse{ margin-top:3px; padding-left:12px; }
+.tag-list, .category-list{ display:block; }
+.sidebar-subtitle{ padding:6px 9px; color:var(--muted); font-size:11px; }
+.cat-row{
+    display:flex; align-items:center; gap:6px;
+    padding:2px 4px; border-radius:8px;
+}
+.cat-row:hover{ background:#f8fafc; }
+.cat-row-btns{ display:flex; gap:3px; flex:none; order:3; }
+.cat-expander{
+    width:18px; height:18px; padding:0;
+    border:1px solid var(--border); border-radius:4px;
+    background:var(--surface);
+    font-size:11px; font-weight:700;
+    display:inline-flex; align-items:center; justify-content:center;
+    line-height:1; flex:none;
+}
+.cat-expander:hover{ background:#e2e8f0; }
+
+/* MAIN */
+.main{ min-height:calc(100vh - 140px); padding:12px; }
+.toolbar{ display:flex; align-items:center; gap:8px; margin-bottom:10px; flex-wrap:wrap; }
+.search-box{ flex:1; min-width:180px; }
+.search-box input{
+    width:100%; height:36px; padding:0 12px;
+    border:1px solid var(--border); border-radius:8px;
+    background:var(--surface); outline:none;
+}
+.search-box input:focus{ border-color:var(--primary); }
+.workspace{
+    display:grid;
+    grid-template-columns:minmax(260px,34%) 1fr;
+    gap:10px;
+    min-height:calc(100vh - 220px);
+}
+.panel{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    overflow:hidden;
+}
+.panel-header{
+    min-height:48px; display:flex;
+    align-items:center; justify-content:space-between;
+    gap:8px; padding:8px 12px;
+    border-bottom:1px solid var(--border);
+}
+.panel-title{ font-weight:700; }
+.filter-sort-bar{
+    display:flex; gap:6px; padding:6px 10px;
+    border-bottom:1px solid var(--border);
+    background:var(--surface2); flex-wrap:wrap; align-items:center;
+}
+.filter-sort-bar select{
+    height:26px; font-size:11px;
+    border:1px solid var(--border); border-radius:6px;
+    background:var(--surface); padding:0 6px;
+}
+
+.note-list{
+    overflow-y:auto;
+    overscroll-behavior:contain;
+    background:var(--note-list-bg);
+}
+.note-row{
+    display:flex; align-items:flex-start; gap:9px;
+    padding:9px 11px;
+    border-bottom:1px solid var(--border);
+    cursor:pointer;
+    transition:background .12s, transform .12s;
+}
+.note-row:hover{ background:#f8fafc; transform:scale(1.005); }
+.note-row.active{ background:#93c5fd; }
+.note-row.ms-selected{ background:#bfdbfe; }
+.note-marker{
+    width:5px; min-width:5px; height:auto;
+    align-self:stretch; border-radius:5px;
+    background:var(--note-color,#94a3b8);
+}
+.note-row-body{ flex:1; min-width:0; }
+.note-line1{
+    display:flex; gap:6px; align-items:baseline; min-width:0;
+}
+.note-line1-title{
+    font-weight:700;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    flex:0 1 auto; max-width:55%;
+}
+.note-line1-content{
+    color:var(--muted); font-size:12px;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    flex:1 1 auto; min-width:0;
+}
+.note-line2{
+    margin-top:4px; display:flex; gap:6px;
+    flex-wrap:wrap; align-items:center;
+    font-size:11px; color:var(--muted);
+}
+.note-line3{ margin-top:4px; font-size:10px; color:var(--muted); }
+.note-line2 .meta-chip{
+    display:inline-flex; align-items:center; gap:3px;
+    max-width:120px; overflow:hidden;
+    text-overflow:ellipsis; white-space:nowrap;
+}
+.note-row-right{
+    display:flex; flex-direction:column;
+    gap:4px; align-items:flex-end; flex:none;
+}
+.row-icon-btn{
+    width:auto; min-width:32px;
+    height:24px; padding:0 6px;
+    border:1px solid var(--border);
+    border-radius:6px;
+    background:var(--surface);
+    color:#94a3b8;
+    font-size:10px; font-weight:600;
+    display:inline-flex; align-items:center;
+    justify-content:center; line-height:1;
+    gap:3px; white-space:nowrap;
+}
+.row-icon-btn:hover{ background:#e2e8f0; }
+.row-icon-btn.pin-on{ color:#b45309; border-color:#fde68a; background:#fffbeb; }
+.row-icon-btn.fav-on{ color:#d97706; border-color:#fde68a; background:#fffbeb; }
+.row-icon-btn.edit-btn:hover{ color:#2563eb; border-color:#bfdbfe; background:#eff6ff; }
+.row-icon-btn.danger:hover{ color:#dc2626; border-color:#fecaca; background:#fef2f2; }
+
+/* Checkbox */
+.note-row.has-checkbox{
+    padding-left:36px; position:relative;
+}
+.note-row.has-checkbox::before{
+    content:"";
+    position:absolute; left:12px; top:14px;
+    width:16px; height:16px;
+    border:2px solid var(--border);
+    border-radius:4px;
+    background:var(--surface);
+    cursor:pointer;
+}
+.note-row.has-checkbox.ms-selected::before{
+    background:var(--primary);
+    border-color:var(--primary);
+    content:"✓"; color:#fff;
+    font-size:11px;
+    display:flex; align-items:center;
+    justify-content:center; font-weight:700;
+}
+
+/* DETAIL PANEL */
+.detail{ min-width:0; }
+.detail-body{ padding:0; background:var(--note-panel-bg); }
+.note-panel-border{
+    border:5px solid var(--note-color,#94a3b8);
+    border-radius:12px;
+    overflow:hidden;
+}
+.note-controls-card{
+    display:flex; align-items:center; gap:6px;
+    padding:8px 10px;
+    border-bottom:1px solid var(--border);
+    background:var(--surface2); flex-wrap:wrap;
+}
+.note-controls-left{ display:flex; gap:5px; flex-wrap:wrap; }
+.note-controls-right{ display:flex; gap:5px; margin-left:auto; flex-wrap:wrap; }
+.ctrl-btn{
+    height:30px; min-width:62px; padding:0 9px;
+    border:1px solid var(--border); border-radius:7px;
+    background:var(--surface); color:var(--text);
+    font-size:11px; font-weight:600;
+    display:inline-flex; align-items:center;
+    justify-content:center; gap:3px; white-space:nowrap;
+}
+.ctrl-btn:hover{ background:#f1f5f9; }
+.ctrl-btn.primary{ background:var(--primary); color:#fff; border-color:var(--primary); }
+.ctrl-btn.danger{ background:var(--danger); color:#fff; border-color:var(--danger); }
+.ctrl-btn.success{ background:var(--success); color:#fff; border-color:var(--success); }
+.heading-card{
+    padding:10px 12px;
+    border-bottom:1px solid var(--border);
+}
+.heading-input{
+    width:100%; border:0; background:transparent;
+    outline:none; font-size:22px; font-weight:700;
+    color:var(--text); padding:4px 0;
+}
+.heading-display{
+    font-size:22px; font-weight:700;
+    line-height:1.3; word-break:break-word;
+    min-height:28px;
+}
+.content-bar{ border-bottom:1px solid var(--border); }
+.content-toolbar{
+    display:flex; gap:4px; flex-wrap:wrap;
+    padding:6px 10px;
+    background:var(--surface2);
+    border-bottom:1px solid var(--border);
+    align-items:center;
+}
+.tool-btn{
+    width:30px; height:28px; min-width:30px; padding:0;
+    border:1px solid var(--border); border-radius:6px;
+    background:var(--surface); color:var(--text);
+    font-size:12px; font-weight:700;
+    display:inline-flex; align-items:center;
+    justify-content:center; cursor:pointer;
+}
+.tool-btn:hover{ background:#e2e8f0; }
+.tool-btn.wide{ width:auto; min-width:auto; padding:0 8px; gap:4px; }
+.tool-sep{ width:1px; height:20px; background:var(--border); margin:0 3px; }
+.content-editable{
+    min-height:120px;
+    padding:10px 12px;
+    outline:none; line-height:1.6;
+    word-break:break-word; font-size:14px;
+}
+.content-editable:empty:before{
+    content:attr(data-placeholder);
+    color:var(--muted);
+}
+.content-editable a{
+    color:var(--primary);
+    text-decoration:underline;
+    cursor:pointer;
+}
+.content-display{
+    padding:10px 12px;
+    white-space:pre-wrap;
+    line-height:1.6;
+    word-break:break-word;
+    min-height:120px;
+}
+.content-display a{
+    color:var(--primary);
+    text-decoration:underline;
+}
+
+/* LINKS */
+.links-card{
+    margin:10px;
+    border:1px solid var(--border);
+    border-radius:10px;
+    overflow:hidden;
+    background:var(--surface);
+}
+.links-card-header{
+    display:flex; align-items:center;
+    justify-content:space-between;
+    padding:7px 10px;
+    background:var(--surface2);
+    border-bottom:1px solid var(--border);
+    gap:6px;
+}
+.links-card-title{ font-size:12px; font-weight:700; color:var(--muted); }
+.links-card-header-actions{ display:flex; gap:4px; }
+.link-item{
+    display:flex; align-items:center; gap:6px;
+    padding:7px 10px;
+    border-bottom:1px solid var(--border);
+    font-size:12px;
+}
+.link-item:last-child{ border-bottom:0; }
+.link-item-text{
+    flex:0 0 auto; font-weight:600;
+    max-width:35%; overflow:hidden;
+    text-overflow:ellipsis; white-space:nowrap;
+}
+.link-item-url{
+    flex:1 1 auto; color:var(--primary);
+    text-decoration:none; overflow:hidden;
+    text-overflow:ellipsis; white-space:nowrap;
+    min-width:0;
+}
+.link-item-actions{ display:flex; gap:3px; flex:none; }
+.link-icon-btn{
+    width:24px; height:24px; min-width:24px; padding:0;
+    border:1px solid var(--border); border-radius:5px;
+    background:var(--surface); cursor:pointer;
+    font-size:11px; display:inline-flex;
+    align-items:center; justify-content:center;
+}
+.link-icon-btn:hover{ background:#e2e8f0; }
+.link-icon-btn.danger:hover{ background:#fef2f2; color:#dc2626; }
+
+/* TAGS + CAT */
+.tags-cat-card{
+    margin:10px;
+    border:1px solid var(--border);
+    border-radius:10px;
+    background:var(--surface);
+    padding:10px;
+}
+.tags-cat-row{
+    display:flex; align-items:center;
+    gap:6px; flex-wrap:wrap;
+    margin-bottom:8px;
+}
+.tags-cat-row:last-child{ margin-bottom:0; }
+.tags-cat-label{
+    font-size:11px; font-weight:700;
+    color:var(--muted); min-width:56px;
+}
+.tag-chip{
+    display:inline-flex; align-items:center; gap:3px;
+    border:1px solid #cbd5e1; border-radius:999px;
+    padding:2px 8px; background:#f8fafc; font-size:11px;
+}
+.tag-chip .chip-x{
+    cursor:pointer; color:#94a3b8; font-weight:700;
+}
+.tag-chip .chip-x:hover{ color:#dc2626; }
+.tags-input-inline{
+    flex:1; min-width:140px; height:28px;
+    padding:0 8px;
+    border:1px solid var(--border); border-radius:6px;
+    background:var(--surface); outline:none; font-size:12px;
+}
+.tags-input-inline:focus{ border-color:var(--primary); }
+.small-action-btn{
+    height:28px; padding:0 8px;
+    border:1px solid var(--border); border-radius:6px;
+    background:var(--surface); color:var(--text);
+    font-size:11px; font-weight:600;
+    display:inline-flex; align-items:center; gap:3px;
+}
+.small-action-btn:hover{ background:#e2e8f0; }
+.small-action-btn.primary{ background:var(--primary); color:#fff; border-color:var(--primary); }
+.small-action-btn.danger{ background:var(--danger); color:#fff; border-color:var(--danger); }
+.small-action-btn.success{ background:var(--success); color:#fff; border-color:var(--success); }
+
+/* METADATA */
+.metadata-box{
+    margin:10px;
+    border:1px solid var(--border);
+    border-radius:10px;
+    overflow:hidden;
+    background:#f8fafc;
+    color:#697386;
+}
+.metadata-title{
+    padding:7px 10px; font-size:12px; font-weight:700;
+    background:#f1f5f9;
+    border-bottom:1px solid var(--border);
+    color:#697386;
+    display:flex; align-items:center; justify-content:space-between;
+    cursor:pointer; user-select:none;
+}
+.metadata-title .toggle-icon{ font-size:11px; color:#94a3b8; }
+.metadata-body{ display:block; }
+.metadata-body.collapsed{ display:none; }
+.metadata-table{
+    width:100%; border-collapse:collapse; table-layout:fixed;
+}
+.metadata-table td{
+    padding:5px 8px; font-size:11px; line-height:1.3;
+    vertical-align:top; border:1px solid var(--border);
+    word-break:break-word; color:#697386;
+}
+.metadata-table td.label{
+    width:22%; color:#697386;
+    font-weight:700; background:#f1f5f9;
+}
+.metadata-table td.value{ width:28%; color:#697386; }
+.metadata-table a.cat-link{
+    color:#2563eb; text-decoration:none; cursor:pointer;
+}
+.metadata-actions{
+    padding:8px 10px;
+    display:flex; gap:5px; flex-wrap:wrap;
+    border-top:1px solid var(--border);
+    background:#f1f5f9;
+}
+
+/* EMPTY */
+.empty{
+    display:flex; align-items:center; justify-content:center;
+    color:var(--muted); padding:20px;
+    text-align:center; flex-direction:column; gap:8px;
+    min-height:100px;
+}
+
+/* SETTINGS */
+.settings-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px; padding:10px;
+}
+.setting{
+    border:1px solid var(--border);
+    border-radius:9px; padding:10px;
+    background:var(--surface2);
+}
+.setting label{
+    display:block; margin-bottom:6px;
+    color:var(--muted); font-size:12px; font-weight:700;
+}
+.setting select, .setting input[type="text"],
+.setting input[type="number"], .setting input[type="color"]{
+    width:100%; height:34px;
+    border:1px solid var(--border); border-radius:7px;
+    background:var(--surface); padding:0 7px;
+}
+.setting input[type="color"]{ padding:0; cursor:pointer; }
+
+/* PAGINATION */
+.pagination{
+    display:flex; align-items:center; justify-content:center;
+    gap:6px; padding:9px; border-top:1px solid var(--border);
+}
+.pagination button{
+    height:28px; min-width:60px; padding:0 8px;
+    border:1px solid var(--border); border-radius:6px;
+    background:var(--surface); font-size:12px;
+}
+
+/* BIN TOOLBAR */
+.bin-toolbar{
+    display:flex; gap:6px; padding:8px 10px;
+    border-bottom:1px solid var(--border);
+    background:var(--surface2); flex-wrap:wrap; align-items:center;
+}
+.bin-toolbar-info{
+    font-size:11px; color:var(--muted); margin-left:auto;
+}
+
+/* TOAST */
+.toast{
+    position:fixed; right:15px; bottom:15px;
+    z-index:5000; max-width:360px;
+    padding:10px 13px; border-radius:8px;
+    background:#172033; color:#fff;
+    font-size:13px;
+    box-shadow:0 8px 30px rgba(0,0,0,.2);
+    transform:translateY(20px); opacity:0;
+    pointer-events:none; transition:.2s ease;
+}
+.toast.show{ transform:translateY(0); opacity:1; }
+
+/* UNDO BAR */
+.undo-bar{
+    position:fixed; left:50%;
+    transform:translateX(-50%) translateY(80px);
+    bottom:20px; z-index:5000;
+    background:#172033; color:#fff;
+    padding:10px 16px; border-radius:8px;
+    font-size:13px;
+    box-shadow:0 8px 30px rgba(0,0,0,.25);
+    display:flex; align-items:center; gap:12px;
+    opacity:0; pointer-events:none;
+    transition:.2s ease;
+}
+.undo-bar.show{
+    transform:translateX(-50%) translateY(0);
+    opacity:1; pointer-events:auto;
+}
+.undo-bar button{
+    background:transparent; color:#60a5fa;
+    border:1px solid #60a5fa; border-radius:6px;
+    padding:3px 10px; cursor:pointer;
+    font-size:12px; font-weight:700;
+}
+
+/* FOOTER */
+.app-footer{
+    padding:14px 12px; text-align:center;
+    border-top:1px solid var(--border);
+    background:var(--surface);
+    color:var(--muted); font-size:11px;
+    margin-top:20px;
+}
+.app-footer a{
+    color:var(--primary); text-decoration:none; font-weight:600;
+}
+.app-footer a:hover{ text-decoration:underline; }
+
+/* UNIVERSAL POPUP SYSTEM */
+.popup-backdrop{
+    position:fixed; inset:0; z-index:5500;
+    background:rgba(0,0,0,.35);
+    display:none;
+    align-items:center; justify-content:center;
+    padding:16px;
+}
+.popup-backdrop.show{ display:flex; }
+.popup{
+    background:var(--surface);
+    border-radius:12px;
+    box-shadow:0 20px 60px rgba(0,0,0,.35);
+    width:100%; max-width:460px;
+    max-height:90vh;
+    display:flex; flex-direction:column;
+    overflow:hidden;
+    animation:popIn .18s ease;
+}
+@keyframes popIn{
+    from{ transform:scale(.95); opacity:0; }
+    to{ transform:scale(1); opacity:1; }
+}
+.popup-header{
+    display:flex; align-items:center;
+    justify-content:space-between;
+    padding:12px 14px;
+    border-bottom:1px solid var(--border);
+    background:var(--surface2);
+}
+.popup-title{ font-weight:700; font-size:14px; }
+.popup-close{
+    width:28px; height:28px;
+    border:1px solid var(--border); border-radius:6px;
+    background:var(--surface);
+    display:flex; align-items:center; justify-content:center;
+    font-size:14px; cursor:pointer;
+}
+.popup-close:hover{ background:#e2e8f0; }
+.popup-body{
+    padding:12px 14px;
+    overflow-y:auto;
+    flex:1;
+}
+.popup-footer{
+    padding:10px 14px;
+    border-top:1px solid var(--border);
+    display:flex; justify-content:flex-end;
+    gap:6px; background:var(--surface2);
+}
+.popup-field{ margin-bottom:10px; }
+.popup-field label{
+    display:block; font-size:11px;
+    color:var(--muted); font-weight:700; margin-bottom:4px;
+}
+.popup-field input, .popup-field textarea{
+    width:100%; padding:8px 10px;
+    border:1px solid var(--border); border-radius:8px;
+    background:var(--surface); outline:none; font-size:13px;
+}
+.popup-field input:focus, .popup-field textarea:focus{
+    border-color:var(--primary);
+}
+.popup-btn{
+    height:32px; min-width:80px; padding:0 12px;
+    border:1px solid var(--border); border-radius:7px;
+    background:var(--surface); font-size:12px;
+    font-weight:600; cursor:pointer;
+}
+.popup-btn.primary{ background:var(--primary); color:#fff; border-color:var(--primary); }
+.popup-btn:hover{ filter:brightness(.96); }
+
+/* Category tree in popup */
+.cat-tree{
+    max-height:250px; overflow-y:auto;
+    border:1px solid var(--border); border-radius:8px;
+    padding:6px;
+    background:var(--surface2);
+}
+.cat-tree-row{
+    display:flex; align-items:center;
+    gap:6px; padding:6px 8px;
+    border-radius:6px; cursor:pointer;
+    font-size:13px;
+}
+.cat-tree-row:hover{ background:#eef2ff; }
+.cat-tree-row.selected{ background:#dbeafe; font-weight:700; }
+.cat-tree-row .cat-radio{
+    width:14px; height:14px;
+    border:2px solid var(--border); border-radius:50%;
+    flex:none;
+}
+.cat-tree-row.selected .cat-radio{
+    background:var(--primary); border-color:var(--primary);
+}
+
+/* Dropdown popup (contextual) */
+.dropdown-popup{
+    position:fixed;
+    z-index:5600;
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:10px;
+    box-shadow:0 12px 40px rgba(0,0,0,.25);
+    padding:8px;
+    display:none;
+    max-width:320px;
+}
+.dropdown-popup.show{ display:block; }
+.color-swatch-grid{
+    display:grid;
+    grid-template-columns:repeat(5,1fr);
+    gap:6px;
+}
+.color-swatch{
+    width:36px; height:36px;
+    border-radius:8px; cursor:pointer;
+    border:2px solid transparent;
+    transition:.12s;
+}
+.color-swatch:hover{ transform:scale(1.08); }
+.color-swatch.selected{
+    border-color:#172033;
+    box-shadow:0 0 0 2px #fff inset;
+}
+.color-custom-row{
+    display:flex; gap:6px; margin-top:8px;
+    padding-top:8px;
+    border-top:1px solid var(--border);
+}
+.color-custom-row input{
+    flex:1; height:30px; padding:0 8px;
+    border:1px solid var(--border); border-radius:6px;
+    font-size:12px;
+}
+.color-custom-row button{
+    height:30px; padding:0 10px;
+    border-radius:6px; border:1px solid var(--primary);
+    background:var(--primary); color:#fff;
+    font-size:12px; font-weight:600; cursor:pointer;
+}
+
+/* Link context menu */
+.link-ctx-menu{
+    position:fixed;
+    z-index:5600;
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:8px;
+    box-shadow:0 12px 40px rgba(0,0,0,.25);
+    padding:4px 0; min-width:180px;
+    display:none;
+}
+.link-ctx-menu.show{ display:block; }
+.link-ctx-menu button{
+    display:block; width:100%;
+    padding:8px 14px; border:0;
+    background:transparent; text-align:left;
+    cursor:pointer; font-size:12px; color:var(--text);
+}
+.link-ctx-menu button:hover{ background:#eef2ff; }
+
+/* Note context menu */
+.context-menu{
+    position:fixed; z-index:6000;
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:8px;
+    box-shadow:0 8px 30px rgba(0,0,0,.2);
+    padding:4px 0; min-width:160px;
+    display:none;
+}
+.context-menu.show{ display:block; }
+.context-menu button{
+    display:block; width:100%;
+    padding:8px 14px; border:0;
+    background:transparent; text-align:left;
+    cursor:pointer; font-size:12px; color:var(--text);
+}
+.context-menu button:hover{ background:#eef2ff; }
+
+/* NIGHT MODE */
+body.night{
+    --bg:#0f172a;
+    --surface:#172033;
+    --surface2:#1e293b;
+    --text:#e5e7eb;
+    --muted:#94a3b8;
+    --border:#334155;
+}
+body.night .top-area,
+body.night .panel,
+body.night .sidebar,
+body.night .search-box input,
+body.night .top-buttons .btn,
+body.night .ctrl-btn,
+body.night .tool-btn,
+body.night .link-icon-btn,
+body.night .small-action-btn,
+body.night .heading-input,
+body.night .content-editable,
+body.night .content-display,
+body.night .tags-input-inline,
+body.night .floating-toggle,
+body.night .row-icon-btn,
+body.night .context-menu,
+body.night .popup,
+body.night .popup-close,
+body.night .popup-btn,
+body.night .dropdown-popup,
+body.night .link-ctx-menu,
+body.night .color-custom-row input{
+    background:var(--surface);
+    color:var(--text);
+}
+body.night .floating-toggle .hamburger span{ background:var(--text); }
+body.night .metadata-title,
+body.night .links-card-header,
+body.night .content-toolbar,
+body.night .note-controls-card,
+body.night .bin-toolbar,
+body.night .filter-sort-bar,
+body.night .metadata-actions,
+body.night .popup-header,
+body.night .popup-footer{
+    background:var(--surface2);
+}
+body.night .metadata-box,
+body.night .metadata-table td,
+body.night .metadata-table td.label,
+body.night .metadata-table td.value{
+    background:#1e293b;
+    color:#94a3b8;
+    border-color:var(--border);
+}
+body.night .metadata-title{ background:#263449; }
+body.night .note-row:hover{ background:#1e293b; }
+body.night .note-row.active{ background:#1e40af; }
+body.night .note-row.ms-selected{ background:#1e3a5f; }
+body.night .cat-row:hover{ background:#1e293b; }
+body.night .sidebar-divider{ background:#334155; }
+body.night .tag-chip{
+    background:#1e293b; border-color:#334155; color:var(--text);
+}
+body.night .app-title{ color:#60a5fa; }
+body.night .sidebar-title{ color:#60a5fa; }
+body.night .cat-tree{
+    background:#1e293b; border-color:var(--border);
+}
+body.night .cat-tree-row:hover{ background:#334155; }
+body.night .cat-tree-row.selected{ background:#1e40af; }
+
+/* RESPONSIVE */
+@media(max-width:850px){
+    .workspace{ grid-template-columns:1fr; }
+    .settings-grid{ grid-template-columns:1fr; }
+    .top-buttons .btn{ min-width:64px; font-size:11px; padding:0 8px; }
+    .status-row{ font-size:11px; gap:8px; }
+    .status-time, .status-change{ font-size:10px; }
+}
+@media(max-width:550px){
+    .main{ padding:7px; }
+    .top-buttons .btn{ min-width:58px; font-size:10px; padding:0 6px; height:30px; }
+    .ctrl-btn{ font-size:10px; min-width:52px; height:28px; padding:0 6px; }
+    .heading-display{ font-size:18px; }
+    .heading-input{ font-size:18px; }
+    .floating-toggle{ width:42px; height:42px; font-size:18px; }
+    .top-area{ padding-left:60px; }
+    .status-row{ font-size:10px; gap:6px; }
+    .status-time, .status-change{ font-size:9px; }
+    .status-rel{ font-size:9px; }
+    .row-icon-btn{
+        min-width:28px; height:22px;
+        font-size:9px; padding:0 4px;
+    }
+    .link-item{ flex-wrap:wrap; }
+    .link-item-text{ max-width:100%; }
+    .link-item-url{ max-width:100%; }
+    .popup{ max-width:100%; }
+}
+</style>
+</head>
+
+<body>
+
+<!-- FLOATING SIDEBAR TOGGLE -->
+<button id="floatingToggle" class="floating-toggle" type="button" title="Show/Hide Sidebar">
+    <span class="hamburger"><span></span><span></span><span></span></span>
+</button>
+
+<!-- TOP AREA -->
+<div class="top-area">
+    <div class="status-row" id="statusRow">
+        <span class="status-item">
+            <span class="status-dot" id="driveDot"></span>
+            <span id="driveText">Drive</span>
+        </span>
+        <span class="status-item">
+            <span class="status-dot" id="syncDot"></span>
+            <span id="syncText">Sync</span>
+        </span>
+        <span class="status-item">
+            <span>⏱</span>
+            <span class="status-time" id="lastSyncText">—</span>
+            <span class="status-rel" id="lastSyncRel"></span>
+        </span>
+        <span class="status-item">
+            <span>✎</span>
+            <span class="status-change" id="lastChangeText">—</span>
+            <span class="status-rel" id="lastChangeRel"></span>
+        </span>
+    </div>
+
+    <div class="top-buttons">
+        <button id="connectBtn" class="btn primary" type="button">Connect</button>
+        <button id="syncBtn" class="btn" type="button">Sync</button>
+        <button id="addBtn" class="btn success" type="button">+ Add</button>
+        <button id="deleteSelectedBtn" class="btn danger hidden" type="button">Delete</button>
+    </div>
+</div>
+
+<!-- SIDEBAR OVERLAY -->
+<div id="sidebarOverlay" class="sidebar-overlay"></div>
+
+<!-- SIDEBAR -->
+<aside id="sidebar" class="sidebar">
+    <div class="sidebar-title">My Notes Manager</div>
+
+    <div class="sidebar-section">
+        <div class="sidebar-item active" data-view="all" onclick="setView('all')">
+            <span class="sidebar-icon">📒</span>
+            <span class="sidebar-label">All Notes</span>
+            <span id="allCount" class="sidebar-count">0</span>
+        </div>
+        <div class="sidebar-item" data-view="favorites" onclick="setView('favorites')">
+            <span class="sidebar-icon">⭐</span>
+            <span class="sidebar-label">Favorites</span>
+            <span id="favoriteCount" class="sidebar-count">0</span>
+        </div>
+    </div>
+
+    <hr class="sidebar-divider">
+
+    <div class="sidebar-section">
+        <div class="sidebar-item" data-view="cat" onclick="setView('cat')">
+            <span class="sidebar-icon">📁</span>
+            <span class="sidebar-label"><strong>Cat</strong></span>
+            <span id="catCount" class="sidebar-count">0</span>
+        </div>
+        <div id="categoryList" class="category-list sidebar-collapse"></div>
+        <div class="sidebar-item" data-view="uncat" onclick="setView('uncat')">
+            <span class="sidebar-icon">📄</span>
+            <span class="sidebar-label"><strong>Uncat</strong></span>
+            <span id="uncatCount" class="sidebar-count">0</span>
+        </div>
+    </div>
+
+    <div class="sidebar-section">
+        <div class="sidebar-item">
+            <span class="sidebar-icon">🏷️</span>
+            <span class="sidebar-label"><strong>Tags</strong></span>
+            <span id="tagCountTotal" class="sidebar-count">0</span>
+        </div>
+        <div id="tagList" class="tag-list sidebar-collapse"></div>
+    </div>
+
+    <hr class="sidebar-divider">
+
+    <div class="sidebar-section">
+        <div class="sidebar-item" data-view="trash" onclick="setView('trash')">
+            <span class="sidebar-icon">🗑️</span>
+            <span class="sidebar-label" id="trashLabel">Recycle Bin</span>
+            <span id="binBadge" class="bin-badge" style="display:none;">0</span>
+        </div>
+        <div class="sidebar-item" onclick="openSettings()">
+            <span class="sidebar-icon">⚙️</span>
+            <span class="sidebar-label">Settings</span>
+        </div>
+    </div>
+
+    <hr class="sidebar-divider">
+
+    <div class="sidebar-section">
+        <div class="sidebar-item">
+            <span class="sidebar-icon">🔗</span>
+            <span class="sidebar-label"><strong>Links</strong></span>
+            <span style="margin-left:auto;display:flex;gap:3px;">
+                <button class="sidebar-ctrl" title="Add Link" onclick="event.stopPropagation(); addGlobalLink()">+</button>
+            </span>
+        </div>
+        <div id="globalLinksList" class="sidebar-collapse"></div>
+    </div>
+
+    <hr class="sidebar-divider">
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+    <div class="toolbar">
+        <div class="search-box">
+            <input id="searchInput" type="search" placeholder="Search notes...">
+        </div>
+    </div>
+
+    <section class="workspace">
+        <div class="panel">
+            <div class="panel-header">
+                <span id="listTitle" class="panel-title">All Notes</span>
+                <span id="listCount" class="sidebar-count">0</span>
+            </div>
+            <div class="filter-sort-bar">
+                <select id="sortFilter" onchange="changeSortFromBar(this.value)">
+                    <option value="Last Modified First">Sort: Last Modified</option>
+                    <option value="Newest">Sort: Newest</option>
+                    <option value="Oldest">Sort: Oldest</option>
+                    <option value="Alphabetical">Sort: A-Z</option>
+                </select>
+            </div>
+            <div id="binToolbarWrap"></div>
+            <div id="noteList" class="note-list"></div>
+            <div id="pagination" class="pagination" style="display:none;"></div>
+        </div>
+
+        <div class="panel detail">
+            <div id="detailBody" class="detail-body">
+                <div class="empty">Select a note to view it.</div>
+            </div>
+        </div>
+    </section>
+</main>
+
+<!-- FOOTER -->
+<footer class="app-footer" id="appFooter">
+    <div>Database File: <strong id="dbFileName">NotesManagerDB.json</strong></div>
+    <div style="margin-top:4px;">
+        Drive Folder: <a id="driveFolderLink" href="#" target="_blank" rel="noopener">Not connected</a>
+    </div>
+</footer>
+
+<div id="toast" class="toast"></div>
+<div id="undoBar" class="undo-bar">
+    <span id="undoMsg">Note deleted.</span>
+    <button onclick="undoDelete()">Undo</button>
+</div>
+
+<!-- Universal Popup -->
+<div id="popupBackdrop" class="popup-backdrop">
+    <div class="popup" id="popupBox">
+        <div class="popup-header">
+            <span class="popup-title" id="popupTitle">Title</span>
+            <button class="popup-close" onclick="closePopup()">✕</button>
+        </div>
+        <div class="popup-body" id="popupBody"></div>
+        <div class="popup-footer" id="popupFooter"></div>
+    </div>
+</div>
+
+<!-- Dropdown popup (contextual) -->
+<div id="dropdownPopup" class="dropdown-popup"></div>
+
+<!-- Link context menu -->
+<div id="linkCtxMenu" class="link-ctx-menu"></div>
+
+<!-- Note context menu -->
+<div id="contextMenu" class="context-menu"></div>
+
+<script src="https://accounts.google.com/gsi/client"></script>
+<script>
+/* =========================================================
+   CONFIG
+   ========================================================= */
+const CLIENT_ID = "262106898132-tsn94p3vvpf34do0ommc6rai2mtc5sh6.apps.googleusercontent.com";
+const DRIVE_SCOPE = "https://www.googleapis.com/auth/drive";
+const DATABASE_NAME = "NotesManagerDB.json";
+const DATABASE_FOLDER_ID = "";
+
+/* =========================================================
+   STATE
+   ========================================================= */
+let accessToken = null;
+let tokenClient = null;
+let databaseFileId = null;
+let databaseFolderId = null;
+let db = createEmptyDatabase();
+let selectedNoteId = null;
+let editingNoteId = null;
+let currentView = "all";
+let currentCategoryId = null;
+let currentTagName = null;
+let searchText = "";
+let sidebarOpen = false;
+let currentPage = 1;
+let autosaveTimer = null;
+let relTimeTimer = null;
+let saveInProgress = false;
+let pendingChanges = false;
+let lastSuccessfulSync = null;
+let lastChangeTime = null;
+let selectedIds = new Set();
+let globalLinks = [];
+let undoDeleteSnapshot = null;
+let undoTimer = null;
+let popupResolve = null;
+
+const COLOR_PALETTE = [
+    "#64748b","#dc2626","#ea580c","#d97706","#ca8a04","#65a30d","#16a34a","#059669",
+    "#0d9488","#0891b2","#0284c7","#2563eb","#4f46e5","#7c3aed","#9333ea","#c026d3",
+    "#db2777","#e11d48","#78350f","#1e293b"
+];
+
+/* =========================================================
+   DEFAULT DB
+   ========================================================= */
+function createEmptyDatabase(){
+    return {
+        version: 10,
+        settings: {
+            theme: "System",
+            fontSize: "Normal",
+            sorting: "Last Modified First",
+            notesPerPage: 5,
+            notesVisibleNoScroll: 5,
+            sidebarWidth: 290,
+            mobileSidebarWidth: "85%",
+            sidebarBorder: 1,
+            sectionHeight: 38,
+            noteListBg: "#ffffff",
+            notePanelBg: "#ffffff",
+            noteLineCount: 3,
+            noteRowHeight: "Auto",
+            contentPreviewLength: 60,
+            deleteConfirmation: true,
+            autosave: true,
+            autosaveInterval: 5,
+            dateTimeFormat: "12 Hour",
+            defaultNoteColor: "#64748b",
+            autoAssignBinTag: true,
+            metadataCollapsed: true,
+            categoriesCollapsed: true
+        },
+        trash: { label: "Recycle Bin" },
+        categories: [],
+        tags: [],
+        notes: [],
+        globalLinks: [],
+        meta: {
+            created: new Date().toISOString(),
+            updated: new Date().toISOString()
+        }
+    };
+}
+
+/* =========================================================
+   GOOGLE AUTH
+   ========================================================= */
+function initializeGoogle(){
+    if (typeof google === "undefined" || !google.accounts || !google.accounts.oauth2){
+        showToast("Google Identity Services load nahi hui.", "error");
+        return;
+    }
+    tokenClient = google.accounts.oauth2.initTokenClient({
+        client_id: CLIENT_ID,
+        scope: DRIVE_SCOPE,
+        callback: function(response){
+            if (response.error){
+                console.error(response);
+                showToast("Google Drive connection failed.", "error");
+                return;
+            }
+            accessToken = response.access_token;
+            setDriveConnected(true);
+            showToast("Drive Connected", "success");
+            loadDatabase();
+        }
+    });
+}
+
+function connectDrive(){
+    if (!tokenClient){
+        initializeGoogle();
+        setTimeout(() => { if (tokenClient) requestDriveToken(); }, 300);
+        return;
+    }
+    requestDriveToken();
+}
+
+function requestDriveToken(){
+    try { tokenClient.requestAccessToken({ prompt: "" }); }
+    catch(error){
+        console.error(error);
+        showToast("Google Drive connection could not start.", "error");
+    }
+}
+
+function setDriveConnected(value){
+    document.getElementById("driveDot").className = "status-dot " + (value ? "green" : "red");
+    document.getElementById("driveText").textContent = value ? "Connected" : "Disconnected";
+    /* Hide Connect button when connected */
+    const cb = document.getElementById("connectBtn");
+    if (value) cb.classList.add("hidden");
+    else cb.classList.remove("hidden");
+}
+
+/* =========================================================
+   DRIVE API
+   ========================================================= */
+async function driveRequest(url, options = {}){
+    if (!accessToken) throw new Error("Google Drive is not connected.");
+    const headers = new Headers(options.headers || {});
+    headers.set("Authorization", "Bearer " + accessToken);
+    const response = await fetch(url, { ...options, headers });
+    if (!response.ok){
+        const text = await response.text();
+        throw new Error("Drive API " + response.status + ": " + text);
+    }
+    return response;
+}
+
+async function findDatabaseFile(){
+    let query = "name = '" + DATABASE_NAME.replace(/'/g, "\\'") + "' and trashed = false";
+    if (DATABASE_FOLDER_ID) query += " and '" + DATABASE_FOLDER_ID + "' in parents";
+    const url = "https://www.googleapis.com/drive/v3/files?q=" + encodeURIComponent(query) +
+        "&spaces=drive&fields=files(id,name,mimeType,modifiedTime,parents)&pageSize=100";
+    const response = await driveRequest(url);
+    const data = await response.json();
+    if (!data.files || !data.files.length) return null;
+    return data.files[0];
+}
+
+async function createDatabaseFile(){
+    const metadata = { name: DATABASE_NAME, mimeType: "application/json" };
+    if (DATABASE_FOLDER_ID) metadata.parents = [DATABASE_FOLDER_ID];
+    const body = JSON.stringify(db, null, 2);
+    const form = new FormData();
+    form.append("metadata", new Blob([JSON.stringify(metadata)], { type: "application/json" }));
+    form.append("file", new Blob([body], { type: "application/json" }));
+    const response = await driveRequest(
+        "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name,modifiedTime,parents",
+        { method: "POST", body: form }
+    );
+    const result = await response.json();
+    databaseFileId = result.id;
+    if (result.parents && result.parents.length) databaseFolderId = result.parents[0];
+    updateFooter();
+    return result;
+}
+
+/* =========================================================
+   LOAD
+   ========================================================= */
+async function loadDatabase(){
+    if (!accessToken) { connectDrive(); return; }
+    try {
+        setSyncState("loading");
+        const file = await findDatabaseFile();
+        if (!file){
+            db = createEmptyDatabase();
+            const created = await createDatabaseFile();
+            databaseFileId = created.id;
+            pendingChanges = false;
+            updateSyncStatus();
+            setLastSync(new Date());
+            showToast("New " + DATABASE_NAME + " created.", "success");
+            refreshUI();
+            return;
+        }
+        databaseFileId = file.id;
+        if (file.parents && file.parents.length) databaseFolderId = file.parents[0];
+        const response = await driveRequest(
+            "https://www.googleapis.com/drive/v3/files/" + encodeURIComponent(file.id) + "?alt=media"
+        );
+        const text = await response.text();
+        if (!text.trim()){
+            db = createEmptyDatabase();
+        } else {
+            try { db = normalizeDatabase(JSON.parse(text)); }
+            catch(e){ throw new Error("Invalid JSON."); }
+        }
+        pendingChanges = false;
+        updateSyncStatus();
+        lastSuccessfulSync = file.modifiedTime ? new Date(file.modifiedTime) : new Date();
+        setLastSync(lastSuccessfulSync);
+        applySettings();
+        refreshUI();
+        updateFooter();
+        showToast("Database loaded.", "success");
+    } catch(error){
+        console.error(error);
+        setSyncState("error");
+        showToast(error.message, "error");
+    }
+}
+
+function normalizeDatabase(data){
+    const base = createEmptyDatabase();
+    if (!data || typeof data !== "object") return base;
+    const result = { ...base, ...data };
+    result.settings = { ...base.settings, ...(data.settings || {}) };
+    result.trash = { ...base.trash, ...(data.trash || {}) };
+    result.categories = Array.isArray(data.categories) ? data.categories : [];
+    result.tags = Array.isArray(data.tags) ? data.tags : [];
+    result.notes = Array.isArray(data.notes) ? data.notes.map(normalizeNote) : [];
+    result.globalLinks = Array.isArray(data.globalLinks) ? data.globalLinks : [];
+    return result;
+}
+
+function normalizeNote(note){
+    const n = note || {};
+    return {
+        id: n.id || generateId("note"),
+        title: n.title || "Untitled Note",
+        content: n.content || "",
+        categoryId: n.categoryId || null,
+        tags: Array.isArray(n.tags) ? n.tags : [],
+        links: Array.isArray(n.links) ? n.links : [],
+        favorite: !!n.favorite,
+        pinned: !!n.pinned,
+        deleted: !!n.deleted,
+        trashHidden: !!n.trashHidden,
+        color: n.color || "#64748b",
+        createdAt: n.createdAt || new Date().toISOString(),
+        modifiedAt: n.modifiedAt || n.createdAt || new Date().toISOString(),
+        deletedAt: n.deletedAt || null,
+        lastViewedAt: n.lastViewedAt || null,
+        lastRestoredAt: n.lastRestoredAt || null,
+        viewCount: Number(n.viewCount || 0),
+        editCount: Number(n.editCount || 0),
+        restoredCount: Number(n.restoredCount || 0)
+    };
+}
+
+/* =========================================================
+   SAVE
+   ========================================================= */
+async function saveDatabaseToDrive(){
+    if (!accessToken){ showToast("Connect Drive first.", "error"); return false; }
+    if (saveInProgress) return false;
+    try {
+        saveInProgress = true;
+        setSyncState("saving");
+        db.meta.updated = new Date().toISOString();
+        db.globalLinks = globalLinks;
+        const body = JSON.stringify(db, null, 2);
+        if (!databaseFileId){
+            const file = await findDatabaseFile();
+            if (file) databaseFileId = file.id;
+        }
+        if (!databaseFileId){
+            await createDatabaseFile();
+        } else {
+            await driveRequest(
+                "https://www.googleapis.com/upload/drive/v3/files/" +
+                encodeURIComponent(databaseFileId) + "?uploadType=media",
+                {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json; charset=UTF-8" },
+                    body
+                }
+            );
+        }
+        pendingChanges = false;
+        lastSuccessfulSync = new Date();
+        updateSyncStatus();
+        setLastSync(lastSuccessfulSync);
+        return true;
+    } catch(error){
+        console.error(error);
+        setSyncState("error");
+        showToast("Drive save failed: " + error.message, "error");
+        return false;
+    } finally {
+        saveInProgress = false;
+    }
+}
+
+/* =========================================================
+   CHANGE TRACKING
+   ========================================================= */
+function markChanged(){
+    pendingChanges = true;
+    lastChangeTime = new Date();
+    db.meta.updated = lastChangeTime.toISOString();
+    updateSyncStatus();
+    scheduleAutosave();
+}
+
+function updateSyncStatus(){
+    if (saveInProgress){
+        setSyncState("saving");
+    } else if (pendingChanges){
+        setSyncState("pending");
+    } else {
+        setSyncState("synced");
+    }
+}
+
+function setSyncState(state){
+    const dot = document.getElementById("syncDot");
+    const text = document.getElementById("syncText");
+    dot.className = "status-dot";
+    if (state === "synced"){ dot.classList.add("green"); text.textContent = "Synced"; }
+    else if (state === "pending"){ dot.classList.add("amber"); text.textContent = "Pending"; }
+    else if (state === "saving"){ dot.classList.add("amber"); text.textContent = "Saving"; }
+    else if (state === "loading"){ dot.classList.add("amber"); text.textContent = "Loading"; }
+    else if (state === "error"){ dot.classList.add("red"); text.textContent = "Error"; }
+}
+
+function scheduleAutosave(){
+    clearTimeout(autosaveTimer);
+    if (!db.settings.autosave || !accessToken) return;
+    const seconds = Math.max(1, Number(db.settings.autosaveInterval || 5));
+    autosaveTimer = setTimeout(async () => {
+        if (pendingChanges) await saveDatabaseToDrive();
+    }, seconds * 1000);
+}
+
+async function synchronize(){
+    if (pendingChanges){
+        const saved = await saveDatabaseToDrive();
+        if (saved) showToast("Changes synced.", "success");
+        return;
+    }
+    await loadDatabase();
+}
+
+function setLastSync(date){
+    if (!date){ return; }
+    lastSuccessfulSync = date;
+    updateLastSyncDisplay();
+}
+
+function updateLastSyncDisplay(){
+    const el = document.getElementById("lastSyncText");
+    const rel = document.getElementById("lastSyncRel");
+    if (!lastSuccessfulSync){
+        el.textContent = "—";
+        rel.textContent = "";
+        return;
+    }
+    el.textContent = formatFullDateTime(lastSuccessfulSync);
+    rel.textContent = "(" + relativeTime(lastSuccessfulSync) + ")";
+}
+
+function updateLastChangeDisplay(){
+    const el = document.getElementById("lastChangeText");
+    const rel = document.getElementById("lastChangeRel");
+    if (!lastChangeTime){
+        el.textContent = "—";
+        rel.textContent = "";
+        return;
+    }
+    el.textContent = formatFullDateTime(lastChangeTime);
+    rel.textContent = "(" + relativeTime(lastChangeTime) + ")";
+}
+
+/* Live ticker for relative times */
+function startRelTimeTicker(){
+    clearInterval(relTimeTimer);
+    relTimeTimer = setInterval(() => {
+        updateLastSyncDisplay();
+        updateLastChangeDisplay();
+    }, 1000);
+}
+
+/* =========================================================
+   FOOTER
+   ========================================================= */
+function updateFooter(){
+    document.getElementById("dbFileName").textContent = DATABASE_NAME;
+    const linkEl = document.getElementById("driveFolderLink");
+    if (databaseFolderId){
+        linkEl.href = "https://drive.google.com/drive/folders/" + databaseFolderId;
+        linkEl.textContent = "Open Folder";
+    } else if (databaseFileId){
+        linkEl.href = "https://drive.google.com/file/d/" + databaseFileId + "/view";
+        linkEl.textContent = "Open File";
+    } else {
+        linkEl.href = "#";
+        linkEl.textContent = "Not connected";
+    }
+}
+
+/* =========================================================
+   NOTE CRUD
+   ========================================================= */
+function addNote(){
+    const now = new Date().toISOString();
+    const note = {
+        id: generateId("note"),
+        title: "New Note",
+        content: "",
+        categoryId: null,
+        tags: [],
+        links: [],
+        favorite: false, pinned: false,
+        deleted: false, trashHidden: false,
+        color: db.settings.defaultNoteColor || "#64748b",
+        createdAt: now, modifiedAt: now,
+        deletedAt: null, lastViewedAt: null, lastRestoredAt: null,
+        viewCount: 0, editCount: 0, restoredCount: 0
+    };
+    db.notes.unshift(note);
+    selectedNoteId = note.id;
+    editingNoteId = note.id;
+    markChanged();
+    refreshUI();
+    renderDetail();
+}
+
+function duplicateNote(id){
+    const note = getNote(id);
+    if (!note) return;
+    const copy = JSON.parse(JSON.stringify(note));
+    copy.id = generateId("note");
+    copy.title = note.title + " (Copy)";
+    copy.createdAt = new Date().toISOString();
+    copy.modifiedAt = copy.createdAt;
+    copy.editCount = 0; copy.restoredCount = 0; copy.viewCount = 0;
+    copy.lastViewedAt = null;
+    db.notes.unshift(copy);
+    markChanged();
+    refreshUI();
+    showToast("Note duplicated.", "success");
+}
+
+function getNote(id){ return db.notes.find(n => n.id === id); }
+
+function deleteNoteWithConfirm(id){
+    const note = getNote(id);
+    if (!note) return;
+    if (!confirm("Move '" + note.title + "' to the Recycle Bin?")) return;
+    const snapshot = JSON.parse(JSON.stringify(note));
+    note.deleted = true;
+    note.trashHidden = false;
+    note.deletedAt = new Date().toISOString();
+    if (db.settings.autoAssignBinTag && !note.tags.includes("Bin")) note.tags.push("Bin");
+    note.modifiedAt = new Date().toISOString();
+    if (selectedNoteId === id) selectedNoteId = null;
+    if (editingNoteId === id) editingNoteId = null;
+    markChanged();
+    refreshUI();
+    showUndoBar("Note moved to Recycle Bin.", snapshot);
+}
+
+function showUndoBar(msg, snapshot){
+    undoDeleteSnapshot = snapshot;
+    document.getElementById("undoMsg").textContent = msg;
+    document.getElementById("undoBar").classList.add("show");
+    clearTimeout(undoTimer);
+    undoTimer = setTimeout(() => {
+        document.getElementById("undoBar").classList.remove("show");
+        undoDeleteSnapshot = null;
+    }, 5000);
+}
+
+function undoDelete(){
+    if (!undoDeleteSnapshot) return;
+    const snapshot = undoDeleteSnapshot;
+    const note = getNote(snapshot.id);
+    if (note){
+        Object.assign(note, snapshot);
+        note.modifiedAt = new Date().toISOString();
+    } else {
+        db.notes.unshift(snapshot);
+    }
+    undoDeleteSnapshot = null;
+    document.getElementById("undoBar").classList.remove("show");
+    markChanged();
+    refreshUI();
+    showToast("Delete undone.", "success");
+}
+
+/* =========================================================
+   FAVORITE / PIN
+   ========================================================= */
+function toggleFavorite(id){
+    const note = getNote(id);
+    if (!note) return;
+    note.favorite = !note.favorite;
+    note.modifiedAt = new Date().toISOString();
+    markChanged();
+    refreshUI();
+}
+
+function togglePinned(id){
+    const note = getNote(id);
+    if (!note) return;
+    note.pinned = !note.pinned;
+    note.modifiedAt = new Date().toISOString();
+    markChanged();
+    refreshUI();
+}
+
+/* =========================================================
+   SELECT NOTE
+   ========================================================= */
+function selectNote(id, event){
+    /* Checkbox click? */
+    if (event && event.target.classList.contains("has-checkbox")){
+        toggleSelect(id);
+        return;
+    }
+    /* Trash: only checkbox */
+    if (currentView === "trash"){
+        toggleSelect(id);
+        return;
+    }
+    /* Multi mode (any selection) */
+    if (selectedIds.size > 0){
+        toggleSelect(id);
+        return;
+    }
+    const note = getNote(id);
+    if (!note) return;
+    selectedNoteId = id;
+    editingNoteId = null;
+    note.lastViewedAt = new Date().toISOString();
+    note.viewCount = Number(note.viewCount || 0) + 1;
+    markChanged();
+    renderNoteList();
+    renderDetail();
+    updateDeleteButton();
+}
+
+function toggleSelect(id){
+    if (selectedIds.has(id)) selectedIds.delete(id);
+    else selectedIds.add(id);
+    renderNoteList();
+    if (currentView === "trash") renderBinToolbar();
+    updateDeleteButton();
+}
+
+function updateDeleteButton(){
+    const btn = document.getElementById("deleteSelectedBtn");
+    if (selectedIds.size >= 2){
+        btn.classList.remove("hidden");
+        btn.textContent = "Delete (" + selectedIds.size + ")";
+    } else {
+        btn.classList.add("hidden");
+    }
+}
+
+/* =========================================================
+   DETAIL
+   ========================================================= */
+function renderDetail(){
+    const container = document.getElementById("detailBody");
+    const note = getNote(selectedNoteId);
+    if (!note){
+        container.innerHTML = `<div class="empty">Select a note to view it.</div>`;
+        return;
+    }
+    if (editingNoteId === note.id){
+        renderEditMode(note);
+        return;
+    }
+    const categoryPath = getCategoryPath(note.categoryId);
+    const tagsHtml = note.tags.map(t => `<span class="tag-chip">${escapeHtml(t)}</span>`).join("");
+    const linksHtml = (note.links || []).map((link, idx) => `
+        <div class="link-item">
+            <span class="link-item-text">${escapeHtml(link.title || "Link")}</span>
+            <a class="link-item-url" href="${escapeAttribute(link.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(link.url)}</a>
+            <div class="link-item-actions">
+                <button class="link-icon-btn" title="Edit" onclick="openLinkEditor('${note.id}', ${idx})">✎</button>
+                <button class="link-icon-btn danger" title="Delete" onclick="deleteLinkInline('${note.id}', ${idx})">🗑</button>
+            </div>
+        </div>
+    `).join("");
+
+    container.innerHTML = `
+        <div class="note-panel-border" style="--note-color:${escapeAttribute(note.color)}">
+            <div class="note-controls-card">
+                <div class="note-controls-left">
+                    <button class="ctrl-btn primary" onclick="addNote()">+ Add</button>
+                    <button class="ctrl-btn" onclick="startEdit()">✎ Edit</button>
+                    <button class="ctrl-btn danger" onclick="deleteNoteWithConfirm('${note.id}')">🗑 Delete</button>
+                    <button class="ctrl-btn" onclick="duplicateNote('${note.id}')">⎘ Copy</button>
+                </div>
+            </div>
+            <div class="heading-card">
+                <div class="heading-display">${escapeHtml(note.title)}</div>
+            </div>
+            <div class="content-bar">
+                <div class="content-toolbar">
+                    <button class="tool-btn" title="Bold" onclick="execCmd('bold')"><b>B</b></button>
+                    <button class="tool-btn" title="Underline" onclick="execCmd('underline')"><u>U</u></button>
+                    <button class="tool-btn" title="Italic" onclick="execCmd('italic')"><i>I</i></button>
+                    <span class="tool-sep"></span>
+                    <button class="tool-btn" title="Text Colour" onclick="event.stopPropagation(); openColorDropdown(event, '${note.id}')">🎨</button>
+                    <button class="tool-btn" title="Insert Link" onclick="insertLinkDialog()">🔗</button>
+                    <button class="tool-btn" title="Insert Date/Time" onclick="insertDateTime()">🕐</button>
+                </div>
+                <div class="content-display" onclick="handleLinkClick(event)">${escapeHtml(note.content).replace(/\n/g, "<br>")}</div>
+            </div>
+            <div class="links-card">
+                <div class="links-card-header">
+                    <span class="links-card-title">Links (${(note.links||[]).length})</span>
+                    <div class="links-card-header-actions">
+                        <button class="small-action-btn primary" onclick="openLinkEditor('${note.id}', -1)">+ Add</button>
+                    </div>
+                </div>
+                ${linksHtml || `<div class="empty" style="min-height:60px;font-size:12px;">No links yet.</div>`}
+            </div>
+            <div class="tags-cat-card">
+                <div class="tags-cat-row">
+                    <span class="tags-cat-label">🏷️ Tags:</span>
+                    ${tagsHtml || `<span style="color:var(--muted);font-size:11px;">No tags</span>`}
+                    <input id="detailTagsInput" class="tags-input-inline" placeholder="Add tag..." onkeydown="if(event.key==='Enter'){assignTagFromInput('${note.id}');}">
+                    <button class="small-action-btn primary" onclick="assignTagFromInput('${note.id}')">Add</button>
+                </div>
+                <div class="tags-cat-row">
+                    <span class="tags-cat-label">📁 Cat:</span>
+                    <span style="font-size:12px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHtml(categoryPath || "Uncat")}</span>
+                    <button class="small-action-btn" onclick="openCategoryAssignPopup('${note.id}')">Add Category</button>
+                </div>
+            </div>
+            ${renderMetadata(note, categoryPath)}
+        </div>
+    `;
+}
+
+function startEdit(){
+    if (!selectedNoteId){ showToast("Select a note first.", "error"); return; }
+    editingNoteId = selectedNoteId;
+    renderDetail();
+}
+
+function cancelEdit(){
+    editingNoteId = null;
+    renderDetail();
+}
+
+function saveCurrent(){
+    if (!editingNoteId){ showToast("Nothing to save.", "normal"); return; }
+    const note = getNote(editingNoteId);
+    if (!note) return;
+    const titleEl = document.getElementById("editTitle");
+    const contentEl = document.getElementById("editContent");
+    if (titleEl) note.title = titleEl.value.trim() || "Untitled Note";
+    if (contentEl) note.content = contentEl.innerText;
+    note.editCount = Number(note.editCount || 0) + 1;
+    note.modifiedAt = new Date().toISOString();
+    markChanged();
+    editingNoteId = null;
+    refreshUI();
+    showToast("Note saved.", "success");
+}
+
+function renderEditMode(note){
+    const container = document.getElementById("detailBody");
+    const categoryPath = getCategoryPath(note.categoryId);
+    const tagsHtml = note.tags.map(t =>
+        `<span class="tag-chip">${escapeHtml(t)}<span class="chip-x" onclick="removeTagFromNoteById('${note.id}','${escapeAttribute(t)}')">×</span></span>`
+    ).join("");
+    const linksHtml = (note.links || []).map((link, idx) => `
+        <div class="link-item">
+            <span class="link-item-text">${escapeHtml(link.title || "Link")}</span>
+            <a class="link-item-url" href="${escapeAttribute(link.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(link.url)}</a>
+            <div class="link-item-actions">
+                <button class="link-icon-btn" title="Edit" onclick="openLinkEditor('${note.id}', ${idx})">✎</button>
+                <button class="link-icon-btn danger" title="Delete" onclick="deleteLinkInline('${note.id}', ${idx})">🗑</button>
+            </div>
+        </div>
+    `).join("");
+
+    container.innerHTML = `
+        <div class="note-panel-border" style="--note-color:${escapeAttribute(note.color)}">
+            <div class="note-controls-card">
+                <div class="note-controls-left">
+                    <button class="ctrl-btn primary" onclick="addNote()">+ Add</button>
+                    <button class="ctrl-btn" onclick="startEdit()">✎ Edit</button>
+                    <button class="ctrl-btn danger" onclick="deleteNoteWithConfirm('${note.id}')">🗑 Delete</button>
+                    <button class="ctrl-btn" onclick="duplicateNote('${note.id}')">⎘ Copy</button>
+                </div>
+                <div class="note-controls-right">
+                    <button class="ctrl-btn success" onclick="saveCurrent()">💾 Save</button>
+                    <button class="ctrl-btn" onclick="cancelEdit()">✕ Cancel</button>
+                </div>
+            </div>
+            <div class="heading-card">
+                <input id="editTitle" class="heading-input" value="${escapeAttribute(note.title)}" placeholder="Untitled Note">
+            </div>
+            <div class="content-bar">
+                <div class="content-toolbar">
+                    <button class="tool-btn" title="Bold" onclick="execCmd('bold')"><b>B</b></button>
+                    <button class="tool-btn" title="Underline" onclick="execCmd('underline')"><u>U</u></button>
+                    <button class="tool-btn" title="Italic" onclick="execCmd('italic')"><i>I</i></button>
+                    <span class="tool-sep"></span>
+                    <button class="tool-btn" title="Text Colour" onclick="event.stopPropagation(); openColorDropdown(event, '${note.id}')">🎨</button>
+                    <button class="tool-btn" title="Insert Link" onclick="insertLinkDialog()">🔗</button>
+                    <button class="tool-btn" title="Insert Date/Time" onclick="insertDateTime()">🕐</button>
+                </div>
+                <div id="editContent" class="content-editable" contenteditable="true" data-placeholder="Write your note..." onclick="handleLinkClick(event)">${escapeHtml(note.content).replace(/\n/g, "<br>")}</div>
+            </div>
+            <div class="links-card">
+                <div class="links-card-header">
+                    <span class="links-card-title">Links (${(note.links||[]).length})</span>
+                    <div class="links-card-header-actions">
+                        <button class="small-action-btn primary" onclick="openLinkEditor('${note.id}', -1)">+ Add</button>
+                    </div>
+                </div>
+                ${linksHtml || `<div class="empty" style="min-height:60px;font-size:12px;">No links yet.</div>`}
+            </div>
+            <div class="tags-cat-card">
+                <div class="tags-cat-row">
+                    <span class="tags-cat-label">🏷️ Tags:</span>
+                    ${tagsHtml || `<span style="color:var(--muted);font-size:11px;">No tags</span>`}
+                    <input id="detailTagsInput" class="tags-input-inline" placeholder="Add tag..." onkeydown="if(event.key==='Enter'){assignTagFromInput('${note.id}');}">
+                    <button class="small-action-btn primary" onclick="assignTagFromInput('${note.id}')">Add</button>
+                </div>
+                <div class="tags-cat-row">
+                    <span class="tags-cat-label">📁 Cat:</span>
+                    <span style="font-size:12px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHtml(categoryPath || "Uncat")}</span>
+                    <button class="small-action-btn" onclick="openCategoryAssignPopup('${note.id}')">Add Category</button>
+                </div>
+            </div>
+            ${renderMetadata(note, categoryPath)}
+        </div>
+    `;
+}
+
+/* =========================================================
+   RICH TEXT
+   ========================================================= */
+function execCmd(cmd){
+    document.execCommand(cmd, false, null);
+    const el = document.getElementById("editContent");
+    if (el) el.focus();
+}
+
+function insertLinkDialog(){
+    const text = prompt("Link text:", "");
+    if (text === null) return;
+    const url = prompt("Link URL:", "https://");
+    if (!url) return;
+    const html = `<a href="${escapeAttribute(url)}" target="_blank" rel="noopener">${escapeHtml(text || url)}</a>`;
+    document.execCommand("insertHTML", false, html);
+}
+
+function insertDateTime(){
+    const now = new Date();
+    const formatted = formatDateTimeForInsert(now);
+    document.execCommand("insertText", false, formatted);
+}
+
+function formatDateTimeForInsert(date){
+    const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+    const d = date.getDate();
+    const m = months[date.getMonth()];
+    const y = date.getFullYear();
+    let h = date.getHours();
+    const min = String(date.getMinutes()).padStart(2,"0");
+    const s = String(date.getSeconds()).padStart(2,"0");
+    const ampm = h >= 12 ? "PM" : "AM";
+    h = h % 12; if (h === 0) h = 12;
+    const hh = String(h).padStart(2,"0");
+    return `${d}-${m}-${y}, ${hh}:${min}:${s} ${ampm}`;
+}
+
+/* =========================================================
+   COLOUR DROPDOWN (Option E)
+   ========================================================= */
+function openColorDropdown(event, noteId){
+    event.stopPropagation();
+    const dp = document.getElementById("dropdownPopup");
+    const note = getNote(noteId);
+    if (!note) return;
+    const currentColor = note.color;
+
+    let html = `<div class="color-swatch-grid">`;
+    COLOR_PALETTE.forEach(c => {
+        const sel = c === currentColor ? "selected" : "";
+        html += `<div class="color-swatch ${sel}" style="background:${c}" onclick="applyColorAndClose('${noteId}','${c}')"></div>`;
+    });
+    html += `</div>
+        <div class="color-custom-row">
+            <input id="colorCustomHex" placeholder="#hex" value="${escapeAttribute(currentColor)}">
+            <button onclick="applyCustomColor('${noteId}')">OK</button>
+        </div>`;
+
+    dp.innerHTML = html;
+
+    /* Position */
+    const rect = event.target.getBoundingClientRect();
+    dp.style.left = Math.min(rect.left, window.innerWidth - 340) + "px";
+    dp.style.top = (rect.bottom + 6) + "px";
+    dp.classList.add("show");
+}
+
+function applyColorAndClose(noteId, color){
+    const note = getNote(noteId);
+    if (note){
+        note.color = color;
+        note.modifiedAt = new Date().toISOString();
+        markChanged();
+        renderDetail();
+        renderNoteList();
+    }
+    document.getElementById("dropdownPopup").classList.remove("show");
+}
+
+function applyCustomColor(noteId){
+    const input = document.getElementById("colorCustomHex");
+    if (!input) return;
+    const val = input.value.trim();
+    if (/^#[0-9a-fA-F]{6}$/.test(val)){
+        applyColorAndClose(noteId, val);
+    } else {
+        showToast("Invalid hex colour.", "error");
+    }
+}
+
+document.addEventListener("click", (e) => {
+    const dp = document.getElementById("dropdownPopup");
+    if (dp && !dp.contains(e.target)) dp.classList.remove("show");
+    const lc = document.getElementById("linkCtxMenu");
+    if (lc && !lc.contains(e.target)) lc.classList.remove("show");
+    const cm = document.getElementById("contextMenu");
+    if (cm && !cm.contains(e.target)) cm.classList.remove("show");
+});
+
+/* =========================================================
+   LINK CONTEXT MENU (click on link = open; right-click = menu)
+   ========================================================= */
+function handleLinkClick(event){
+    const a = event.target.closest("a");
+    if (!a) return;
+    if (event.button === 0){
+        /* Left click → open in new tab (browser does this by default) */
+        return;
+    }
+}
+
+document.addEventListener("contextmenu", (e) => {
+    const a = e.target.closest("a");
+    if (!a) return;
+    const inContent = e.target.closest(".content-editable, .content-display");
+    if (!inContent) return;
+    e.preventDefault();
+    showLinkContextMenu(e, a.href, a.textContent);
+});
+
+/* Long-press for mobile */
+let linkLongPressTimer = null;
+document.addEventListener("touchstart", (e) => {
+    const a = e.target.closest("a");
+    if (!a) return;
+    const inContent = e.target.closest(".content-editable, .content-display");
+    if (!inContent) return;
+    linkLongPressTimer = setTimeout(() => {
+        showLinkContextMenu(e, a.href, a.textContent);
+    }, 600);
+});
+document.addEventListener("touchend", () => clearTimeout(linkLongPressTimer));
+document.addEventListener("touchmove", () => clearTimeout(linkLongPressTimer));
+
+function showLinkContextMenu(event, href, text){
+    const menu = document.getElementById("linkCtxMenu");
+    const x = event.touches ? event.touches[0].clientX : event.clientX;
+    const y = event.touches ? event.touches[0].clientY : event.clientY;
+    menu.innerHTML = `
+        <button onclick="linkMenuOpen('${escapeAttribute(href)}')">🔗 Open</button>
+        <button onclick="linkMenuEdit('${escapeAttribute(href)}','${escapeAttribute(text)}')">✎ Edit</button>
+        <button onclick="linkMenuDelete('${escapeAttribute(href)}')">🗑 Delete</button>
+        <button onclick="linkMenuCopy('${escapeAttribute(href)}')">📋 Copy Link Address</button>
+    `;
+    menu.style.left = Math.min(x, window.innerWidth - 200) + "px";
+    menu.style.top = Math.min(y, window.innerHeight - 200) + "px";
+    menu.classList.add("show");
+}
+
+function linkMenuOpen(href){ window.open(href, "_blank"); document.getElementById("linkCtxMenu").classList.remove("show"); }
+function linkMenuEdit(href, text){
+    document.getElementById("linkCtxMenu").classList.remove("show");
+    const newText = prompt("Link text:", text);
+    if (newText === null) return;
+    const newUrl = prompt("Link URL:", href);
+    if (!newUrl) return;
+    /* Replace matching anchor in content */
+    const note = getNote(editingNoteId || selectedNoteId);
+    if (!note) return;
+    /* Simple find & replace */
+    const escapeRegex = s => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const re = new RegExp('<a[^>]*href="' + escapeRegex(href) + '"[^>]*>.*?<\\/a>', "i");
+    if (note.content && note.content.match(re)){
+        note.content = note.content.replace(re, `<a href="${escapeAttribute(newUrl)}" target="_blank" rel="noopener">${escapeHtml(newText || newUrl)}</a>`);
+    } else {
+        note.content = (note.content || "") + ` <a href="${escapeAttribute(newUrl)}" target="_blank">${escapeHtml(newText || newUrl)}</a>`;
+    }
+    note.modifiedAt = new Date().toISOString();
+    markChanged();
+    renderDetail();
+}
+function linkMenuDelete(href){
+    document.getElementById("linkCtxMenu").classList.remove("show");
+    if (!confirm("Delete this link from the content?")) return;
+    const note = getNote(editingNoteId || selectedNoteId);
+    if (!note) return;
+    const escapeRegex = s => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const re = new RegExp('<a[^>]*href="' + escapeRegex(href) + '"[^>]*>.*?<\\/a>', "gi");
+    note.content = (note.content || "").replace(re, "");
+    note.modifiedAt = new Date().toISOString();
+    markChanged();
+    renderDetail();
+}
+function linkMenuCopy(href){
+    navigator.clipboard.writeText(href).then(() => showToast("Link copied.", "success"));
+    document.getElementById("linkCtxMenu").classList.remove("show");
+}
+
+/* =========================================================
+   LINK EDITOR POPUP (note.links array)
+   ========================================================= */
+function openLinkEditor(noteId, index){
+    const note = getNote(noteId);
+    if (!note) return;
+    const isNew = index < 0;
+    const link = isNew ? { title: "", url: "" } : (note.links[index] || { title: "", url: "" });
+
+    openPopup({
+        title: isNew ? "Add Link" : "Edit Link",
+        bodyHTML: `
+            <div class="popup-field">
+                <label>Link Title</label>
+                <input id="linkTitleInput" value="${escapeAttribute(link.title)}" placeholder="e.g. Google">
+            </div>
+            <div class="popup-field">
+                <label>Link Address</label>
+                <input id="linkUrlInput" value="${escapeAttribute(link.url)}" placeholder="https://example.com">
+            </div>
+        `,
+        footerHTML: `
+            <button class="popup-btn" onclick="closePopup()">Cancel</button>
+            <button class="popup-btn primary" id="popupSaveBtn">Save</button>
+        `,
+        onSave: () => {
+            const t = document.getElementById("linkTitleInput").value.trim();
+            const u = document.getElementById("linkUrlInput").value.trim();
+            if (!u){ showToast("URL required.", "error"); return false; }
+            if (isNew){
+                if (!note.links) note.links = [];
+                note.links.push({ title: t || u, url: u });
+            } else {
+                note.links[index] = { title: t || u, url: u };
+            }
+            note.modifiedAt = new Date().toISOString();
+            markChanged();
+            renderDetail();
+            showToast("Link saved.", "success");
+            return true;
+        }
+    });
+}
+
+function deleteLinkInline(noteId, index){
+    const note = getNote(noteId);
+    if (!note || !note.links || !note.links[index]) return;
+    if (!confirm("Delete this link?")) return;
+    note.links.splice(index, 1);
+    note.modifiedAt = new Date().toISOString();
+    markChanged();
+    renderDetail();
+}
+
+/* =========================================================
+   GLOBAL LINKS
+   ========================================================= */
+function renderGlobalLinks(){
+    const container = document.getElementById("globalLinksList");
+    if (!container) return;
+    if (!globalLinks.length){
+        container.innerHTML = `<div class="sidebar-subtitle">No links</div>`;
+        return;
+    }
+    container.innerHTML = globalLinks.map((link, i) => `
+        <div class="sidebar-item" style="padding-left:22px;flex-direction:column;align-items:flex-start;gap:2px;padding-top:6px;padding-bottom:6px;">
+            <div style="display:flex;width:100%;align-items:center;gap:6px;">
+                <span class="sidebar-icon">🔗</span>
+                <a href="${escapeAttribute(link.url)}" target="_blank" rel="noopener" style="color:var(--primary);text-decoration:none;font-size:12px;font-weight:600;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" onclick="event.stopPropagation()">${escapeHtml(link.title || link.url)}</a>
+                <div class="sidebar-controls">
+                    <button class="sidebar-ctrl" title="Edit" onclick="event.stopPropagation(); editGlobalLinkAt(${i})">✎</button>
+                    <button class="sidebar-ctrl danger" title="Remove" onclick="event.stopPropagation(); removeGlobalLinkAt(${i})">🗑</button>
+                </div>
+            </div>
+            <div style="font-size:10px;color:var(--muted);padding-left:26px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%;">${escapeHtml(link.url)}</div>
+        </div>
+    `).join("");
+}
+
+function addGlobalLink(){
+    openPopup({
+        title: "Add Link",
+        bodyHTML: `
+            <div class="popup-field"><label>Title</label><input id="glTitle" placeholder="e.g. Google"></div>
+            <div class="popup-field"><label>URL</label><input id="glUrl" placeholder="https://example.com"></div>
+        `,
+        footerHTML: `
+            <button class="popup-btn" onclick="closePopup()">Cancel</button>
+            <button class="popup-btn primary" id="popupSaveBtn">Save</button>
+        `,
+        onSave: () => {
+            const t = document.getElementById("glTitle").value.trim();
+            const u = document.getElementById("glUrl").value.trim();
+            if (!u){ showToast("URL required.", "error"); return false; }
+            globalLinks.push({ title: t || u, url: u });
+            markChanged();
+            renderGlobalLinks();
+            showToast("Link added.", "success");
+            return true;
+        }
+    });
+}
+
+function editGlobalLinkAt(index){
+    const link = globalLinks[index];
+    if (!link) return;
+    openPopup({
+        title: "Edit Link",
+        bodyHTML: `
+            <div class="popup-field"><label>Title</label><input id="glTitle" value="${escapeAttribute(link.title)}"></div>
+            <div class="popup-field"><label>URL</label><input id="glUrl" value="${escapeAttribute(link.url)}"></div>
+        `,
+        footerHTML: `
+            <button class="popup-btn" onclick="closePopup()">Cancel</button>
+            <button class="popup-btn primary" id="popupSaveBtn">Save</button>
+        `,
+        onSave: () => {
+            const t = document.getElementById("glTitle").value.trim();
+            const u = document.getElementById("glUrl").value.trim();
+            if (!u){ showToast("URL required.", "error"); return false; }
+            link.title = t || u;
+            link.url = u;
+            markChanged();
+            renderGlobalLinks();
+            return true;
+        }
+    });
+}
+
+function removeGlobalLinkAt(index){
+    if (!globalLinks[index]) return;
+    if (!confirm("Remove this link?")) return;
+    globalLinks.splice(index, 1);
+    markChanged();
+    renderGlobalLinks();
+    showToast("Link removed.", "success");
+}
+
+/* =========================================================
+   UNIVERSAL POPUP SYSTEM
+   ========================================================= */
+function openPopup({ title, bodyHTML, footerHTML, onSave }){
+    document.getElementById("popupTitle").textContent = title;
+    document.getElementById("popupBody").innerHTML = bodyHTML;
+    document.getElementById("popupFooter").innerHTML = footerHTML || `
+        <button class="popup-btn" onclick="closePopup()">Cancel</button>
+        <button class="popup-btn primary" id="popupSaveBtn">Save</button>
+    `;
+    document.getElementById("popupBackdrop").classList.add("show");
+    popupResolve = onSave || null;
+    const saveBtn = document.getElementById("popupSaveBtn");
+    if (saveBtn){
+        saveBtn.onclick = () => {
+            if (popupResolve){
+                const result = popupResolve();
+                if (result === false) return;
+            }
+            closePopup();
+        };
+    }
+}
+
+function closePopup(){
+    document.getElementById("popupBackdrop").classList.remove("show");
+    popupResolve = null;
+}
+
+document.getElementById("popupBackdrop").addEventListener("click", (e) => {
+    if (e.target.id === "popupBackdrop") closePopup();
+});
+
+document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape"){
+        if (document.getElementById("popupBackdrop").classList.contains("show")) closePopup();
+        if (document.getElementById("dropdownPopup").classList.contains("show")) document.getElementById("dropdownPopup").classList.remove("show");
+        if (document.getElementById("linkCtxMenu").classList.contains("show")) document.getElementById("linkCtxMenu").classList.remove("show");
+        if (document.getElementById("contextMenu").classList.contains("show")) document.getElementById("contextMenu").classList.remove("show");
+        if (sidebarOpen) toggleSidebar();
+        if (editingNoteId) cancelEdit();
+    }
+});
+
+/* =========================================================
+   CATEGORY ASSIGN POPUP
+   ========================================================= */
+function openCategoryAssignPopup(noteId){
+    const note = getNote(noteId);
+    if (!note) return;
+
+    let selectedCatId = note.categoryId;
+
+    function renderTree(){
+        const roots = db.categories.filter(c => !c.parentId);
+        let html = `<div class="cat-tree-row ${!selectedCatId ? "selected" : ""}" onclick="__catSelect(null, this)">
+            <span class="cat-radio"></span>
+            <span>📄 Uncat</span>
+        </div>`;
+        html += roots.map(c => renderCatNode(c, 0)).join("");
+        return html;
+    }
+
+    function renderCatNode(cat, depth){
+        const indent = "— ".repeat(depth);
+        const sel = cat.id === selectedCatId ? "selected" : "";
+        let html = `<div class="cat-tree-row ${sel}" onclick="__catSelect('${cat.id}', this)">
+            <span class="cat-radio"></span>
+            <span>📁 ${escapeHtml(indent + cat.name)}</span>
+        </div>`;
+        const children = db.categories.filter(c => c.parentId === cat.id);
+        html += children.map(c => renderCatNode(c, depth + 1)).join("");
+        return html;
+    }
+
+    openPopup({
+        title: "Assign Category",
+        bodyHTML: `
+            <div class="popup-field">
+                <input id="catSearchInput" placeholder="🔍 Search..." oninput="__catFilter(this.value)">
+            </div>
+            <div class="cat-tree" id="catTreeContainer">${renderTree()}</div>
+            <div style="margin-top:10px;display:flex;gap:6px;">
+                <button class="popup-btn" id="addSisterBtn" disabled onclick="__catAddSister()">+ Add Sister</button>
+                <button class="popup-btn" id="addChildBtn" disabled onclick="__catAddChild()">+ Add Child</button>
+            </div>
+            <div style="font-size:11px;color:var(--muted);margin-top:8px;">
+                Selected: <span id="catSelectedLabel">Uncat</span>
+            </div>
+        `,
+        footerHTML: `
+            <button class="popup-btn" onclick="closePopup()">Cancel</button>
+            <button class="popup-btn primary" id="catAssignSaveBtn">Select</button>
+        `,
+        onSave: () => {
+            note.categoryId = selectedCatId;
+            note.modifiedAt = new Date().toISOString();
+            markChanged();
+            refreshUI();
+            showToast("Category assigned.", "success");
+            return true;
+        }
+    });
+
+    /* Refresh tree after popup */
+    window.__catSelect = function(id, el){
+        selectedCatId = id;
+        document.querySelectorAll("#catTreeContainer .cat-tree-row").forEach(r => r.classList.remove("selected"));
+        el.classList.add("selected");
+        updateCatButtons();
+        const label = id ? getCategoryPath(id) : "Uncat";
+        document.getElementById("catSelectedLabel").textContent = label;
+    };
+
+    window.__catFilter = function(query){
+        const q = query.toLowerCase();
+        const rows = document.querySelectorAll("#catTreeContainer .cat-tree-row");
+        rows.forEach(row => {
+            const text = row.textContent.toLowerCase();
+            row.style.display = !q || text.includes(q) ? "flex" : "none";
+        });
+    };
+
+    window.__catAddSister = function(){
+        if (!selectedCatId){ showToast("Select a category first.", "error"); return; }
+        const cat = db.categories.find(c => c.id === selectedCatId);
+        if (!cat) return;
+        const name = prompt("Sister category name:");
+        if (!name || !name.trim()) return;
+        const newCat = { id: generateId("cat"), name: name.trim(), parentId: cat.parentId || null };
+        db.categories.push(newCat);
+        selectedCatId = newCat.id;
+        markChanged();
+        /* Refresh tree */
+        document.getElementById("catTreeContainer").innerHTML = renderTree();
+        updateCatButtons();
+        document.getElementById("catSelectedLabel").textContent = getCategoryPath(selectedCatId);
+    };
+
+    window.__catAddChild = function(){
+        if (!selectedCatId){ showToast("Select a category first.", "error"); return; }
+        const name = prompt("Child category name:");
+        if (!name || !name.trim()) return;
+        const newCat = { id: generateId("cat"), name: name.trim(), parentId: selectedCatId };
+        db.categories.push(newCat);
+        selectedCatId = newCat.id;
+        markChanged();
+        document.getElementById("catTreeContainer").innerHTML = renderTree();
+        updateCatButtons();
+        document.getElementById("catSelectedLabel").textContent = getCategoryPath(selectedCatId);
+    };
+
+    function updateCatButtons(){
+        document.getElementById("addSisterBtn").disabled = !selectedCatId;
+        document.getElementById("addChildBtn").disabled = false;
+    }
+}
+
+/* =========================================================
+   TAGS
+   ========================================================= */
+function assignTagFromInput(noteId){
+    const input = document.getElementById("detailTagsInput");
+    if (!input) return;
+    const value = input.value.trim();
+    if (!value) return;
+    const note = getNote(noteId);
+    if (!note) return;
+    const tags = parseTags(value);
+    tags.forEach(t => {
+        if (!note.tags.includes(t)) note.tags.push(t);
+        if (!db.tags.includes(t)) db.tags.push(t);
+    });
+    note.modifiedAt = new Date().toISOString();
+    input.value = "";
+    markChanged();
+    renderDetail();
+    renderSidebar();
+}
+
+function removeTagFromNoteById(noteId, tag){
+    const note = getNote(noteId);
+    if (!note) return;
+    note.tags = note.tags.filter(t => t !== tag);
+    note.modifiedAt = new Date().toISOString();
+    markChanged();
+    renderDetail();
+    renderSidebar();
+}
+
+function parseTags(text){
+    return [...new Set(text.split(",").map(x => x.trim()).filter(Boolean))];
+}
+
+/* =========================================================
+   METADATA
+   ========================================================= */
+function renderMetadata(note, categoryPath){
+    const collapsed = db.settings.metadataCollapsed ? "collapsed" : "";
+    const isSynced = lastSuccessfulSync ? "Google Drive" : "Not Synced";
+    const words = countWords(note.content);
+    const chars = (note.content || "").length;
+    const lines = (note.content || "").split(/\n/).length;
+    const size = new Blob([JSON.stringify(note)]).size;
+    const externalLinks = ((note.content || "").match(/https?:\/\/[^\s<]+/g) || []).length;
+    const tagsCount = note.tags.length;
+    const catDepth = note.categoryId ? getCategoryDepth(note.categoryId) : 0;
+    const siblings = note.categoryId ? countSiblingNotes(note.id, note.categoryId) : 0;
+    const totalEdits = Number(note.editCount || 0);
+    const noteAge = daysBetween(new Date(note.createdAt), new Date());
+    const daysSinceMod = daysBetween(new Date(note.modifiedAt), new Date());
+    const timeSinceEdit = relativeTime(note.modifiedAt);
+    const deletedDateStr = note.deleted ? formatFullDateTime(note.deletedAt) : "—";
+
+    return `
+        <div class="metadata-box">
+            <div class="metadata-title" onclick="toggleMetadata()">
+                <span>📊 Note Metadata</span>
+                <span class="toggle-icon" id="metaToggleIcon">${collapsed ? "▸" : "▾"}</span>
+            </div>
+            <div class="metadata-body ${collapsed}" id="metaBody">
+                <table class="metadata-table">
+                    <tr>
+                        <td class="label">Created</td>
+                        <td class="value">${escapeHtml(formatFullDateTime(note.createdAt))}</td>
+                        <td class="label">Modified</td>
+                        <td class="value">${escapeHtml(formatFullDateTime(note.modifiedAt))}</td>
+                    </tr>
+                    <tr>
+                        <td class="label">Category</td>
+                        <td class="value">${categoryPath ? `<a class="cat-link" onclick="setCategoryView('${note.categoryId}')">${escapeHtml(categoryPath)}</a>` : "Uncat"}</td>
+                        <td class="label">Tags</td>
+                        <td class="value">${note.tags.length ? escapeHtml(note.tags.join(", ")) : "None"}</td>
+                    </tr>
+                    <tr>
+                        <td class="label">Status</td>
+                        <td class="value">${note.deleted ? "In Recycle Bin" : "Active"}</td>
+                        <td class="label">Favorite</td>
+                        <td class="value">${note.favorite ? "Yes" : "No"}</td>
+                    </tr>
+                    <tr>
+                        <td class="label">Pinned</td>
+                        <td class="value">${note.pinned ? "Yes" : "No"}</td>
+                        <td class="label">Colour</td>
+                        <td class="value">${escapeHtml(note.color)}</td>
+                    </tr>
+                    <tr>
+                        <td class="label">Note ID</td>
+                        <td class="value">${escapeHtml(note.id.slice(0,12))}</td>
+                        <td class="label">Words</td>
+                        <td class="value">${words}</td>
+                    </tr>
+                    <tr>
+                        <td class="label">Characters</td>
+                        <td class="value">${chars}</td>
+                        <td class="label">Lines</td>
+                        <td class="value">${lines}</td>
+                    </tr>
+                    <tr>
+                        <td class="label">Last Viewed</td>
+                        <td class="value">${note.lastViewedAt ? escapeHtml(formatFullDateTime(note.lastViewedAt)) : "Never"}</td>
+                        <td class="label">View Count</td>
+                        <td class="value">${note.viewCount || 0}</td>
+                    </tr>
+                    <tr>
+                        <td class="label">Synced</td>
+                        <td class="value">${isSynced}</td>
+                        <td class="label">Last Sync</td>
+                        <td class="value">${lastSuccessfulSync ? formatShortTime(lastSuccessfulSync) : "—"}</td>
+                    </tr>
+                    <tr>
+                        <td class="label">Note Age</td>
+                        <td class="value">${noteAge} days</td>
+                        <td class="label">Days Since Mod</td>
+                        <td class="value">${daysSinceMod} days</td>
+                    </tr>
+                    <tr>
+                        <td class="label">Edit Count</td>
+                        <td class="value">${totalEdits}</td>
+                        <td class="label">Restored Count</td>
+                        <td class="value">${note.restoredCount || 0}</td>
+                    </tr>
+                    <tr>
+                        <td class="label">Total Edits</td>
+                        <td class="value">${totalEdits}</td>
+                        <td class="label">Size (bytes)</td>
+                        <td class="value">${size}</td>
+                    </tr>
+                    <tr>
+                        <td class="label">External Links</td>
+                        <td class="value">${externalLinks}</td>
+                        <td class="label">Tags Count</td>
+                        <td class="value">${tagsCount}</td>
+                    </tr>
+                    <tr>
+                        <td class="label">Category Depth</td>
+                        <td class="value">${catDepth}</td>
+                        <td class="label">Sibling Notes</td>
+                        <td class="value">${siblings}</td>
+                    </tr>
+                    <tr>
+                        <td class="label">Time Since Edit</td>
+                        <td class="value">${timeSinceEdit}</td>
+                        <td class="label">Last Restore</td>
+                        <td class="value">${note.lastRestoredAt ? escapeHtml(formatFullDateTime(note.lastRestoredAt)) : "Never"}</td>
+                    </tr>
+                    ${note.deleted ? `<tr>
+                        <td class="label">Deleted Date</td>
+                        <td class="value" colspan="3">${escapeHtml(deletedDateStr)}</td>
+                    </tr>` : ""}
+                </table>
+                <div class="metadata-actions">
+                    <button class="small-action-btn" onclick="duplicateNote('${note.id}')">⎘ Duplicate</button>
+                    <button class="small-action-btn" onclick="openExportDialog('${note.id}')">↗ Export</button>
+                    <button class="small-action-btn" onclick="resetViewCount('${note.id}')">Reset Views</button>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function toggleMetadata(){
+    db.settings.metadataCollapsed = !db.settings.metadataCollapsed;
+    const body = document.getElementById("metaBody");
+    const icon = document.getElementById("metaToggleIcon");
+    if (db.settings.metadataCollapsed){
+        body.classList.add("collapsed");
+        if (icon) icon.textContent = "▸";
+    } else {
+        body.classList.remove("collapsed");
+        if (icon) icon.textContent = "▾";
+    }
+    markChanged();
+}
+
+function resetViewCount(noteId){
+    const note = getNote(noteId);
+    if (!note) return;
+    if (!confirm("Reset view count to 0?")) return;
+    note.viewCount = 0;
+    note.modifiedAt = new Date().toISOString();
+    markChanged();
+    renderDetail();
+    showToast("View count reset.", "success");
+}
+
+function countWords(text){
+    if (!text) return 0;
+    return text.trim().split(/\s+/).filter(Boolean).length;
+}
+
+function countSiblingNotes(noteId, categoryId){
+    let count = 0;
+    db.notes.forEach(n => {
+        if (!n.deleted && n.id !== noteId && n.categoryId === categoryId) count++;
+    });
+    return count;
+}
+
+function getCategoryDepth(catId){
+    let depth = 0;
+    let current = db.categories.find(c => c.id === catId);
+    const guard = new Set();
+    while (current && !guard.has(current.id)){
+        guard.add(current.id);
+        depth++;
+        current = current.parentId ? db.categories.find(c => c.id === current.parentId) : null;
+    }
+    return depth;
+}
+
+function daysBetween(d1, d2){
+    const ms = Math.abs(d2 - d1);
+    return Math.floor(ms / (1000 * 60 * 60 * 24));
+}
+
+function relativeTime(value){
+    if (!value) return "—";
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "—";
+    const sec = Math.floor((Date.now() - date.getTime()) / 1000);
+    if (sec < 5) return "just now";
+    if (sec < 60) return sec + " sec ago";
+    const min = Math.floor(sec / 60);
+    if (min < 60) return min + " min ago";
+    const hrs = Math.floor(min / 60);
+    if (hrs < 24) return hrs + " hr ago";
+    const days = Math.floor(hrs / 24);
+    if (days < 30) return days + " days ago";
+    const months = Math.floor(days / 30);
+    if (months < 12) return months + " mo ago";
+    const years = Math.floor(months / 12);
+    return years + " yr ago";
+}
+
+/* =========================================================
+   EXPORT
+   ========================================================= */
+function openExportDialog(noteId){
+    const note = getNote(noteId);
+    if (!note) return;
+    openPopup({
+        title: "Export Note",
+        bodyHTML: `
+            <div style="display:flex;flex-direction:column;gap:6px;">
+                <button class="popup-btn" onclick="__expCopy()">📋 Copy to Clipboard</button>
+                <button class="popup-btn" onclick="__expPrint()">🖨 Print</button>
+                <button class="popup-btn" onclick="__expPDF()">📄 Save as PDF</button>
+                <button class="popup-btn" onclick="__expQR()">📱 QR Code</button>
+            </div>
+        `,
+        footerHTML: `<button class="popup-btn" onclick="closePopup()">Close</button>`,
+        onSave: null
+    });
+
+    window.__expCopy = () => {
+        navigator.clipboard.writeText(note.title + "\n\n" + note.content).then(() => {
+            showToast("Copied.", "success");
+            closePopup();
+        });
+    };
+    window.__expPrint = () => {
+        const w = window.open("", "_blank");
+        w.document.write(`<pre style="font-family:Arial;padding:20px;white-space:pre-wrap;">${escapeHtml(note.title)}\n\n${escapeHtml(note.content)}</pre>`);
+        w.document.close();
+        w.print();
+        closePopup();
+    };
+    window.__expPDF = () => {
+        const w = window.open("", "_blank");
+        w.document.write(`<pre style="font-family:Arial;padding:20px;white-space:pre-wrap;">${escapeHtml(note.title)}\n\n${escapeHtml(note.content)}</pre>`);
+        w.document.close();
+        setTimeout(() => w.print(), 300);
+        closePopup();
+    };
+    window.__expQR = () => {
+        const url = "https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=" + encodeURIComponent(note.title + "\n" + note.content.slice(0, 500));
+        window.open(url, "_blank");
+        closePopup();
+    };
+}
+
+/* =========================================================
+   SIDEBAR
+   ========================================================= */
+function toggleSidebar(){
+    sidebarOpen = !sidebarOpen;
+    const sidebar = document.getElementById("sidebar");
+    const overlay = document.getElementById("sidebarOverlay");
+    const btn = document.getElementById("floatingToggle");
+    if (sidebarOpen){
+        sidebar.classList.add("open");
+        overlay.classList.add("open");
+        btn.innerHTML = `<span class="arrow-icon">◀</span>`;
+    } else {
+        sidebar.classList.remove("open");
+        overlay.classList.remove("open");
+        btn.innerHTML = `<span class="hamburger"><span></span><span></span><span></span></span>`;
+    }
+}
+
+function renderSidebar(){
+    const activeNotes = db.notes.filter(n => !n.deleted);
+    const catNotes = activeNotes.filter(n => n.categoryId);
+    const uncatNotes = activeNotes.filter(n => !n.categoryId);
+    const trashCount = db.notes.filter(n => n.deleted && !n.trashHidden).length;
+
+    document.getElementById("allCount").textContent = activeNotes.length;
+    document.getElementById("favoriteCount").textContent = activeNotes.filter(n => n.favorite).length;
+    document.getElementById("catCount").textContent = catNotes.length;
+    document.getElementById("uncatCount").textContent = uncatNotes.length;
+
+    const badge = document.getElementById("binBadge");
+    if (trashCount > 0){
+        badge.style.display = "inline-block";
+        badge.textContent = trashCount;
+    } else {
+        badge.style.display = "none";
+    }
+
+    renderCategories();
+    renderTags();
+    renderGlobalLinks();
+}
+
+function renderCategories(){
+    const container = document.getElementById("categoryList");
+    const usedIds = new Set();
+    db.notes.forEach(note => {
+        if (note.deleted) return;
+        if (note.categoryId){
+            let current = db.categories.find(c => c.id === note.categoryId);
+            const guard = new Set();
+            while (current && !guard.has(current.id)){
+                guard.add(current.id);
+                usedIds.add(current.id);
+                current = db.categories.find(c => c.id === current.parentId);
+            }
+        }
+    });
+    const roots = db.categories.filter(c => !c.parentId && usedIds.has(c.id));
+    if (!roots.length){
+        container.innerHTML = `<div class="sidebar-subtitle">No categories in use</div>`;
+        return;
+    }
+    container.innerHTML = roots.map(cat => renderCategoryTree(cat, usedIds)).join("");
+}
+
+function renderCategoryTree(cat, usedIds){
+    if (!usedIds.has(cat.id)) return "";
+    const children = db.categories.filter(c => c.parentId === cat.id && usedIds.has(c.id));
+    const count = countCategoryNotes(cat.id);
+    const hasChildren = children.length > 0;
+    const collapsed = db.settings.categoriesCollapsed;
+    const childrenHtml = hasChildren
+        ? `<div class="tree-children" style="margin-left:14px;display:${collapsed ? 'none':'block'};" id="catChildren-${cat.id}">${children.map(c => renderCategoryTree(c, usedIds)).join("")}</div>`
+        : "";
+    const expander = hasChildren
+        ? `<button class="cat-expander" onclick="event.stopPropagation(); toggleCatNode('${cat.id}', this)">${collapsed ? "+" : "−"}</button>`
+        : `<span style="width:18px;display:inline-block;"></span>`;
+
+    return `
+        <div class="cat-row" style="padding-left:22px;">
+            ${expander}
+            <span class="sidebar-icon">📁</span>
+            <span class="sidebar-label" onclick="setCategoryView('${cat.id}')" style="cursor:pointer;">${escapeHtml(cat.name)}</span>
+            <span class="sidebar-count">${count}</span>
+            <div class="cat-row-btns">
+                <button class="sidebar-ctrl" title="Rename" onclick="event.stopPropagation(); renameCategory('${cat.id}')">✎</button>
+                <button class="sidebar-ctrl danger" title="Remove" onclick="event.stopPropagation(); removeCategory('${cat.id}')">🗑</button>
+            </div>
+        </div>
+        ${childrenHtml}
+    `;
+}
+
+function toggleCatNode(catId, btn){
+    const el = document.getElementById("catChildren-" + catId);
+    if (!el) return;
+    if (el.style.display === "none"){
+        el.style.display = "block";
+        btn.textContent = "−";
+    } else {
+        el.style.display = "none";
+        btn.textContent = "+";
+    }
+}
+
+function countCategoryNotes(catId){
+    let count = 0;
+    db.notes.forEach(note => {
+        if (note.deleted || !note.categoryId) return;
+        if (note.categoryId === catId){ count++; return; }
+        if (isDescendantOf(note.categoryId, catId)) count++;
+    });
+    return count;
+}
+
+function isDescendantOf(catId, ancestorId){
+    let current = db.categories.find(c => c.id === catId);
+    const guard = new Set();
+    while (current && current.parentId && !guard.has(current.id)){
+        guard.add(current.id);
+        if (current.parentId === ancestorId) return true;
+        current = db.categories.find(c => c.id === current.parentId);
+    }
+    return false;
+}
+
+function getCategoryPath(catId){
+    if (!catId) return "";
+    const parts = [];
+    let current = db.categories.find(c => c.id === catId);
+    const guard = new Set();
+    while (current && !guard.has(current.id)){
+        guard.add(current.id);
+        parts.unshift(current.name);
+        current = db.categories.find(c => c.id === current.parentId);
+    }
+    return parts.join(" / ");
+}
+
+function renameCategory(id){
+    const cat = db.categories.find(c => c.id === id);
+    if (!cat) return;
+    const name = prompt("Rename category:", cat.name);
+    if (!name || !name.trim()) return;
+    cat.name = name.trim();
+    markChanged();
+    renderSidebar();
+    refreshUI();
+}
+
+function removeCategory(id){
+    const cat = db.categories.find(c => c.id === id);
+    if (!cat) return;
+    if (!confirm("Remove this category? Its notes will be reassigned to the parent category (or Uncat).")) return;
+    const parentId = cat.parentId || null;
+    db.notes.forEach(note => {
+        if (note.categoryId === id){
+            note.categoryId = parentId;
+            note.modifiedAt = new Date().toISOString();
+        }
+    });
+    const toRemove = new Set([id]);
+    let changed = true;
+    while (changed){
+        changed = false;
+        db.categories.forEach(c => {
+            if (c.parentId && toRemove.has(c.parentId) && !toRemove.has(c.id)){
+                toRemove.add(c.id);
+                changed = true;
+            }
+        });
+    }
+    db.categories = db.categories.filter(c => !toRemove.has(c.id));
+    markChanged();
+    renderSidebar();
+    refreshUI();
+    showToast("Category removed. Notes kept.", "success");
+}
+
+function renderTags(){
+    const container = document.getElementById("tagList");
+    const used = new Set();
+    db.notes.forEach(note => {
+        if (note.deleted) return;
+        note.tags.forEach(t => {
+            if (t === "Bin") return;
+            used.add(t);
+        });
+    });
+    const sorted = [...used].sort((a,b) => a.localeCompare(b));
+    document.getElementById("tagCountTotal").textContent = sorted.length;
+    if (!sorted.length){
+        container.innerHTML = "";
+        return;
+    }
+    container.innerHTML = sorted.map(tag => {
+        const count = db.notes.filter(n => !n.deleted && n.tags.includes(tag)).length;
+        return `
+            <div class="sidebar-item" style="padding-left:22px;">
+                <span class="sidebar-icon">🏷️</span>
+                <span class="sidebar-label" onclick="setTagView('${escapeAttribute(tag)}')" style="cursor:pointer;">${escapeHtml(tag)}</span>
+                <span class="sidebar-count">${count}</span>
+                <div class="sidebar-controls">
+                    <button class="sidebar-ctrl" title="Rename" onclick="event.stopPropagation(); renameTag('${escapeAttribute(tag)}')">✎</button>
+                    <button class="sidebar-ctrl danger" title="Remove" onclick="event.stopPropagation(); removeTagEverywhere('${escapeAttribute(tag)}')">🗑</button>
+                </div>
+            </div>
+        `;
+    }).join("");
+}
+
+function renameTag(tag){
+    const newName = prompt("Rename tag:", tag);
+    if (!newName || !newName.trim()) return;
+    const clean = newName.trim();
+    db.notes.forEach(note => {
+        note.tags = note.tags.map(t => t === tag ? clean : t);
+        note.modifiedAt = new Date().toISOString();
+    });
+    db.tags = db.tags.map(t => t === tag ? clean : t);
+    markChanged();
+    refreshUI();
+    showToast("Tag renamed.", "success");
+}
+
+function removeTagEverywhere(tag){
+    if (!confirm("Remove tag '" + tag + "' from all notes? Notes will NOT be deleted.")) return;
+    db.notes.forEach(note => {
+        if (note.tags.includes(tag)){
+            note.tags = note.tags.filter(t => t !== tag);
+            note.modifiedAt = new Date().toISOString();
+        }
+    });
+    db.tags = db.tags.filter(t => t !== tag);
+    markChanged();
+    refreshUI();
+    showToast("Tag removed. Notes kept.", "success");
+}
+
+/* =========================================================
+   VIEWS
+   ========================================================= */
+function setView(view){
+    currentView = view;
+    currentCategoryId = null;
+    currentTagName = null;
+    currentPage = 1;
+    selectedIds.clear();
+    updateSidebarActive();
+    renderListTitle();
+    renderNoteList();
+    renderBinToolbar();
+    updateDeleteButton();
+}
+
+function setCategoryView(id){
+    currentView = "category";
+    currentCategoryId = id;
+    currentTagName = null;
+    currentPage = 1;
+    selectedIds.clear();
+    updateSidebarActive();
+    renderListTitle();
+    renderNoteList();
+    renderBinToolbar();
+    updateDeleteButton();
+}
+
+function setTagView(tag){
+    currentView = "tag";
+    currentTagName = tag;
+    currentCategoryId = null;
+    currentPage = 1;
+    selectedIds.clear();
+    updateSidebarActive();
+    renderListTitle();
+    renderNoteList();
+    renderBinToolbar();
+    updateDeleteButton();
+}
+
+function updateSidebarActive(){
+    document.querySelectorAll(".sidebar-item[data-view]").forEach(item => {
+        item.classList.toggle("active", item.dataset.view === currentView);
+    });
+}
+
+function renderListTitle(){
+    const title = document.getElementById("listTitle");
+    if (currentView === "all") title.textContent = "All Notes";
+    else if (currentView === "favorites") title.textContent = "Favorites";
+    else if (currentView === "cat") title.textContent = "Cat";
+    else if (currentView === "uncat") title.textContent = "Uncat";
+    else if (currentView === "trash") title.textContent = db.trash.label || "Recycle Bin";
+    else if (currentView === "category"){
+        const cat = db.categories.find(c => c.id === currentCategoryId);
+        title.textContent = cat ? cat.name : "Category";
+    }
+    else if (currentView === "tag") title.textContent = "Tag: " + currentTagName;
+}
+
+/* =========================================================
+   FILTER / SORT
+   ========================================================= */
+function getVisibleNotes(){
+    let notes = [...db.notes];
+    if (currentView === "trash"){
+        notes = notes.filter(n => n.deleted && !n.trashHidden);
+    } else {
+        notes = notes.filter(n => !n.deleted);
+    }
+    if (currentView === "favorites") notes = notes.filter(n => n.favorite);
+    if (currentView === "cat") notes = notes.filter(n => n.categoryId);
+    if (currentView === "uncat") notes = notes.filter(n => !n.categoryId);
+    if (currentView === "category"){
+        notes = notes.filter(n =>
+            n.categoryId === currentCategoryId ||
+            (n.categoryId && isDescendantOf(n.categoryId, currentCategoryId))
+        );
+    }
+    if (currentView === "tag") notes = notes.filter(n => n.tags.includes(currentTagName));
+    if (searchText){
+        const q = searchText.toLowerCase();
+        notes = notes.filter(n => {
+            const cat = getCategoryPath(n.categoryId);
+            return (
+                n.title.toLowerCase().includes(q) ||
+                n.content.toLowerCase().includes(q) ||
+                cat.toLowerCase().includes(q) ||
+                n.tags.join(" ").toLowerCase().includes(q)
+            );
+        });
+    }
+    return sortNotes(notes);
+}
+
+function sortNotes(notes){
+    const s = db.settings.sorting;
+    if (s === "Alphabetical") return notes.sort((a,b) => a.title.localeCompare(b.title));
+    if (s === "Newest") return notes.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
+    if (s === "Oldest") return notes.sort((a,b) => new Date(a.createdAt) - new Date(b.createdAt));
+    return notes.sort((a,b) => new Date(b.modifiedAt) - new Date(a.modifiedAt));
+}
+
+function changeSortFromBar(value){
+    db.settings.sorting = value;
+    markChanged();
+    renderNoteList();
+}
+
+/* =========================================================
+   RENDER NOTE LIST
+   ========================================================= */
+function renderNoteList(){
+    const container = document.getElementById("noteList");
+    let notes = getVisibleNotes();
+    document.getElementById("listCount").textContent = notes.length;
+
+    const perPage = db.settings.notesPerPage;
+    let pages = 1;
+    if (perPage !== "All"){
+        const n = Number(perPage);
+        pages = Math.max(1, Math.ceil(notes.length / n));
+        currentPage = Math.min(currentPage, pages);
+        const start = (currentPage - 1) * n;
+        notes = notes.slice(start, start + n);
+    } else {
+        currentPage = 1;
+    }
+
+    if (!notes.length){
+        container.innerHTML = `<div class="empty">No notes found.</div>`;
+        renderPagination(1);
+        return;
+    }
+
+    container.innerHTML = notes.map(note => renderNoteRow(note)).join("");
+    renderPagination(pages);
+}
+
+function renderNoteRow(note){
+    const previewLen = db.settings.contentPreviewLength || 60;
+    const contentPreview = note.content.replace(/\s+/g, " ").trim().slice(0, previewLen);
+    const lastCat = note.categoryId ? (db.categories.find(c => c.id === note.categoryId) || {}).name || "" : "";
+    const date = formatFullDateTime(note.modifiedAt);
+    const relTime = relativeTime(note.modifiedAt);
+    const isMs = selectedIds.has(note.id);
+    const isTrash = currentView === "trash";
+    const filteredTags = note.tags.filter(t => t !== "Bin");
+    const tagsShown = filteredTags.slice(0, 5);
+    const tagsMore = filteredTags.length > 5 ? " ..." : "";
+    const tagsPreview = tagsShown.map(t => `<span class="meta-chip">🏷️ ${escapeHtml(t)}</span>`).join(" ");
+    const lineCount = db.settings.noteLineCount || 3;
+
+    if (isTrash){
+        return `
+            <div class="note-row has-checkbox ${isMs ? "ms-selected" : ""}" onclick="selectNote('${note.id}')">
+                <div class="note-marker" style="--note-color:${escapeAttribute(note.color)}"></div>
+                <div class="note-row-body">
+                    <div class="note-line1">
+                        <span class="note-line1-title">${escapeHtml(note.title)}</span>
+                        ${lineCount >= 2 ? `<span class="note-line1-content">${escapeHtml(contentPreview || "No content")}</span>` : ""}
+                    </div>
+                    ${lineCount >= 3 ? `<div class="note-line2">
+                        ${lastCat ? `<span class="meta-chip">📁 ${escapeHtml(lastCat)}</span>` : `<span class="meta-chip" style="color:var(--muted);">📁 Uncat</span>`}
+                        ${tagsPreview}${tagsMore}
+                    </div>` : ""}
+                    ${lineCount >= 3 ? `<div class="note-line3">🕒 ${escapeHtml(date)} (${escapeHtml(relTime)})</div>` : ""}
+                </div>
+                <div class="note-row-right">
+                    <button class="row-icon-btn success" title="Restore" onclick="event.stopPropagation(); restoreNote('${note.id}')">↩ Restore</button>
+                    <button class="row-icon-btn danger" title="Permanent Delete" onclick="event.stopPropagation(); permanentDeleteNote('${note.id}')">🗑 Delete</button>
+                </div>
+            </div>
+        `;
+    }
+
+    return `
+        <div class="note-row has-checkbox ${selectedNoteId === note.id ? "active" : ""} ${isMs ? "ms-selected" : ""}"
+             onclick="selectNote('${note.id}')"
+             oncontextmenu="event.preventDefault(); showContextMenu(event, '${note.id}');">
+            <div class="note-marker" style="--note-color:${escapeAttribute(note.color)}"></div>
+            <div class="note-row-body">
+                <div class="note-line1">
+                    <span class="note-line1-title">${escapeHtml(note.title)}</span>
+                    ${lineCount >= 2 ? `<span class="note-line1-content">${escapeHtml(contentPreview || "No content")}</span>` : ""}
+                </div>
+                ${lineCount >= 3 ? `<div class="note-line2">
+                    ${lastCat ? `<span class="meta-chip">📁 ${escapeHtml(lastCat)}</span>` : `<span class="meta-chip" style="color:var(--muted);">📁 Uncat</span>`}
+                    ${tagsPreview}${tagsMore}
+                </div>` : ""}
+                ${lineCount >= 3 ? `<div class="note-line3">🕒 ${escapeHtml(date)} (${escapeHtml(relTime)})</div>` : ""}
+            </div>
+            <div class="note-row-right">
+                <button class="row-icon-btn ${note.pinned ? "pin-on" : ""}" title="Pin/Unpin" onclick="event.stopPropagation(); togglePinned('${note.id}')">📌 ${note.pinned ? "Pinned" : "Pin"}</button>
+                <button class="row-icon-btn ${note.favorite ? "fav-on" : ""}" title="Favorite" onclick="event.stopPropagation(); toggleFavorite('${note.id}')">${note.favorite ? "★ Fav" : "☆ Fav"}</button>
+                <button class="row-icon-btn edit-btn" title="Edit" onclick="event.stopPropagation(); editingNoteId='${note.id}'; selectedNoteId='${note.id}'; renderDetail();">✎ Edit</button>
+                <button class="row-icon-btn danger" title="Delete" onclick="event.stopPropagation(); deleteNoteWithConfirm('${note.id}')">🗑 Delete</button>
+            </div>
+        </div>
+    `;
+}
+
+/* =========================================================
+   CONTEXT MENU
+   ========================================================= */
+function showContextMenu(event, noteId){
+    event.preventDefault();
+    const menu = document.getElementById("contextMenu");
+    menu.innerHTML = `
+        <button onclick="ctxDuplicate('${noteId}')">⎘ Duplicate</button>
+        <button onclick="ctxTogglePin('${noteId}')">📌 Toggle Pin</button>
+        <button onclick="ctxToggleFav('${noteId}')">⭐ Toggle Favorite</button>
+        <button onclick="ctxExport('${noteId}')">↗ Export</button>
+        <button style="color:#dc2626;" onclick="ctxDelete('${noteId}')">🗑 Delete</button>
+    `;
+    const x = event.touches ? event.touches[0].clientX : event.clientX;
+    const y = event.touches ? event.touches[0].clientY : event.clientY;
+    menu.style.left = Math.min(x, window.innerWidth - 200) + "px";
+    menu.style.top = Math.min(y, window.innerHeight - 200) + "px";
+    menu.classList.add("show");
+}
+
+function ctxDuplicate(id){ duplicateNote(id); closeCtx(); }
+function ctxTogglePin(id){ togglePinned(id); closeCtx(); }
+function ctxToggleFav(id){ toggleFavorite(id); closeCtx(); }
+function ctxExport(id){ openExportDialog(id); closeCtx(); }
+function ctxDelete(id){ deleteNoteWithConfirm(id); closeCtx(); }
+function closeCtx(){ document.getElementById("contextMenu").classList.remove("show"); }
+
+/* Long press */
+let noteLongPressTimer = null;
+document.addEventListener("touchstart", (e) => {
+    const row = e.target.closest(".note-row");
+    if (!row) return;
+    noteLongPressTimer = setTimeout(() => {
+        const noteId = row.getAttribute("onclick")?.match(/'([^']+)'/)?.[1];
+        if (noteId) showContextMenu(e, noteId);
+    }, 600);
+});
+document.addEventListener("touchend", () => clearTimeout(noteLongPressTimer));
+document.addEventListener("touchmove", () => clearTimeout(noteLongPressTimer));
+
+/* =========================================================
+   PAGINATION
+   ========================================================= */
+function renderPagination(pages){
+    const container = document.getElementById("pagination");
+    if (pages <= 1){ container.style.display = "none"; return; }
+    container.style.display = "flex";
+    container.innerHTML = `
+        <button onclick="changePage(-1)" ${currentPage <= 1 ? "disabled" : ""}>Prev</button>
+        <span style="font-size:12px;">${currentPage} / ${pages}</span>
+        <button onclick="changePage(1)" ${currentPage >= pages ? "disabled" : ""}>Next</button>
+    `;
+}
+
+function changePage(delta){
+    currentPage += delta;
+    renderNoteList();
+}
+
+/* =========================================================
+   RECYCLE BIN ACTIONS
+   ========================================================= */
+function renderBinToolbar(){
+    const wrap = document.getElementById("binToolbarWrap");
+    if (!wrap) return;
+    if (currentView !== "trash"){
+        wrap.innerHTML = "";
+        return;
+    }
+    const total = db.notes.filter(n => n.deleted && !n.trashHidden).length;
+    const selCount = selectedIds.size;
+    wrap.innerHTML = `
+        <div class="bin-toolbar">
+            <button class="ctrl-btn success" onclick="binRestoreSelected()" ${selCount ? "" : "disabled"}>↩ Restore</button>
+            <button class="ctrl-btn danger" onclick="binPermanentDeleteSelected()" ${selCount ? "" : "disabled"}>🗑 Delete</button>
+            <button class="ctrl-btn danger" onclick="emptyBin()" ${total ? "" : "disabled"}>Empty Bin</button>
+            <span class="bin-toolbar-info">${selCount} of ${total} selected</span>
+        </div>
+    `;
+}
+
+function restoreNote(id){
+    const note = getNote(id);
+    if (!note) return;
+    note.deleted = false;
+    note.trashHidden = false;
+    note.restoredCount = Number(note.restoredCount || 0) + 1;
+    note.lastRestoredAt = new Date().toISOString();
+    note.modifiedAt = new Date().toISOString();
+    markChanged();
+    refreshUI();
+    showToast("Note restored.", "success");
+}
+
+function permanentDeleteNote(id){
+    const note = getNote(id);
+    if (!note) return;
+    if (!confirm("Permanently delete '" + note.title + "'? This cannot be undone.")) return;
+    db.notes = db.notes.filter(n => n.id !== id);
+    selectedIds.delete(id);
+    markChanged();
+    refreshUI();
+    showToast("Permanently deleted.", "success");
+}
+
+function binRestoreSelected(){
+    if (!selectedIds.size){ showToast("Select notes first.", "normal"); return; }
+    selectedIds.forEach(id => {
+        const note = getNote(id);
+        if (note){
+            note.deleted = false;
+            note.trashHidden = false;
+            note.restoredCount = Number(note.restoredCount || 0) + 1;
+            note.lastRestoredAt = new Date().toISOString();
+            note.modifiedAt = new Date().toISOString();
+        }
+    });
+    selectedIds.clear();
+    markChanged();
+    refreshUI();
+    showToast("Selected notes restored.", "success");
+}
+
+function binPermanentDeleteSelected(){
+    if (!selectedIds.size){ showToast("Select notes first.", "normal"); return; }
+    if (!confirm("Permanently delete " + selectedIds.size + " note(s)? This cannot be undone.")) return;
+    db.notes = db.notes.filter(n => !selectedIds.has(n.id));
+    selectedIds.clear();
+    markChanged();
+    refreshUI();
+    showToast("Selected notes permanently deleted.", "success");
+}
+
+function emptyBin(){
+    const deleted = db.notes.filter(n => n.deleted && !n.trashHidden);
+    if (!deleted.length){ showToast("Recycle Bin is empty.", "normal"); return; }
+    if (!confirm("Empty Recycle Bin? All " + deleted.length + " notes will be PERMANENTLY deleted.")) return;
+    db.notes = db.notes.filter(n => !(n.deleted && !n.trashHidden));
+    selectedIds.clear();
+    markChanged();
+    refreshUI();
+    showToast("Recycle Bin emptied permanently.", "success");
+}
+
+function deleteSelected(){
+    if (!selectedIds.size){ showToast("No notes selected.", "normal"); return; }
+    if (currentView === "trash"){ binPermanentDeleteSelected(); return; }
+    if (!confirm("Move " + selectedIds.size + " note(s) to Recycle Bin?")) return;
+    selectedIds.forEach(id => {
+        const note = getNote(id);
+        if (note){
+            note.deleted = true;
+            note.trashHidden = false;
+            note.deletedAt = new Date().toISOString();
+            if (db.settings.autoAssignBinTag && !note.tags.includes("Bin")) note.tags.push("Bin");
+            note.modifiedAt = new Date().toISOString();
+        }
+    });
+    selectedIds.clear();
+    markChanged();
+    refreshUI();
+    showToast("Selected notes moved to Recycle Bin.", "success");
+}
+
+/* =========================================================
+   SETTINGS
+   ========================================================= */
+function openSettings(){
+    currentView = "settings";
+    document.getElementById("listTitle").textContent = "Settings";
+    document.getElementById("listCount").textContent = "";
+    document.getElementById("noteList").innerHTML = "";
+    document.getElementById("binToolbarWrap").innerHTML = "";
+    document.getElementById("pagination").style.display = "none";
+    const detail = document.getElementById("detailBody");
+    detail.innerHTML = renderSettings();
+    selectedNoteId = null;
+    editingNoteId = null;
+}
+
+function renderSettings(){
+    const s = db.settings;
+    return `
+        <div style="padding:14px;">
+            <h3 style="margin-top:0;">Settings</h3>
+            <div class="settings-grid">
+                <div class="setting">
+                    <label>Theme</label>
+                    <select onchange="saveSetting('theme',this.value)">
+                        ${option("Day", s.theme)}${option("Night", s.theme)}${option("System", s.theme)}
+                    </select>
+                </div>
+                <div class="setting">
+                    <label>Font Size</label>
+                    <select onchange="saveSetting('fontSize',this.value)">
+                        ${option("Small", s.fontSize)}${option("Normal", s.fontSize)}${option("Large", s.fontSize)}${option("Extra Large", s.fontSize)}
+                    </select>
+                </div>
+                <div class="setting">
+                    <label>Sorting</label>
+                    <select onchange="saveSetting('sorting',this.value)">
+                        ${option("Last Modified First", s.sorting)}${option("Newest", s.sorting)}${option("Oldest", s.sorting)}${option("Alphabetical", s.sorting)}
+                    </select>
+                </div>
+                <div class="setting">
+                    <label>Notes Per Page</label>
+                    <select onchange="saveSetting('notesPerPage', this.value === 'All' ? 'All' : Number(this.value))">
+                        ${["5","10","20","50","100","All"].map(x => `<option value="${x}" ${String(s.notesPerPage) === x ? "selected" : ""}>${x}</option>`).join("")}
+                    </select>
+                </div>
+                <div class="setting">
+                    <label>Note List Height</label>
+                    <select onchange="saveSetting('notesVisibleNoScroll', this.value === 'All' ? 'All' : Number(this.value))">
+                        ${["3","5","10","15","20","All"].map(x => `<option value="${x}" ${String(s.notesVisibleNoScroll) === x ? "selected" : ""}>${x === "All" ? "All" : x + " notes"}</option>`).join("")}
+                    </select>
+                </div>
+                <div class="setting">
+                    <label>Note Line Count</label>
+                    <select onchange="saveSetting('noteLineCount',Number(this.value))">
+                        ${[2,3,4].map(x => `<option value="${x}" ${s.noteLineCount === x ? "selected" : ""}>${x} lines</option>`).join("")}
+                    </select>
+                </div>
+                <div class="setting">
+                    <label>Content Preview Length</label>
+                    <select onchange="saveSetting('contentPreviewLength',Number(this.value))">
+                        ${[40,60,100,150].map(x => `<option value="${x}" ${Number(s.contentPreviewLength) === x ? "selected" : ""}>${x} chars</option>`).join("")}
+                    </select>
+                </div>
+                <div class="setting">
+                    <label>Sidebar Width</label>
+                    <select onchange="saveSetting('sidebarWidth', Number(this.value))">
+                        <option value="240" ${s.sidebarWidth === 240 ? "selected" : ""}>Narrow (240px)</option>
+                        <option value="290" ${s.sidebarWidth === 290 ? "selected" : ""}>Normal (290px)</option>
+                        <option value="340" ${s.sidebarWidth === 340 ? "selected" : ""}>Wide (340px)</option>
+                        <option value="400" ${s.sidebarWidth === 400 ? "selected" : ""}>Extra Wide (400px)</option>
+                    </select>
+                </div>
+                <div class="setting">
+                    <label>Sidebar Border</label>
+                    <select onchange="saveSetting('sidebarBorder',Number(this.value))">
+                        ${[0,1,2,3].map(x => `<option value="${x}" ${Number(s.sidebarBorder) === x ? "selected" : ""}>${x}px</option>`).join("")}
+                    </select>
+                </div>
+                <div class="setting">
+                    <label>Section Height</label>
+                    <select onchange="saveSetting('sectionHeight',Number(this.value))">
+                        ${[32,38,44,50].map(x => `<option value="${x}" ${Number(s.sectionHeight) === x ? "selected" : ""}>${x}px</option>`).join("")}
+                    </select>
+                </div>
+                <div class="setting">
+                    <label>Note List Background</label>
+                    <input type="color" value="${escapeAttribute(s.noteListBg || '#ffffff')}" onchange="saveSetting('noteListBg',this.value)">
+                </div>
+                <div class="setting">
+                    <label>Note Panel Background</label>
+                    <input type="color" value="${escapeAttribute(s.notePanelBg || '#ffffff')}" onchange="saveSetting('notePanelBg',this.value)">
+                </div>
+                <div class="setting">
+                    <label>Autosave</label>
+                    <select onchange="saveSetting('autosave',this.value === 'true')">
+                        <option value="true" ${s.autosave ? "selected" : ""}>On</option>
+                        <option value="false" ${!s.autosave ? "selected" : ""}>Off</option>
+                    </select>
+                </div>
+                <div class="setting">
+                    <label>Autosave Interval</label>
+                    <select onchange="saveSetting('autosaveInterval',Number(this.value))">
+                        ${[5,10,15,30,60].map(x => `<option value="${x}" ${Number(s.autosaveInterval) === x ? "selected" : ""}>${x} sec</option>`).join("")}
+                    </select>
+                </div>
+                <div class="setting">
+                    <label>Delete Confirmation</label>
+                    <select onchange="saveSetting('deleteConfirmation',this.value === 'true')">
+                        <option value="true" ${s.deleteConfirmation ? "selected" : ""}>On</option>
+                        <option value="false" ${!s.deleteConfirmation ? "selected" : ""}>Off</option>
+                    </select>
+                </div>
+                <div class="setting">
+                    <label>Date / Time Format</label>
+                    <select onchange="saveSetting('dateTimeFormat',this.value)">
+                        ${option("Local", s.dateTimeFormat)}${option("12 Hour", s.dateTimeFormat)}${option("24 Hour", s.dateTimeFormat)}
+                    </select>
+                </div>
+                <div class="setting">
+                    <label>Default Note Colour</label>
+                    <input type="color" value="${escapeAttribute(s.defaultNoteColor || '#64748b')}" onchange="saveSetting('defaultNoteColor',this.value)">
+                </div>
+                <div class="setting">
+                    <label>Auto-assign "Bin" tag</label>
+                    <select onchange="saveSetting('autoAssignBinTag',this.value === 'true')">
+                        <option value="true" ${s.autoAssignBinTag ? "selected" : ""}>On</option>
+                        <option value="false" ${!s.autoAssignBinTag ? "selected" : ""}>Off</option>
+                    </select>
+                </div>
+                <div class="setting">
+                    <label>Metadata Default</label>
+                    <select onchange="saveSetting('metadataCollapsed',this.value === 'true')">
+                        <option value="true" ${s.metadataCollapsed ? "selected" : ""}>Collapsed</option>
+                        <option value="false" ${!s.metadataCollapsed ? "selected" : ""}>Expanded</option>
+                    </select>
+                </div>
+                <div class="setting">
+                    <label>Categories Default</label>
+                    <select onchange="saveSetting('categoriesCollapsed',this.value === 'true')">
+                        <option value="true" ${s.categoriesCollapsed ? "selected" : ""}>Collapsed</option>
+                        <option value="false" ${!s.categoriesCollapsed ? "selected" : ""}>Expanded</option>
+                    </select>
+                </div>
+                <div class="setting">
+                    <label>Recycle Bin Name</label>
+                    <select onchange="changeTrashLabel(this.value)">
+                        ${["Recycle Bin","Trash","Dustbin","Deleted Items","Bin","Waste Bin"].map(x => `<option ${x === db.trash.label ? "selected" : ""}>${escapeHtml(x)}</option>`).join("")}
+                    </select>
+                </div>
+            </div>
+
+            <div style="margin-top:18px;display:flex;gap:6px;flex-wrap:wrap;">
+                <button class="ctrl-btn" onclick="exportDatabaseJSON()">Export JSON</button>
+                <button class="ctrl-btn" onclick="showDatabaseStats()">Show Stats</button>
+            </div>
+
+            <div style="margin-top:20px;padding:12px;border:1px solid var(--border);border-radius:9px;background:var(--surface2);font-size:11px;color:var(--muted);">
+                <strong style="color:var(--text);">Database File:</strong> ${escapeHtml(DATABASE_NAME)}<br>
+                <strong style="color:var(--text);">Drive Link:</strong> 
+                ${databaseFolderId ? `<a href="https://drive.google.com/drive/folders/${databaseFolderId}" target="_blank" style="color:var(--primary);">Open Folder</a>` : 
+                  databaseFileId ? `<a href="https://drive.google.com/file/d/${databaseFileId}/view" target="_blank" style="color:var(--primary);">Open File</a>` : "Not connected"}
+            </div>
+        </div>
+    `;
+}
+
+function option(value, selected){
+    return `<option value="${escapeAttribute(value)}" ${value === selected ? "selected" : ""}>${escapeHtml(value)}</option>`;
+}
+
+function saveSetting(key, value){
+    db.settings[key] = value;
+    applySettings();
+    markChanged();
+    showToast("Setting saved.", "success");
+}
+
+function changeTrashLabel(value){
+    db.trash.label = value;
+    markChanged();
+    document.getElementById("trashLabel").textContent = value;
+    renderListTitle();
+}
+
+function exportDatabaseJSON(){
+    const blob = new Blob([JSON.stringify(db, null, 2)], { type: "application/json" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "NotesManagerDB_export_" + Date.now() + ".json";
+    a.click();
+    URL.revokeObjectURL(a.href);
+    showToast("Exported.", "success");
+}
+
+function showDatabaseStats(){
+    const active = db.notes.filter(n => !n.deleted).length;
+    const deleted = db.notes.filter(n => n.deleted).length;
+    const cats = db.categories.length;
+    const tags = new Set();
+    db.notes.forEach(n => n.tags.forEach(t => { if (t !== "Bin") tags.add(t); }));
+    alert(
+        "Database Stats:\n\n" +
+        "Active Notes: " + active + "\n" +
+        "Deleted Notes: " + deleted + "\n" +
+        "Categories: " + cats + "\n" +
+        "Unique Tags: " + tags.size + "\n" +
+        "Global Links: " + globalLinks.length
+    );
+}
+
+/* =========================================================
+   APPLY SETTINGS
+   ========================================================= */
+function applySettings(){
+    const theme = db.settings.theme;
+    document.body.classList.remove("night");
+    if (theme === "Night"){
+        document.body.classList.add("night");
+    } else if (theme === "System"){
+        if (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches){
+            document.body.classList.add("night");
+        }
+    }
+    const fontSizes = { "Small":"13px", "Normal":"15px", "Large":"17px", "Extra Large":"19px" };
+    document.documentElement.style.setProperty("--font-size", fontSizes[db.settings.fontSize] || "15px");
+    if (db.settings.sidebarWidth) document.documentElement.style.setProperty("--sidebar-width", db.settings.sidebarWidth + "px");
+    if (db.settings.sidebarBorder !== undefined) document.documentElement.style.setProperty("--sidebar-border", db.settings.sidebarBorder + "px");
+    if (db.settings.sectionHeight) document.documentElement.style.setProperty("--section-height", db.settings.sectionHeight + "px");
+    if (db.settings.noteListBg) document.documentElement.style.setProperty("--note-list-bg", db.settings.noteListBg);
+    if (db.settings.notePanelBg) document.documentElement.style.setProperty("--note-panel-bg", db.settings.notePanelBg);
+
+    /* Note list fixed height based on setting */
+    const listEl = document.getElementById("noteList");
+    if (listEl){
+        const visible = db.settings.notesVisibleNoScroll;
+        const rowHeight = 88;
+        if (visible === "All"){
+            listEl.style.height = "auto";
+            listEl.style.maxHeight = "calc(100vh - 240px)";
+        } else {
+            const h = (Number(visible) * rowHeight) + "px";
+            listEl.style.height = h;
+            listEl.style.maxHeight = h;
+        }
+    }
+
+    document.getElementById("trashLabel").textContent = db.trash.label || "Recycle Bin";
+    updateFooter();
+}
+
+/* =========================================================
+   REFRESH
+   ========================================================= */
+function refreshUI(){
+    if (currentView === "settings"){ openSettings(); return; }
+    renderSidebar();
+    renderListTitle();
+    renderNoteList();
+    renderBinToolbar();
+    renderDetail();
+    updateDeleteButton();
+    const sf = document.getElementById("sortFilter");
+    if (sf) sf.value = db.settings.sorting;
+    updateLastSyncDisplay();
+    updateLastChangeDisplay();
+}
+
+/* =========================================================
+   SEARCH
+   ========================================================= */
+document.getElementById("searchInput").addEventListener("input", function(){
+    searchText = this.value.trim();
+    currentPage = 1;
+    renderNoteList();
+});
+
+/* =========================================================
+   BUTTON EVENTS
+   ========================================================= */
+document.getElementById("floatingToggle").addEventListener("click", toggleSidebar);
+document.getElementById("sidebarOverlay").addEventListener("click", () => { if (sidebarOpen) toggleSidebar(); });
+document.getElementById("connectBtn").addEventListener("click", connectDrive);
+document.getElementById("syncBtn").addEventListener("click", synchronize);
+document.getElementById("addBtn").addEventListener("click", addNote);
+document.getElementById("deleteSelectedBtn").addEventListener("click", deleteSelected);
+
+/* =========================================================
+   KEYBOARD
+   ========================================================= */
+document.addEventListener("keydown", function(e){
+    if (e.ctrlKey && e.key.toLowerCase() === "s"){
+        e.preventDefault();
+        if (editingNoteId) saveCurrent();
+        else if (pendingChanges) saveDatabaseToDrive();
+    }
+});
+
+/* =========================================================
+   DATE / TIME FORMATTING
+   ========================================================= */
+function formatFullDateTime(value){
+    if (!value) return "—";
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "—";
+    const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+    const d = date.getDate();
+    const m = months[date.getMonth()];
+    const y = date.getFullYear();
+    let h = date.getHours();
+    const min = String(date.getMinutes()).padStart(2,"0");
+    const s = String(date.getSeconds()).padStart(2,"0");
+    const ampm = h >= 12 ? "AM" : "PM";
+    h = h % 12; if (h === 0) h = 12;
+    const hh = String(h).padStart(2,"0");
+    return `${d}-${m}-${y}, ${hh}:${min}:${s} ${ampm}`;
+}
+
+function formatShortTime(value){
+    if (!value) return "—";
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "—";
+    return date.toLocaleTimeString(undefined, { hour:"2-digit", minute:"2-digit", hour12:true });
+}
+
+/* =========================================================
+   UTILITIES
+   ========================================================= */
+function generateId(prefix){
+    return prefix + "_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 9);
+}
+
+function escapeHtml(value){
+    return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
+function escapeAttribute(value){ return escapeHtml(value); }
+
+function showToast(message, type = "normal"){
+    const toast = document.getElementById("toast");
+    toast.textContent = message;
+    toast.classList.add("show");
+    clearTimeout(toast._timer);
+    toast._timer = setTimeout(() => toast.classList.remove("show"), 2500);
+}
+
+/* =========================================================
+   INIT
+   ========================================================= */
+function initializeApp(){
+    sidebarOpen = false;
+    document.getElementById("sidebar").classList.remove("open");
+    document.getElementById("sidebarOverlay").classList.remove("open");
+    db = normalizeDatabase(db);
+    globalLinks = Array.isArray(db.globalLinks) ? db.globalLinks : [];
+    applySettings();
+    renderSidebar();
+    renderListTitle();
+    renderNoteList();
+    renderBinToolbar();
+    renderDetail();
+    updateSyncStatus();
+    updateFooter();
+    updateLastSyncDisplay();
+    updateLastChangeDisplay();
+    startRelTimeTicker();
+    initializeGoogle();
+}
+
+if (window.matchMedia){
+    const media = window.matchMedia("(prefers-color-scheme: dark)");
+    media.addEventListener("change", () => {
+        if (db.settings.theme === "System") applySettings();
+    });
+}
+
+initializeApp();
+</script>
+
+</body>
+</html>
