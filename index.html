@@ -20,6 +20,7 @@
     --shadow:0 8px 25px rgba(20,30,50,.08);
     --radius:12px;
     --font-size:15px;
+    --sidebar-width:290px;
 }
 
 *{ box-sizing:border-box; }
@@ -38,14 +39,63 @@ body{
 }
 
 /* =========================================================
-   TOP AREA
+   FLOATING SIDEBAR TOGGLE (FIXED TOP-LEFT, ALWAYS VISIBLE)
+   ========================================================= */
+
+.floating-toggle{
+    position:fixed;
+    top:10px;
+    left:10px;
+    z-index:3000;
+    width:46px;
+    height:46px;
+    border:1px solid var(--border);
+    border-radius:10px;
+    background:var(--surface);
+    color:var(--text);
+    box-shadow:0 6px 20px rgba(0,0,0,.15);
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:20px;
+    font-weight:700;
+    padding:0;
+    transition:background .15s;
+}
+
+.floating-toggle:hover{ background:#eef2ff; }
+
+/* 3 lines icon (CSS-based) */
+
+.floating-toggle .hamburger{
+    display:flex;
+    flex-direction:column;
+    gap:4px;
+}
+
+.floating-toggle .hamburger span{
+    width:20px;
+    height:2.5px;
+    background:var(--text);
+    border-radius:2px;
+    display:block;
+}
+
+.floating-toggle .arrow-icon{
+    font-size:18px;
+    line-height:1;
+}
+
+/* =========================================================
+   TOP AREA (STICKY HEADER - TITLE + STATUS + BUTTONS)
    ========================================================= */
 
 .top-area{
     background:var(--surface);
     border-bottom:1px solid var(--border);
     box-shadow:0 2px 8px rgba(0,0,0,.04);
-    padding:10px 12px;
+    padding:10px 12px 10px 68px;
     position:sticky;
     top:0;
     z-index:1000;
@@ -93,6 +143,7 @@ body{
 .status-card.sync-off{ color:#b45309; border-color:#fde68a; background:#fffbeb; }
 .status-card.sync-err{ color:#dc2626; border-color:#fecaca; background:#fef2f2; }
 .status-card.last-sync{ color:#2563eb; border-color:#bfdbfe; background:#eff6ff; }
+.status-card.last-change{ color:#7c3aed; border-color:#ddd6fe; background:#f5f3ff; }
 
 .top-buttons{
     display:flex;
@@ -123,7 +174,6 @@ body{
 }
 
 .top-buttons .btn:hover{ background:#f1f5f9; }
-
 .top-buttons .btn.primary{ background:var(--primary); color:#fff; border-color:var(--primary); }
 .top-buttons .btn.primary:hover{ background:var(--primary2); }
 .top-buttons .btn.danger{ background:var(--danger); color:#fff; border-color:var(--danger); }
@@ -135,7 +185,7 @@ body{
 button,select,input,textarea{ font:inherit; }
 
 /* =========================================================
-   SIDEBAR
+   SIDEBAR OVERLAY
    ========================================================= */
 
 .sidebar-overlay{
@@ -148,12 +198,16 @@ button,select,input,textarea{ font:inherit; }
 
 .sidebar-overlay.open{ display:block; }
 
+/* =========================================================
+   SIDEBAR
+   ========================================================= */
+
 .sidebar{
     position:fixed;
     top:0;
     left:0;
     bottom:0;
-    width:290px;
+    width:var(--sidebar-width);
     z-index:2000;
     background:var(--surface);
     border-right:1px solid var(--border);
@@ -163,7 +217,7 @@ button,select,input,textarea{ font:inherit; }
     overflow-y:auto;
     overscroll-behavior:contain;
     padding:10px;
-    padding-top:56px;
+    padding-top:66px;
 }
 
 .sidebar.open{ transform:translateX(0); }
@@ -205,6 +259,18 @@ button,select,input,textarea{ font:inherit; }
     flex:none;
 }
 
+.bin-badge{
+    background:#dc2626;
+    color:#fff;
+    font-size:10px;
+    font-weight:700;
+    padding:1px 6px;
+    border-radius:999px;
+    flex:none;
+    min-width:18px;
+    text-align:center;
+}
+
 .sidebar-divider{
     height:1px;
     background:#e2e8f0;
@@ -236,12 +302,7 @@ button,select,input,textarea{ font:inherit; }
 }
 
 .sidebar-ctrl:hover{ background:#e2e8f0; }
-
-.sidebar-ctrl.danger:hover{
-    background:#fef2f2;
-    border-color:#fecaca;
-    color:#dc2626;
-}
+.sidebar-ctrl.danger:hover{ background:#fef2f2; border-color:#fecaca; color:#dc2626; }
 
 .sidebar-collapse{
     margin-top:3px;
@@ -256,8 +317,6 @@ button,select,input,textarea{ font:inherit; }
     color:var(--muted);
     font-size:11px;
 }
-
-/* Category row with left-side buttons */
 
 .cat-row{
     display:flex;
@@ -336,8 +395,6 @@ button,select,input,textarea{ font:inherit; }
 
 .panel-title{ font-weight:700; }
 
-/* Note list fixed height for 5 notes */
-
 .note-list{
     max-height:480px;
     overflow-y:auto;
@@ -357,7 +414,9 @@ button,select,input,textarea{ font:inherit; }
 }
 
 .note-row:hover{ background:#f8fafc; }
-.note-row.active{ background:#eff6ff; }
+.note-row.active{ background:#bfdbfe; }
+
+.note-row.ms-selected{ background:#bfdbfe; }
 
 .note-marker{
     width:5px;
@@ -441,6 +500,66 @@ button,select,input,textarea{ font:inherit; }
     color:var(--muted);
 }
 
+/* Checkbox in note row (Recycle Bin + normal views) */
+
+.note-row.has-checkbox{
+    padding-left:36px;
+    position:relative;
+}
+
+.note-row.has-checkbox::before{
+    content:"";
+    position:absolute;
+    left:12px;
+    top:14px;
+    width:16px;
+    height:16px;
+    border:2px solid var(--border);
+    border-radius:4px;
+    background:var(--surface);
+    cursor:pointer;
+}
+
+.note-row.has-checkbox.ms-selected::before{
+    background:var(--primary);
+    border-color:var(--primary);
+    content:"✓";
+    color:#fff;
+    font-size:11px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-weight:700;
+}
+
+/* Per-note action buttons (Recycle Bin) */
+
+.note-row-actions{
+    display:flex;
+    gap:4px;
+    flex-direction:column;
+    align-items:flex-end;
+    flex:none;
+}
+
+.note-row-actions button{
+    width:26px;
+    height:26px;
+    border:1px solid var(--border);
+    border-radius:6px;
+    background:var(--surface);
+    cursor:pointer;
+    font-size:12px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    padding:0;
+}
+
+.note-row-actions button:hover{ background:#e2e8f0; }
+.note-row-actions button.success:hover{ background:#f0fdf4; color:#15803d; border-color:#bbf7d0; }
+.note-row-actions button.danger:hover{ background:#fef2f2; color:#dc2626; border-color:#fecaca; }
+
 /* =========================================================
    NOTE DETAIL
    ========================================================= */
@@ -449,9 +568,16 @@ button,select,input,textarea{ font:inherit; }
 .detail-body{ padding:0; }
 
 .note-color-bar{
-    height:6px;
+    height:10px;
     width:100%;
     background:var(--note-color,#94a3b8);
+}
+
+.note-color-border{
+    border-top:3px solid var(--note-color,#94a3b8);
+    border-left:3px solid var(--note-color,#94a3b8);
+    border-right:3px solid var(--note-color,#94a3b8);
+    border-bottom:0;
 }
 
 .note-controls-card{
@@ -679,7 +805,7 @@ button,select,input,textarea{ font:inherit; }
 .link-icon-btn.danger:hover{ background:#fef2f2; color:#dc2626; }
 
 /* =========================================================
-   TAGS + CATEGORY CARD
+   TAGS + CAT
    ========================================================= */
 
 .tags-cat-card{
@@ -761,7 +887,7 @@ button,select,input,textarea{ font:inherit; }
 .small-action-btn.success{ background:var(--success); color:#fff; border-color:var(--success); }
 
 /* =========================================================
-   METADATA CARD
+   METADATA
    ========================================================= */
 
 .metadata-box{
@@ -851,7 +977,8 @@ button,select,input,textarea{ font:inherit; }
 }
 
 .setting select,
-.setting input[type="text"]{
+.setting input[type="text"],
+.setting input[type="number"]{
     width:100%;
     height:34px;
     border:1px solid var(--border);
@@ -885,7 +1012,7 @@ button,select,input,textarea{ font:inherit; }
 }
 
 /* =========================================================
-   RECYCLE BIN TOOLBAR
+   BIN TOOLBAR
    ========================================================= */
 
 .bin-toolbar{
@@ -896,11 +1023,6 @@ button,select,input,textarea{ font:inherit; }
     background:var(--surface2);
     flex-wrap:wrap;
     align-items:center;
-}
-
-.bin-toolbar .ctrl-btn{
-    height:30px;
-    min-width:auto;
 }
 
 .bin-toolbar-info{
@@ -937,42 +1059,6 @@ button,select,input,textarea{ font:inherit; }
 }
 
 /* =========================================================
-   MULTISELECT
-   ========================================================= */
-
-body.multiselect .note-row{
-    padding-left:36px;
-    position:relative;
-}
-
-body.multiselect .note-row::before{
-    content:"";
-    position:absolute;
-    left:12px;
-    top:50%;
-    transform:translateY(-50%);
-    width:16px;
-    height:16px;
-    border:2px solid var(--border);
-    border-radius:4px;
-    background:var(--surface);
-}
-
-body.multiselect .note-row.ms-selected::before{
-    background:var(--primary);
-    border-color:var(--primary);
-    content:"✓";
-    color:#fff;
-    font-size:11px;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    font-weight:700;
-}
-
-body.multiselect .note-row.ms-selected{ background:#eff6ff; }
-
-/* =========================================================
    NIGHT MODE
    ========================================================= */
 
@@ -998,10 +1084,14 @@ body.night .small-action-btn,
 body.night .heading-input,
 body.night .content-editable,
 body.night .content-display,
-body.night .tags-input-inline{
+body.night .tags-input-inline,
+body.night .floating-toggle,
+body.night .note-row-actions button{
     background:var(--surface);
     color:var(--text);
 }
+
+body.night .floating-toggle .hamburger span{ background:var(--text); }
 
 body.night .metadata-title,
 body.night .links-card-header,
@@ -1013,6 +1103,7 @@ body.night .bin-toolbar{
 
 body.night .note-row:hover{ background:#1e293b; }
 body.night .note-row.active{ background:#1e3a5f; }
+body.night .note-row.ms-selected{ background:#1e3a5f; }
 body.night .cat-row:hover{ background:#1e293b; }
 
 body.night .status-card.drive-on,
@@ -1031,6 +1122,10 @@ body.night .status-card.sync-off{
 
 body.night .status-card.last-sync{
     background:#1e3a8a; border-color:#1e40af; color:#bfdbfe;
+}
+
+body.night .status-card.last-change{
+    background:#4c1d95; border-color:#5b21b6; color:#ddd6fe;
 }
 
 body.night .app-title{ color:#60a5fa; }
@@ -1067,11 +1162,20 @@ body.night .tag-chip{
     .link-item-text{ max-width:100%; }
     .link-item-url{ max-width:100%; }
     .note-list{ max-height:360px; }
+    .floating-toggle{ width:42px; height:42px; font-size:18px; }
+    .top-area{ padding-left:62px; }
 }
 </style>
 </head>
 
 <body>
+
+<!-- FLOATING SIDEBAR TOGGLE (FIXED TOP-LEFT) -->
+<button id="floatingToggle" class="floating-toggle" type="button" title="Show/Hide Sidebar">
+    <span class="hamburger">
+        <span></span><span></span><span></span>
+    </span>
+</button>
 
 <!-- TOP AREA -->
 <div class="top-area">
@@ -1081,14 +1185,14 @@ body.night .tag-chip{
         <div id="driveStatus" class="status-card drive-off">Drive: Disconnected</div>
         <div id="syncStatus" class="status-card sync-off">Sync: Pending</div>
         <div id="lastSyncStatus" class="status-card last-sync">Last Synced: —</div>
+        <div id="lastChangeStatus" class="status-card last-change">Last Change: —</div>
     </div>
 
     <div class="top-buttons">
-        <button id="sidebarToggle" class="btn" type="button">Show Sidebar</button>
         <button id="connectBtn" class="btn primary" type="button">Connect</button>
         <button id="syncBtn" class="btn" type="button">Sync</button>
         <button id="addBtn" class="btn success" type="button">+ Add</button>
-        <button id="multiselectBtn" class="btn" type="button">Multiselect</button>
+        <button id="multiselectBtn" class="btn" type="button">Multi</button>
         <button id="deleteSelectedBtn" class="btn danger" type="button">Delete</button>
     </div>
 </div>
@@ -1159,7 +1263,7 @@ body.night .tag-chip{
         <div class="sidebar-item" data-view="trash" onclick="setView('trash')">
             <span class="sidebar-icon">🗑️</span>
             <span class="sidebar-label" id="trashLabel">Recycle Bin</span>
-            <span id="trashCount" class="sidebar-count">0</span>
+            <span id="binBadge" class="bin-badge" style="display:none;">0</span>
         </div>
 
         <div class="sidebar-item" onclick="openSettings()">
@@ -1238,27 +1342,24 @@ let lastSuccessfulSync = null;
 let lastChangeTime = null;
 let multiselectMode = false;
 let multiselectIds = new Set();
-let globalLinks = []; // {title, url}
+let globalLinks = [];
 
 /* =========================================================
    DEFAULT DB
    ========================================================= */
 function createEmptyDatabase(){
     return {
-        version: 1,
+        version: 2,
         settings: {
-            sidebarView: "Compact",
             theme: "System",
             fontSize: "Normal",
             sorting: "Last Modified First",
             notesPerPage: 5,
+            sidebarWidth: 290,
             deleteConfirmation: true,
             autosave: true,
             autosaveInterval: 5,
             dateTimeFormat: "12 Hour",
-            notePanelTheme: "Auto",
-            showStatusBar: true,
-            compactNoteList: true,
             defaultNoteColor: "#64748b",
             defaultCategory: "",
             autoAssignBinTag: true
@@ -1280,7 +1381,7 @@ function createEmptyDatabase(){
    ========================================================= */
 function initializeGoogle(){
     if (typeof google === "undefined" || !google.accounts || !google.accounts.oauth2){
-        showToast("Google Identity Services load نہیں ہوئی۔ Internet check کریں۔", "error");
+        showToast("Google Identity Services load نہیں ہوئی۔", "error");
         return;
     }
     tokenClient = google.accounts.oauth2.initTokenClient({
@@ -1500,6 +1601,7 @@ function markChanged(){
     lastChangeTime = new Date();
     db.meta.updated = lastChangeTime.toISOString();
     updateSyncStatus();
+    updateLastChangeStatus();
     scheduleAutosave();
 }
 
@@ -1553,6 +1655,12 @@ function setLastSync(date){
     const el = document.getElementById("lastSyncStatus");
     if (!date){ el.textContent = "Last Synced: —"; return; }
     el.textContent = "Last Synced: " + formatShortTime(date);
+}
+
+function updateLastChangeStatus(){
+    const el = document.getElementById("lastChangeStatus");
+    if (!lastChangeTime){ el.textContent = "Last Change: —"; return; }
+    el.textContent = "Last Change: " + formatShortTime(lastChangeTime);
 }
 
 /* =========================================================
@@ -1629,6 +1737,7 @@ function togglePinned(id){
    SELECT NOTE
    ========================================================= */
 function selectNote(id){
+    // Checkbox toggle in multiselect mode OR trash view
     if (multiselectMode || currentView === "trash"){
         if (multiselectIds.has(id)) multiselectIds.delete(id);
         else multiselectIds.add(id);
@@ -1648,7 +1757,7 @@ function selectNote(id){
 }
 
 /* =========================================================
-   DETAIL PANEL
+   DETAIL
    ========================================================= */
 function renderDetail(){
     const container = document.getElementById("detailBody");
@@ -1741,7 +1850,6 @@ function renderDetail(){
 }
 
 function toggleLinksEdit(noteId){
-    // triggers a generic prompt to select a link to edit
     const note = getNote(noteId);
     if (!note || !note.links || !note.links.length){
         showToast("No links to edit.", "normal");
@@ -1751,9 +1859,7 @@ function toggleLinksEdit(noteId){
     const choice = prompt("Enter link number to edit:\n\n" + list, "1");
     if (choice === null) return;
     const idx = parseInt(choice, 10) - 1;
-    if (idx >= 0 && idx < note.links.length){
-        editLinkInline(noteId, idx);
-    }
+    if (idx >= 0 && idx < note.links.length) editLinkInline(noteId, idx);
 }
 
 function startEdit(){
@@ -1968,12 +2074,11 @@ function deleteLinkInline(noteId, index){
 }
 
 /* =========================================================
-   LINK POPUP WINDOW
+   LINK POPUP
    ========================================================= */
 function openLinkPopup(title, initialTitle, initialUrl, onSave){
     const w = window.open("", "LinkWindow", "width=420,height=280,resizable=yes,scrollbars=yes");
     if (!w){
-        // popup blocked → fallback
         const t = prompt(title + "\n\nLink Title:", initialTitle);
         if (t === null) return;
         const u = prompt("Link URL:", initialUrl || "https://");
@@ -2022,7 +2127,7 @@ function openLinkPopup(title, initialTitle, initialUrl, onSave){
 }
 
 /* =========================================================
-   GLOBAL LINKS (Sidebar "Links" section)
+   GLOBAL LINKS
    ========================================================= */
 function renderGlobalLinks(){
     const container = document.getElementById("globalLinksList");
@@ -2060,9 +2165,7 @@ function editGlobalLink(){
     const choice = prompt("Enter link number to edit:\n\n" + list, "1");
     if (choice === null) return;
     const idx = parseInt(choice, 10) - 1;
-    if (idx >= 0 && idx < globalLinks.length){
-        editGlobalLinkAt(idx);
-    }
+    if (idx >= 0 && idx < globalLinks.length) editGlobalLinkAt(idx);
 }
 
 function editGlobalLinkAt(index){
@@ -2204,15 +2307,15 @@ function toggleSidebar(){
     sidebarOpen = !sidebarOpen;
     const sidebar = document.getElementById("sidebar");
     const overlay = document.getElementById("sidebarOverlay");
-    const button = document.getElementById("sidebarToggle");
+    const btn = document.getElementById("floatingToggle");
     if (sidebarOpen){
         sidebar.classList.add("open");
         overlay.classList.add("open");
-        button.textContent = "Hide Sidebar";
+        btn.innerHTML = `<span class="arrow-icon">◀</span>`;
     } else {
         sidebar.classList.remove("open");
         overlay.classList.remove("open");
-        button.textContent = "Show Sidebar";
+        btn.innerHTML = `<span class="hamburger"><span></span><span></span><span></span></span>`;
     }
 }
 
@@ -2220,12 +2323,20 @@ function renderSidebar(){
     const activeNotes = db.notes.filter(n => !n.deleted);
     const catNotes = activeNotes.filter(n => n.categoryId);
     const uncatNotes = activeNotes.filter(n => !n.categoryId);
+    const trashCount = db.notes.filter(n => n.deleted && !n.trashHidden).length;
 
     document.getElementById("allCount").textContent = activeNotes.length;
     document.getElementById("favoriteCount").textContent = activeNotes.filter(n => n.favorite).length;
     document.getElementById("catCount").textContent = catNotes.length;
     document.getElementById("uncatCount").textContent = uncatNotes.length;
-    document.getElementById("trashCount").textContent = db.notes.filter(n => n.deleted && !n.trashHidden).length;
+
+    const badge = document.getElementById("binBadge");
+    if (trashCount > 0){
+        badge.style.display = "inline-block";
+        badge.textContent = trashCount;
+    } else {
+        badge.style.display = "none";
+    }
 
     renderCategories();
     renderTags();
@@ -2233,7 +2344,7 @@ function renderSidebar(){
 }
 
 /* =========================================================
-   RENDER CATEGORIES (with rename + remove buttons at LEFT)
+   RENDER CATEGORIES (with +child count)
    ========================================================= */
 function renderCategories(){
     const container = document.getElementById("categoryList");
@@ -2363,7 +2474,7 @@ function removeCategory(id){
 }
 
 /* =========================================================
-   TAGS (flat list, only from active notes)
+   TAGS
    ========================================================= */
 function renderTags(){
     const container = document.getElementById("tagList");
@@ -2574,6 +2685,7 @@ function renderNoteRow(note){
     const catPath = getCategoryPath(note.categoryId);
     const date = formatDateTime(note.modifiedAt);
     const isMs = multiselectIds.has(note.id);
+    const isTrash = currentView === "trash";
 
     const tagsPreview = note.tags
         .filter(t => t !== "Bin")
@@ -2581,43 +2693,63 @@ function renderNoteRow(note){
         .map(t => `<span class="meta-chip">🏷️ ${escapeHtml(t)}</span>`)
         .join(" ");
 
+    // Recycle Bin row has per-note Restore / Permanent Delete + checkbox
+    if (isTrash){
+        return `
+            <div class="note-row has-checkbox ${isMs ? "ms-selected" : ""}"
+                 onclick="selectNote('${note.id}')">
+
+                <div class="note-marker" style="--note-color:${escapeAttribute(note.color)}"></div>
+
+                <div class="note-row-body">
+                    <div class="note-line1">
+                        <span class="note-line1-title">${escapeHtml(note.title)}</span>
+                        <span class="note-line1-content">${escapeHtml(contentPreview || "No content")}</span>
+                    </div>
+                    <div class="note-line2">
+                        ${catPath ? `<span class="meta-chip">📁 ${escapeHtml(catPath)}</span>` : `<span class="meta-chip" style="color:var(--muted);">📁 Uncat</span>`}
+                        ${tagsPreview || ""}
+                    </div>
+                    <div class="note-line3">🕒 ${escapeHtml(date)}</div>
+                </div>
+
+                <div class="note-row-actions">
+                    <button class="success" title="Restore" onclick="event.stopPropagation(); restoreNote('${note.id}')">↩</button>
+                    <button class="danger" title="Permanent Delete" onclick="event.stopPropagation(); permanentDeleteNote('${note.id}')">🗑</button>
+                </div>
+            </div>
+        `;
+    }
+
+    // Normal rows
+    const hasCheckbox = multiselectMode;
     return `
-        <div class="note-row ${selectedNoteId === note.id ? "active" : ""} ${isMs ? "ms-selected" : ""}"
+        <div class="note-row ${hasCheckbox ? "has-checkbox" : ""} ${selectedNoteId === note.id ? "active" : ""} ${isMs ? "ms-selected" : ""}"
              onclick="selectNote('${note.id}')">
 
             <div class="note-marker" style="--note-color:${escapeAttribute(note.color)}"></div>
 
             <div class="note-row-body">
-
                 <div class="note-line1">
                     <span class="note-line1-title">${escapeHtml(note.title)}</span>
                     <span class="note-line1-content">${escapeHtml(contentPreview || "No content")}</span>
                 </div>
-
                 <div class="note-line2">
                     <span class="mini-toggle ${note.pinned ? "on" : ""}"
                           title="${note.pinned ? "Unpin" : "Pin"}"
                           onclick="event.stopPropagation(); togglePinned('${note.id}')">
                         📌 ${note.pinned ? "Pinned" : "Pin"}
                     </span>
-
                     <span class="mini-toggle ${note.favorite ? "fav-on" : ""}"
                           title="${note.favorite ? "Unfavorite" : "Favorite"}"
                           onclick="event.stopPropagation(); toggleFavorite('${note.id}')">
                         ${note.favorite ? "★ Fav" : "☆ Fav"}
                     </span>
-
                     ${catPath ? `<span class="meta-chip">📁 ${escapeHtml(catPath)}</span>` : `<span class="meta-chip" style="color:var(--muted);">📁 Uncat</span>`}
-
                     ${tagsPreview || ""}
                 </div>
-
-                <div class="note-line3">
-                    🕒 ${escapeHtml(date)}
-                </div>
-
+                <div class="note-line3">🕒 ${escapeHtml(date)}</div>
             </div>
-
         </div>
     `;
 }
@@ -2642,7 +2774,7 @@ function changePage(delta){
 }
 
 /* =========================================================
-   RECYCLE BIN TOOLBAR (only in trash view)
+   RECYCLE BIN ACTIONS
    ========================================================= */
 function renderBinToolbar(){
     const wrap = document.getElementById("binToolbarWrap");
@@ -2655,12 +2787,35 @@ function renderBinToolbar(){
     const selCount = multiselectIds.size;
     wrap.innerHTML = `
         <div class="bin-toolbar">
-            <button class="ctrl-btn success" onclick="binRestoreSelected()" ${selCount ? "" : "disabled"}>Restore</button>
-            <button class="ctrl-btn danger" onclick="binPermanentDeleteSelected()" ${selCount ? "" : "disabled"}>Permanent Delete</button>
-            <button class="ctrl-btn danger" onclick="binDeleteAll()" ${total ? "" : "disabled"}>Delete All</button>
+            <button class="ctrl-btn success" onclick="binRestoreSelected()" ${selCount ? "" : "disabled"}>↩ Restore</button>
+            <button class="ctrl-btn danger" onclick="binPermanentDeleteSelected()" ${selCount ? "" : "disabled"}>🗑 Permanently Delete</button>
+            <button class="ctrl-btn danger" onclick="emptyBin()" ${total ? "" : "disabled"}>🗑 Empty Bin</button>
             <span class="bin-toolbar-info">${selCount} of ${total} selected</span>
         </div>
     `;
+}
+
+function restoreNote(id){
+    const note = getNote(id);
+    if (!note) return;
+    note.deleted = false;
+    note.trashHidden = false;
+    // Bin tag stays (history)
+    note.modifiedAt = new Date().toISOString();
+    markChanged();
+    refreshUI();
+    showToast("Note restored.", "success");
+}
+
+function permanentDeleteNote(id){
+    const note = getNote(id);
+    if (!note) return;
+    if (!confirm("Permanently delete '" + note.title + "'? This cannot be undone.")) return;
+    db.notes = db.notes.filter(n => n.id !== id);
+    multiselectIds.delete(id);
+    markChanged();
+    refreshUI();
+    showToast("Note permanently deleted.", "success");
 }
 
 function binRestoreSelected(){
@@ -2689,10 +2844,10 @@ function binPermanentDeleteSelected(){
     showToast("Selected notes permanently deleted.", "success");
 }
 
-function binDeleteAll(){
+function emptyBin(){
     const deleted = db.notes.filter(n => n.deleted && !n.trashHidden);
     if (!deleted.length){ showToast("Recycle Bin is empty.", "normal"); return; }
-    if (!confirm("Permanently delete ALL " + deleted.length + " notes in the Recycle Bin? This cannot be undone.")) return;
+    if (!confirm("Empty Recycle Bin? All " + deleted.length + " notes will be PERMANENTLY deleted. This cannot be undone.")) return;
     db.notes = db.notes.filter(n => !(n.deleted && !n.trashHidden));
     multiselectIds.clear();
     markChanged();
@@ -2701,21 +2856,19 @@ function binDeleteAll(){
 }
 
 /* =========================================================
-   MULTISELECT
+   MULTISELECT (normal views)
    ========================================================= */
 function toggleMultiselect(){
     multiselectMode = !multiselectMode;
     multiselectIds.clear();
     const btn = document.getElementById("multiselectBtn");
     if (multiselectMode){
-        document.body.classList.add("multiselect");
         btn.classList.add("active");
-        btn.textContent = "Cancel MS";
-        showToast("Multiselect ON. Tap notes to select.", "normal");
+        btn.textContent = "Cancel";
+        showToast("Multi ON. Tap notes to select.", "normal");
     } else {
-        document.body.classList.remove("multiselect");
         btn.classList.remove("active");
-        btn.textContent = "Multiselect";
+        btn.textContent = "Multi";
     }
     renderNoteList();
 }
@@ -2734,9 +2887,8 @@ function deleteSelected(){
     });
     multiselectIds.clear();
     multiselectMode = false;
-    document.body.classList.remove("multiselect");
     document.getElementById("multiselectBtn").classList.remove("active");
-    document.getElementById("multiselectBtn").textContent = "Multiselect";
+    document.getElementById("multiselectBtn").textContent = "Multi";
     markChanged();
     refreshUI();
     showToast("Selected notes moved to Recycle Bin.", "success");
@@ -2794,6 +2946,15 @@ function renderSettings(){
                     </select>
                 </div>
                 <div class="setting">
+                    <label>Sidebar Width</label>
+                    <select onchange="saveSetting('sidebarWidth', Number(this.value))">
+                        <option value="240" ${s.sidebarWidth === 240 ? "selected" : ""}>Narrow (240px)</option>
+                        <option value="290" ${s.sidebarWidth === 290 ? "selected" : ""}>Normal (290px)</option>
+                        <option value="340" ${s.sidebarWidth === 340 ? "selected" : ""}>Wide (340px)</option>
+                        <option value="400" ${s.sidebarWidth === 400 ? "selected" : ""}>Extra Wide (400px)</option>
+                    </select>
+                </div>
+                <div class="setting">
                     <label>Autosave</label>
                     <select onchange="saveSetting('autosave',this.value === 'true')">
                         <option value="true" ${s.autosave ? "selected" : ""}>On</option>
@@ -2828,13 +2989,6 @@ function renderSettings(){
                     <select onchange="saveSetting('autoAssignBinTag',this.value === 'true')">
                         <option value="true" ${s.autoAssignBinTag ? "selected" : ""}>On</option>
                         <option value="false" ${!s.autoAssignBinTag ? "selected" : ""}>Off</option>
-                    </select>
-                </div>
-                <div class="setting">
-                    <label>Compact Note List</label>
-                    <select onchange="saveSetting('compactNoteList',this.value === 'true')">
-                        <option value="true" ${s.compactNoteList ? "selected" : ""}>On</option>
-                        <option value="false" ${!s.compactNoteList ? "selected" : ""}>Off</option>
                     </select>
                 </div>
                 <div class="setting">
@@ -2912,17 +3066,12 @@ function applySettings(){
     }
     const fontSizes = { "Small":"13px", "Normal":"15px", "Large":"17px", "Extra Large":"19px" };
     document.documentElement.style.setProperty("--font-size", fontSizes[db.settings.fontSize] || "15px");
-    document.getElementById("trashLabel").textContent = db.trash.label || "Recycle Bin";
 
-    // Note list row height hint
-    const listEl = document.getElementById("noteList");
-    if (listEl){
-        if (db.settings.compactNoteList){
-            listEl.style.maxHeight = "480px";
-        } else {
-            listEl.style.maxHeight = "600px";
-        }
+    if (db.settings.sidebarWidth){
+        document.documentElement.style.setProperty("--sidebar-width", db.settings.sidebarWidth + "px");
     }
+
+    document.getElementById("trashLabel").textContent = db.trash.label || "Recycle Bin";
 }
 
 /* =========================================================
@@ -2949,7 +3098,7 @@ document.getElementById("searchInput").addEventListener("input", function(){
 /* =========================================================
    BUTTON EVENTS
    ========================================================= */
-document.getElementById("sidebarToggle").addEventListener("click", toggleSidebar);
+document.getElementById("floatingToggle").addEventListener("click", toggleSidebar);
 document.getElementById("sidebarOverlay").addEventListener("click", () => { if (sidebarOpen) toggleSidebar(); });
 document.getElementById("connectBtn").addEventListener("click", connectDrive);
 document.getElementById("syncBtn").addEventListener("click", synchronize);
@@ -3027,7 +3176,6 @@ function initializeApp(){
     sidebarOpen = false;
     document.getElementById("sidebar").classList.remove("open");
     document.getElementById("sidebarOverlay").classList.remove("open");
-    document.getElementById("sidebarToggle").textContent = "Show Sidebar";
     db = normalizeDatabase(db);
     globalLinks = Array.isArray(db.globalLinks) ? db.globalLinks : [];
     applySettings();
