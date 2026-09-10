@@ -38,7 +38,7 @@ body{
 }
 
 /* =========================================================
-   APP TITLE + STATUS + BUTTONS (TOP SECTION)
+   TOP AREA
    ========================================================= */
 
 .top-area{
@@ -64,8 +64,6 @@ body{
     text-overflow:ellipsis;
 }
 
-/* ===== STATUS CARDS ROW ===== */
-
 .status-row{
     display:flex;
     gap:8px;
@@ -89,43 +87,12 @@ body{
     line-height:1.4;
 }
 
-.status-card.drive-on{
-    color:#15803d;
-    border-color:#bbf7d0;
-    background:#f0fdf4;
-}
-
-.status-card.drive-off{
-    color:#dc2626;
-    border-color:#fecaca;
-    background:#fef2f2;
-}
-
-.status-card.sync-on{
-    color:#15803d;
-    border-color:#bbf7d0;
-    background:#f0fdf4;
-}
-
-.status-card.sync-off{
-    color:#b45309;
-    border-color:#fde68a;
-    background:#fffbeb;
-}
-
-.status-card.sync-err{
-    color:#dc2626;
-    border-color:#fecaca;
-    background:#fef2f2;
-}
-
-.status-card.last-sync{
-    color:#2563eb;
-    border-color:#bfdbfe;
-    background:#eff6ff;
-}
-
-/* ===== TOP BUTTONS ROW ===== */
+.status-card.drive-on{ color:#15803d; border-color:#bbf7d0; background:#f0fdf4; }
+.status-card.drive-off{ color:#dc2626; border-color:#fecaca; background:#fef2f2; }
+.status-card.sync-on{ color:#15803d; border-color:#bbf7d0; background:#f0fdf4; }
+.status-card.sync-off{ color:#b45309; border-color:#fde68a; background:#fffbeb; }
+.status-card.sync-err{ color:#dc2626; border-color:#fecaca; background:#fef2f2; }
+.status-card.last-sync{ color:#2563eb; border-color:#bfdbfe; background:#eff6ff; }
 
 .top-buttons{
     display:flex;
@@ -157,48 +124,18 @@ body{
 
 .top-buttons .btn:hover{ background:#f1f5f9; }
 
-.top-buttons .btn.primary{
-    background:var(--primary);
-    color:#fff;
-    border-color:var(--primary);
-}
-
+.top-buttons .btn.primary{ background:var(--primary); color:#fff; border-color:var(--primary); }
 .top-buttons .btn.primary:hover{ background:var(--primary2); }
-
-.top-buttons .btn.danger{
-    background:var(--danger);
-    color:#fff;
-    border-color:var(--danger);
-}
-
+.top-buttons .btn.danger{ background:var(--danger); color:#fff; border-color:var(--danger); }
 .top-buttons .btn.danger:hover{ background:#b91c1c; }
+.top-buttons .btn.success{ background:var(--success); color:#fff; border-color:var(--success); }
+.top-buttons .btn.active{ background:var(--primary); color:#fff; border-color:var(--primary); }
 
-.top-buttons .btn.success{
-    background:var(--success);
-    color:#fff;
-    border-color:var(--success);
-}
-
-.top-buttons .btn.active{
-    background:var(--primary);
-    color:#fff;
-    border-color:var(--primary);
-}
-
-.btn{
-    cursor:pointer;
-    font:inherit;
-}
-
-button,
-select,
-input,
-textarea{
-    font:inherit;
-}
+.btn{ cursor:pointer; font:inherit; }
+button,select,input,textarea{ font:inherit; }
 
 /* =========================================================
-   FIXED SHOW / HIDE (mobile-friendly)
+   SIDEBAR
    ========================================================= */
 
 .sidebar-overlay{
@@ -210,10 +147,6 @@ textarea{
 }
 
 .sidebar-overlay.open{ display:block; }
-
-/* =========================================================
-   SIDEBAR
-   ========================================================= */
 
 .sidebar{
     position:fixed;
@@ -228,8 +161,9 @@ textarea{
     transform:translateX(-105%);
     transition:transform .2s ease;
     overflow-y:auto;
+    overscroll-behavior:contain;
     padding:10px;
-    padding-top:12px;
+    padding-top:56px;
 }
 
 .sidebar.open{ transform:translateX(0); }
@@ -279,14 +213,9 @@ textarea{
 }
 
 .sidebar-controls{
-    display:none;
+    display:flex;
     gap:3px;
     flex:none;
-}
-
-.sidebar-item:hover .sidebar-controls,
-.sidebar-item.selected .sidebar-controls{
-    display:flex;
 }
 
 .sidebar-ctrl{
@@ -326,6 +255,24 @@ textarea{
     padding:6px 9px;
     color:var(--muted);
     font-size:11px;
+}
+
+/* Category row with left-side buttons */
+
+.cat-row{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    padding:2px 4px;
+    border-radius:8px;
+}
+
+.cat-row:hover{ background:#f8fafc; }
+
+.cat-row-btns{
+    display:flex;
+    gap:3px;
+    flex:none;
 }
 
 /* =========================================================
@@ -389,9 +336,12 @@ textarea{
 
 .panel-title{ font-weight:700; }
 
+/* Note list fixed height for 5 notes */
+
 .note-list{
-    max-height:calc(100vh - 260px);
+    max-height:480px;
     overflow-y:auto;
+    overscroll-behavior:contain;
 }
 
 /* ===== 3-LINE NOTE ROW ===== */
@@ -472,15 +422,8 @@ textarea{
     border-color:var(--border);
 }
 
-.note-line2 .mini-toggle.on{
-    color:#b45309;
-    font-weight:700;
-}
-
-.note-line2 .mini-toggle.fav-on{
-    color:#d97706;
-    font-weight:700;
-}
+.note-line2 .mini-toggle.on{ color:#b45309; font-weight:700; }
+.note-line2 .mini-toggle.fav-on{ color:#d97706; font-weight:700; }
 
 .note-line2 .meta-chip{
     display:inline-flex;
@@ -499,24 +442,17 @@ textarea{
 }
 
 /* =========================================================
-   NOTE DETAIL PANEL
+   NOTE DETAIL
    ========================================================= */
 
 .detail{ min-width:0; }
-
-.detail-body{
-    padding:0;
-}
-
-/* Colour bar at very top of note panel */
+.detail-body{ padding:0; }
 
 .note-color-bar{
     height:6px;
     width:100%;
     background:var(--note-color,#94a3b8);
 }
-
-/* Control card (single row) */
 
 .note-controls-card{
     display:flex;
@@ -560,26 +496,9 @@ textarea{
 }
 
 .ctrl-btn:hover{ background:#f1f5f9; }
-
-.ctrl-btn.primary{
-    background:var(--primary);
-    color:#fff;
-    border-color:var(--primary);
-}
-
-.ctrl-btn.danger{
-    background:var(--danger);
-    color:#fff;
-    border-color:var(--danger);
-}
-
-.ctrl-btn.success{
-    background:var(--success);
-    color:#fff;
-    border-color:var(--success);
-}
-
-/* Heading card */
+.ctrl-btn.primary{ background:var(--primary); color:#fff; border-color:var(--primary); }
+.ctrl-btn.danger{ background:var(--danger); color:#fff; border-color:var(--danger); }
+.ctrl-btn.success{ background:var(--success); color:#fff; border-color:var(--success); }
 
 .heading-card{
     padding:10px 12px;
@@ -605,11 +524,7 @@ textarea{
     min-height:28px;
 }
 
-/* Content bar with text controls */
-
-.content-bar{
-    border-bottom:1px solid var(--border);
-}
+.content-bar{ border-bottom:1px solid var(--border); }
 
 .content-toolbar{
     display:flex;
@@ -695,12 +610,18 @@ textarea{
     padding:7px 10px;
     background:var(--surface2);
     border-bottom:1px solid var(--border);
+    gap:6px;
 }
 
 .links-card-title{
     font-size:12px;
     font-weight:700;
     color:var(--muted);
+}
+
+.links-card-header-actions{
+    display:flex;
+    gap:4px;
 }
 
 .link-item{
@@ -755,11 +676,7 @@ textarea{
 }
 
 .link-icon-btn:hover{ background:#e2e8f0; }
-
-.link-icon-btn.danger:hover{
-    background:#fef2f2;
-    color:#dc2626;
-}
+.link-icon-btn.danger:hover{ background:#fef2f2; color:#dc2626; }
 
 /* =========================================================
    TAGS + CATEGORY CARD
@@ -839,15 +756,12 @@ textarea{
 }
 
 .small-action-btn:hover{ background:#e2e8f0; }
-
-.small-action-btn.primary{
-    background:var(--primary);
-    color:#fff;
-    border-color:var(--primary);
-}
+.small-action-btn.primary{ background:var(--primary); color:#fff; border-color:var(--primary); }
+.small-action-btn.danger{ background:var(--danger); color:#fff; border-color:var(--danger); }
+.small-action-btn.success{ background:var(--success); color:#fff; border-color:var(--success); }
 
 /* =========================================================
-   METADATA CARD (2-COLUMN BORDERED TABLE)
+   METADATA CARD
    ========================================================= */
 
 .metadata-box{
@@ -936,7 +850,8 @@ textarea{
     font-weight:700;
 }
 
-.setting select{
+.setting select,
+.setting input[type="text"]{
     width:100%;
     height:34px;
     border:1px solid var(--border);
@@ -970,6 +885,31 @@ textarea{
 }
 
 /* =========================================================
+   RECYCLE BIN TOOLBAR
+   ========================================================= */
+
+.bin-toolbar{
+    display:flex;
+    gap:6px;
+    padding:8px 10px;
+    border-bottom:1px solid var(--border);
+    background:var(--surface2);
+    flex-wrap:wrap;
+    align-items:center;
+}
+
+.bin-toolbar .ctrl-btn{
+    height:30px;
+    min-width:auto;
+}
+
+.bin-toolbar-info{
+    font-size:11px;
+    color:var(--muted);
+    margin-left:auto;
+}
+
+/* =========================================================
    TOAST
    ========================================================= */
 
@@ -997,7 +937,7 @@ textarea{
 }
 
 /* =========================================================
-   MULTISELECT MODE
+   MULTISELECT
    ========================================================= */
 
 body.multiselect .note-row{
@@ -1030,9 +970,7 @@ body.multiselect .note-row.ms-selected::before{
     font-weight:700;
 }
 
-body.multiselect .note-row.ms-selected{
-    background:#eff6ff;
-}
+body.multiselect .note-row.ms-selected{ background:#eff6ff; }
 
 /* =========================================================
    NIGHT MODE
@@ -1068,41 +1006,34 @@ body.night .tags-input-inline{
 body.night .metadata-title,
 body.night .links-card-header,
 body.night .content-toolbar,
-body.night .note-controls-card{
+body.night .note-controls-card,
+body.night .bin-toolbar{
     background:var(--surface2);
 }
 
 body.night .note-row:hover{ background:#1e293b; }
 body.night .note-row.active{ background:#1e3a5f; }
+body.night .cat-row:hover{ background:#1e293b; }
 
 body.night .status-card.drive-on,
 body.night .status-card.sync-on{
-    background:#14532d;
-    border-color:#166534;
-    color:#bbf7d0;
+    background:#14532d; border-color:#166534; color:#bbf7d0;
 }
 
 body.night .status-card.drive-off,
 body.night .status-card.sync-err{
-    background:#7f1d1d;
-    border-color:#991b1b;
-    color:#fecaca;
+    background:#7f1d1d; border-color:#991b1b; color:#fecaca;
 }
 
 body.night .status-card.sync-off{
-    background:#78350f;
-    border-color:#92400e;
-    color:#fde68a;
+    background:#78350f; border-color:#92400e; color:#fde68a;
 }
 
 body.night .status-card.last-sync{
-    background:#1e3a8a;
-    border-color:#1e40af;
-    color:#bfdbfe;
+    background:#1e3a8a; border-color:#1e40af; color:#bfdbfe;
 }
 
 body.night .app-title{ color:#60a5fa; }
-
 body.night .sidebar-divider{ background:#334155; }
 
 body.night .tag-chip{
@@ -1118,7 +1049,7 @@ body.night .tag-chip{
 @media(max-width:850px){
     .app-title{ font-size:17px; }
     .workspace{ grid-template-columns:1fr; }
-    .note-list{ max-height:42vh; }
+    .note-list{ max-height:400px; }
     .settings-grid{ grid-template-columns:1fr; }
     .status-card{ font-size:11px; padding:4px 9px; }
     .top-buttons .btn{ min-width:64px; font-size:11px; padding:0 8px; }
@@ -1135,21 +1066,18 @@ body.night .tag-chip{
     .link-item{ flex-wrap:wrap; }
     .link-item-text{ max-width:100%; }
     .link-item-url{ max-width:100%; }
+    .note-list{ max-height:360px; }
 }
 </style>
 </head>
 
 <body>
 
-<!-- =========================================================
-     TOP AREA: TITLE + STATUS + BUTTONS
-     ========================================================= -->
-
+<!-- TOP AREA -->
 <div class="top-area">
-
     <div class="app-title">MY NOTES MANAGER</div>
 
-    <div class="status-row" id="statusRow">
+    <div class="status-row">
         <div id="driveStatus" class="status-card drive-off">Drive: Disconnected</div>
         <div id="syncStatus" class="status-card sync-off">Sync: Pending</div>
         <div id="lastSyncStatus" class="status-card last-sync">Last Synced: —</div>
@@ -1163,22 +1091,14 @@ body.night .tag-chip{
         <button id="multiselectBtn" class="btn" type="button">Multiselect</button>
         <button id="deleteSelectedBtn" class="btn danger" type="button">Delete</button>
     </div>
-
 </div>
 
-<!-- =========================================================
-     SIDEBAR OVERLAY
-     ========================================================= -->
-
+<!-- SIDEBAR OVERLAY -->
 <div id="sidebarOverlay" class="sidebar-overlay"></div>
 
-<!-- =========================================================
-     SIDEBAR
-     ========================================================= -->
-
+<!-- SIDEBAR -->
 <aside id="sidebar" class="sidebar">
 
-    <!-- ALL NOTES -->
     <div class="sidebar-section">
         <div class="sidebar-item active" data-view="all" onclick="setView('all')">
             <span class="sidebar-icon">📒</span>
@@ -1186,7 +1106,6 @@ body.night .tag-chip{
             <span id="allCount" class="sidebar-count">0</span>
         </div>
 
-        <!-- FAVORITES -->
         <div class="sidebar-item" data-view="favorites" onclick="setView('favorites')">
             <span class="sidebar-icon">⭐</span>
             <span class="sidebar-label">Favorites</span>
@@ -1196,52 +1115,46 @@ body.night .tag-chip{
 
     <hr class="sidebar-divider">
 
-    <!-- CAT + UNCAT -->
     <div class="sidebar-section">
-
-        <div class="sidebar-item" onclick="setView('cat')">
+        <div class="sidebar-item" data-view="cat" onclick="setView('cat')">
             <span class="sidebar-icon">📁</span>
             <span class="sidebar-label"><strong>Cat</strong></span>
             <span id="catCount" class="sidebar-count">0</span>
         </div>
 
-        <div class="sidebar-item" onclick="setView('uncat')">
+        <div id="categoryList" class="category-list sidebar-collapse"></div>
+
+        <div class="sidebar-item" data-view="uncat" onclick="setView('uncat')">
             <span class="sidebar-icon">📄</span>
             <span class="sidebar-label"><strong>Uncat</strong></span>
             <span id="uncatCount" class="sidebar-count">0</span>
         </div>
-
-        <!-- SUBCATEGORIES (nested tree shown under Cat) -->
-        <div id="categoryList" class="category-list sidebar-collapse"></div>
-
     </div>
 
-    <!-- TAGS -->
     <div class="sidebar-section">
-
-        <div class="sidebar-item" onclick="toggleSidebarSection('tagList')">
+        <div class="sidebar-item">
             <span class="sidebar-icon">🏷️</span>
             <span class="sidebar-label"><strong>Tags</strong></span>
-            <span id="tagArrow">▾</span>
         </div>
-
-        <div id="tagList" class="tag-list sidebar-collapse open"></div>
-
+        <div id="tagList" class="tag-list sidebar-collapse"></div>
     </div>
 
     <hr class="sidebar-divider">
 
-    <!-- CHECKLIST -->
     <div class="sidebar-section">
-        <div class="sidebar-item" onclick="openChecklist()">
-            <span class="sidebar-icon">☑️</span>
-            <span class="sidebar-label">Checklist</span>
+        <div class="sidebar-item">
+            <span class="sidebar-icon">🔗</span>
+            <span class="sidebar-label"><strong>Links</strong></span>
+            <span style="margin-left:auto;display:flex;gap:3px;">
+                <button class="sidebar-ctrl" title="Add Link" onclick="event.stopPropagation(); addGlobalLink()">+</button>
+                <button class="sidebar-ctrl" title="Edit Link" onclick="event.stopPropagation(); editGlobalLink()">✎</button>
+            </span>
         </div>
+        <div id="globalLinksList" class="sidebar-collapse"></div>
     </div>
 
     <hr class="sidebar-divider">
 
-    <!-- BIN -->
     <div class="sidebar-section">
         <div class="sidebar-item" data-view="trash" onclick="setView('trash')">
             <span class="sidebar-icon">🗑️</span>
@@ -1249,7 +1162,6 @@ body.night .tag-chip{
             <span id="trashCount" class="sidebar-count">0</span>
         </div>
 
-        <!-- SETTINGS -->
         <div class="sidebar-item" onclick="openSettings()">
             <span class="sidebar-icon">⚙️</span>
             <span class="sidebar-label">Settings</span>
@@ -1260,12 +1172,8 @@ body.night .tag-chip{
 
 </aside>
 
-<!-- =========================================================
-     MAIN
-     ========================================================= -->
-
+<!-- MAIN -->
 <main class="main">
-
     <div class="toolbar">
         <div class="search-box">
             <input id="searchInput" type="search" placeholder="Search notes...">
@@ -1280,11 +1188,12 @@ body.night .tag-chip{
                 <span id="listTitle" class="panel-title">All Notes</span>
                 <span id="listCount" class="sidebar-count">0</span>
             </div>
+            <div id="binToolbarWrap"></div>
             <div id="noteList" class="note-list"></div>
             <div id="pagination" class="pagination" style="display:none;"></div>
         </div>
 
-        <!-- DETAIL PANEL -->
+        <!-- DETAIL -->
         <div class="panel detail">
             <div id="detailBody" class="detail-body">
                 <div class="empty">Select a note to view it.</div>
@@ -1292,7 +1201,6 @@ body.night .tag-chip{
         </div>
 
     </section>
-
 </main>
 
 <div id="toast" class="toast"></div>
@@ -1322,7 +1230,6 @@ let currentCategoryId = null;
 let currentTagName = null;
 let searchText = "";
 let sidebarOpen = false;
-let tagOpen = true;
 let currentPage = 1;
 let autosaveTimer = null;
 let saveInProgress = false;
@@ -1331,9 +1238,10 @@ let lastSuccessfulSync = null;
 let lastChangeTime = null;
 let multiselectMode = false;
 let multiselectIds = new Set();
+let globalLinks = []; // {title, url}
 
 /* =========================================================
-   DEFAULT DATABASE
+   DEFAULT DB
    ========================================================= */
 function createEmptyDatabase(){
     return {
@@ -1343,17 +1251,23 @@ function createEmptyDatabase(){
             theme: "System",
             fontSize: "Normal",
             sorting: "Last Modified First",
-            notesPerPage: "All",
+            notesPerPage: 5,
             deleteConfirmation: true,
             autosave: true,
             autosaveInterval: 5,
-            dateTimeFormat: "12 Hour"
+            dateTimeFormat: "12 Hour",
+            notePanelTheme: "Auto",
+            showStatusBar: true,
+            compactNoteList: true,
+            defaultNoteColor: "#64748b",
+            defaultCategory: "",
+            autoAssignBinTag: true
         },
-        checklist: { url: "" },
         trash: { label: "Recycle Bin" },
         categories: [],
         tags: [],
         notes: [],
+        globalLinks: [],
         meta: {
             created: new Date().toISOString(),
             updated: new Date().toISOString()
@@ -1396,9 +1310,8 @@ function connectDrive(){
 }
 
 function requestDriveToken(){
-    try {
-        tokenClient.requestAccessToken({ prompt: "" });
-    } catch(error){
+    try { tokenClient.requestAccessToken({ prompt: "" }); }
+    catch(error){
         console.error(error);
         showToast("Google Drive connection could not start.", "error");
     }
@@ -1458,7 +1371,7 @@ async function createDatabaseFile(){
 }
 
 /* =========================================================
-   LOAD DATABASE
+   LOAD
    ========================================================= */
 async function loadDatabase(){
     if (!accessToken) { connectDrive(); return; }
@@ -1485,7 +1398,7 @@ async function loadDatabase(){
             db = createEmptyDatabase();
         } else {
             try { db = normalizeDatabase(JSON.parse(text)); }
-            catch(e){ throw new Error("MasterDB.json contains invalid JSON."); }
+            catch(e){ throw new Error("MasterDB.json invalid JSON."); }
         }
         pendingChanges = false;
         updateSyncStatus();
@@ -1493,7 +1406,7 @@ async function loadDatabase(){
         setLastSync(lastSuccessfulSync);
         applySettings();
         refreshUI();
-        showToast("Database loaded from Google Drive.", "success");
+        showToast("Database loaded.", "success");
     } catch(error){
         console.error(error);
         setSyncStatus("Error", "error");
@@ -1506,11 +1419,11 @@ function normalizeDatabase(data){
     if (!data || typeof data !== "object") return base;
     const result = { ...base, ...data };
     result.settings = { ...base.settings, ...(data.settings || {}) };
-    result.checklist = { ...base.checklist, ...(data.checklist || {}) };
     result.trash = { ...base.trash, ...(data.trash || {}) };
     result.categories = Array.isArray(data.categories) ? data.categories : [];
     result.tags = Array.isArray(data.tags) ? data.tags : [];
     result.notes = Array.isArray(data.notes) ? data.notes.map(normalizeNote) : [];
+    result.globalLinks = Array.isArray(data.globalLinks) ? data.globalLinks : [];
     return result;
 }
 
@@ -1536,15 +1449,16 @@ function normalizeNote(note){
 }
 
 /* =========================================================
-   SAVE DATABASE
+   SAVE
    ========================================================= */
 async function saveDatabaseToDrive(){
-    if (!accessToken){ showToast("پہلے Drive کو Connect کریں۔", "error"); return false; }
+    if (!accessToken){ showToast("Connect Drive first.", "error"); return false; }
     if (saveInProgress) return false;
     try {
         saveInProgress = true;
         setSyncStatus("Saving", "normal");
         db.meta.updated = new Date().toISOString();
+        db.globalLinks = globalLinks;
         const body = JSON.stringify(db, null, 2);
         if (!databaseFileId){
             const file = await findDatabaseFile();
@@ -1650,14 +1564,14 @@ function addNote(){
         id: generateId("note"),
         title: "New Note",
         content: "",
-        categoryId: null,
+        categoryId: db.settings.defaultCategory || null,
         tags: [],
         links: [],
         favorite: false,
         pinned: false,
         deleted: false,
         trashHidden: false,
-        color: "#64748b",
+        color: db.settings.defaultNoteColor || "#64748b",
         createdAt: now,
         modifiedAt: now,
         lastViewedAt: null,
@@ -1681,50 +1595,13 @@ function deleteNote(id){
     }
     note.deleted = true;
     note.trashHidden = false;
-    if (!note.tags.includes("Bin")) note.tags.push("Bin");
+    if (db.settings.autoAssignBinTag && !note.tags.includes("Bin")) note.tags.push("Bin");
     note.modifiedAt = new Date().toISOString();
     markChanged();
     if (selectedNoteId === id) selectedNoteId = null;
     if (editingNoteId === id) editingNoteId = null;
     refreshUI();
     showToast("Note moved to Recycle Bin.", "success");
-}
-
-function restoreNote(id){
-    const note = getNote(id);
-    if (!note) return;
-    note.deleted = false;
-    note.trashHidden = false;
-    note.modifiedAt = new Date().toISOString();
-    markChanged();
-    selectedNoteId = note.id;
-    refreshUI();
-    showToast("Note restored.", "success");
-}
-
-function restoreAllDeleted(){
-    let count = 0;
-    db.notes.forEach(n => {
-        if (n.deleted){ n.deleted = false; n.trashHidden = false; n.modifiedAt = new Date().toISOString(); count++; }
-    });
-    if (count){ markChanged(); refreshUI(); showToast(count + " notes restored.", "success"); }
-}
-
-function emptyTrash(){
-    const deleted = db.notes.filter(n => n.deleted);
-    if (!deleted.length){ showToast("Recycle Bin is empty.", "normal"); return; }
-    if (!confirm("Empty Recycle Bin? Notes will NOT be permanently deleted.")) return;
-    deleted.forEach(n => { n.trashHidden = true; n.modifiedAt = new Date().toISOString(); });
-    markChanged();
-    refreshUI();
-    showToast("Recycle Bin emptied.", "success");
-}
-
-function restoreTrash(){
-    db.notes.forEach(n => { if (n.deleted) n.trashHidden = false; });
-    markChanged();
-    refreshUI();
-    showToast("Recycle Bin restored.", "success");
 }
 
 /* =========================================================
@@ -1752,10 +1629,11 @@ function togglePinned(id){
    SELECT NOTE
    ========================================================= */
 function selectNote(id){
-    if (multiselectMode){
+    if (multiselectMode || currentView === "trash"){
         if (multiselectIds.has(id)) multiselectIds.delete(id);
         else multiselectIds.add(id);
         renderNoteList();
+        if (currentView === "trash") renderBinToolbar();
         return;
     }
     const note = getNote(id);
@@ -1770,7 +1648,7 @@ function selectNote(id){
 }
 
 /* =========================================================
-   RENDER DETAIL (VIEW MODE)
+   DETAIL PANEL
    ========================================================= */
 function renderDetail(){
     const container = document.getElementById("detailBody");
@@ -1836,7 +1714,10 @@ function renderDetail(){
         <div class="links-card">
             <div class="links-card-header">
                 <span class="links-card-title">Links (${(note.links||[]).length})</span>
-                <button class="small-action-btn primary" onclick="addLinkInline('${note.id}')">+ Add Link</button>
+                <div class="links-card-header-actions">
+                    <button class="small-action-btn primary" onclick="addLinkInline('${note.id}')">+ Add</button>
+                    <button class="small-action-btn" onclick="toggleLinksEdit('${note.id}')">✎ Edit</button>
+                </div>
             </div>
             ${linksHtml || `<div class="empty" style="min-height:60px;font-size:12px;">No links yet.</div>`}
         </div>
@@ -1859,9 +1740,22 @@ function renderDetail(){
     `;
 }
 
-/* =========================================================
-   RENDER EDIT MODE
-   ========================================================= */
+function toggleLinksEdit(noteId){
+    // triggers a generic prompt to select a link to edit
+    const note = getNote(noteId);
+    if (!note || !note.links || !note.links.length){
+        showToast("No links to edit.", "normal");
+        return;
+    }
+    const list = note.links.map((l, i) => `${i+1}. ${l.title} → ${l.url}`).join("\n");
+    const choice = prompt("Enter link number to edit:\n\n" + list, "1");
+    if (choice === null) return;
+    const idx = parseInt(choice, 10) - 1;
+    if (idx >= 0 && idx < note.links.length){
+        editLinkInline(noteId, idx);
+    }
+}
+
 function startEdit(){
     if (!selectedNoteId) { showToast("Select a note first.", "error"); return; }
     editingNoteId = selectedNoteId;
@@ -1948,7 +1842,9 @@ function renderEditMode(note){
         <div class="links-card">
             <div class="links-card-header">
                 <span class="links-card-title">Links (${(note.links||[]).length})</span>
-                <button class="small-action-btn primary" onclick="addLinkInline('${note.id}')">+ Add Link</button>
+                <div class="links-card-header-actions">
+                    <button class="small-action-btn primary" onclick="addLinkInline('${note.id}')">+ Add</button>
+                </div>
             </div>
             ${linksHtml || `<div class="empty" style="min-height:60px;font-size:12px;">No links yet.</div>`}
         </div>
@@ -1972,7 +1868,7 @@ function renderEditMode(note){
 }
 
 /* =========================================================
-   RICH TEXT COMMANDS
+   RICH TEXT
    ========================================================= */
 function execCmd(cmd){
     document.execCommand(cmd, false, null);
@@ -1989,7 +1885,7 @@ function pickColor(){
 }
 
 function insertLinkDialog(){
-    const text = prompt("Link text (displayed):", "");
+    const text = prompt("Link text:", "");
     if (text === null) return;
     const url = prompt("Link URL:", "https://");
     if (!url) return;
@@ -1998,7 +1894,7 @@ function insertLinkDialog(){
 }
 
 /* =========================================================
-   TAG ACTIONS
+   TAGS
    ========================================================= */
 function assignTagFromInput(noteId){
     const input = document.getElementById("detailTagsInput");
@@ -2034,35 +1930,31 @@ function parseTags(text){
 }
 
 /* =========================================================
-   LINK ACTIONS
+   LINKS
    ========================================================= */
 function addLinkInline(noteId){
     const note = getNote(noteId);
     if (!note) return;
-    const title = prompt("Link title:", "");
-    if (title === null) return;
-    const url = prompt("Link URL:", "https://");
-    if (!url) return;
-    if (!note.links) note.links = [];
-    note.links.push({ title: title || url, url: url });
-    note.modifiedAt = new Date().toISOString();
-    markChanged();
-    renderDetail();
+    openLinkPopup("Add Link", "", "", (title, url) => {
+        if (!note.links) note.links = [];
+        note.links.push({ title: title || url, url: url });
+        note.modifiedAt = new Date().toISOString();
+        markChanged();
+        renderDetail();
+    });
 }
 
 function editLinkInline(noteId, index){
     const note = getNote(noteId);
     if (!note || !note.links || !note.links[index]) return;
     const link = note.links[index];
-    const title = prompt("Edit link title:", link.title);
-    if (title === null) return;
-    const url = prompt("Edit link URL:", link.url);
-    if (!url) return;
-    link.title = title || url;
-    link.url = url;
-    note.modifiedAt = new Date().toISOString();
-    markChanged();
-    renderDetail();
+    openLinkPopup("Edit Link", link.title, link.url, (title, url) => {
+        link.title = title || url;
+        link.url = url;
+        note.modifiedAt = new Date().toISOString();
+        markChanged();
+        renderDetail();
+    });
 }
 
 function deleteLinkInline(noteId, index){
@@ -2076,25 +1968,139 @@ function deleteLinkInline(noteId, index){
 }
 
 /* =========================================================
-   CATEGORY MENU FOR NOTE
+   LINK POPUP WINDOW
+   ========================================================= */
+function openLinkPopup(title, initialTitle, initialUrl, onSave){
+    const w = window.open("", "LinkWindow", "width=420,height=280,resizable=yes,scrollbars=yes");
+    if (!w){
+        // popup blocked → fallback
+        const t = prompt(title + "\n\nLink Title:", initialTitle);
+        if (t === null) return;
+        const u = prompt("Link URL:", initialUrl || "https://");
+        if (!u) return;
+        onSave(t || u, u);
+        return;
+    }
+    w.document.write(`
+        <!DOCTYPE html>
+        <html><head><title>${escapeHtml(title)}</title>
+        <style>
+            body{font-family:Arial,sans-serif;background:#f4f6f9;margin:0;padding:16px;color:#172033;}
+            h3{margin:0 0 12px;font-size:16px;}
+            label{display:block;font-size:12px;font-weight:700;color:#697386;margin-bottom:4px;margin-top:10px;}
+            input{width:100%;height:36px;padding:0 10px;border:1px solid #dfe4ec;border-radius:8px;font-size:14px;box-sizing:border-box;outline:none;}
+            input:focus{border-color:#2563eb;}
+            .buttons{display:flex;gap:8px;margin-top:16px;justify-content:flex-end;}
+            button{height:34px;min-width:80px;padding:0 14px;border-radius:8px;border:1px solid #dfe4ec;background:#fff;font-weight:600;cursor:pointer;font-size:13px;}
+            .primary{background:#2563eb;color:#fff;border-color:#2563eb;}
+        </style>
+        </head><body>
+            <h3>${escapeHtml(title)}</h3>
+            <label>Link Title</label>
+            <input id="ttl" value="${escapeAttribute(initialTitle)}" placeholder="e.g. Google">
+            <label>Link Address</label>
+            <input id="url" value="${escapeAttribute(initialUrl)}" placeholder="https://example.com">
+            <div class="buttons">
+                <button onclick="window.close()">Cancel</button>
+                <button class="primary" onclick="save()">Save</button>
+            </div>
+            <script>
+                function save(){
+                    var t = document.getElementById('ttl').value.trim();
+                    var u = document.getElementById('url').value.trim();
+                    if (!u){ alert('Please enter a URL.'); return; }
+                    if (window.opener && window.opener.__linkCallback){
+                        window.opener.__linkCallback(t, u);
+                    }
+                    window.close();
+                }
+            <\/script>
+        </body></html>
+    `);
+    w.document.close();
+    window.__linkCallback = function(t, u){ onSave(t, u); delete window.__linkCallback; };
+}
+
+/* =========================================================
+   GLOBAL LINKS (Sidebar "Links" section)
+   ========================================================= */
+function renderGlobalLinks(){
+    const container = document.getElementById("globalLinksList");
+    if (!container) return;
+    if (!globalLinks.length){
+        container.innerHTML = `<div class="sidebar-subtitle">No links</div>`;
+        return;
+    }
+    container.innerHTML = globalLinks.map((link, i) => `
+        <div class="sidebar-item" style="padding-left:22px;">
+            <span class="sidebar-icon">🔗</span>
+            <span class="sidebar-label" title="${escapeAttribute(link.url)}">
+                <a href="${escapeAttribute(link.url)}" target="_blank" rel="noopener" style="color:var(--primary);text-decoration:none;" onclick="event.stopPropagation()">${escapeHtml(link.title || link.url)}</a>
+            </span>
+            <div class="sidebar-controls">
+                <button class="sidebar-ctrl" title="Edit" onclick="event.stopPropagation(); editGlobalLinkAt(${i})">✎</button>
+                <button class="sidebar-ctrl danger" title="Remove" onclick="event.stopPropagation(); removeGlobalLinkAt(${i})">🗑</button>
+            </div>
+        </div>
+    `).join("");
+}
+
+function addGlobalLink(){
+    openLinkPopup("Add Link", "", "", (title, url) => {
+        globalLinks.push({ title: title || url, url: url });
+        markChanged();
+        renderGlobalLinks();
+        showToast("Link added.", "success");
+    });
+}
+
+function editGlobalLink(){
+    if (!globalLinks.length){ showToast("No links to edit.", "normal"); return; }
+    const list = globalLinks.map((l, i) => `${i+1}. ${l.title} → ${l.url}`).join("\n");
+    const choice = prompt("Enter link number to edit:\n\n" + list, "1");
+    if (choice === null) return;
+    const idx = parseInt(choice, 10) - 1;
+    if (idx >= 0 && idx < globalLinks.length){
+        editGlobalLinkAt(idx);
+    }
+}
+
+function editGlobalLinkAt(index){
+    const link = globalLinks[index];
+    if (!link) return;
+    openLinkPopup("Edit Link", link.title, link.url, (title, url) => {
+        link.title = title || url;
+        link.url = url;
+        markChanged();
+        renderGlobalLinks();
+    });
+}
+
+function removeGlobalLinkAt(index){
+    if (!globalLinks[index]) return;
+    if (!confirm("Remove this link?")) return;
+    globalLinks.splice(index, 1);
+    markChanged();
+    renderGlobalLinks();
+    showToast("Link removed.", "success");
+}
+
+/* =========================================================
+   CATEGORY MENU
    ========================================================= */
 function openCategoryMenuForNote(noteId){
     const note = getNote(noteId);
     if (!note) return;
 
-    const menu = [];
-    menu.push("0 = Uncat");
-    db.categories.forEach((c, i) => {
-        menu.push((i+1) + " = " + getCategoryPath(c.id));
-    });
+    const menu = ["0 = Uncat"];
+    db.categories.forEach((c, i) => menu.push((i+1) + " = " + getCategoryPath(c.id)));
 
     const choice = prompt(
         "Assign Category:\n" + menu.join("\n") +
-        "\n\nEnter number (or C to create new, S for sister, H for child):",
+        "\n\nEnter number, or C=New root, S=Sister, H=Child:",
         ""
     );
     if (choice === null) return;
-
     const trimmed = choice.trim();
 
     if (trimmed.toLowerCase() === "c"){
@@ -2120,14 +2126,9 @@ function openCategoryMenuForNote(noteId){
         note.categoryId = cat.id;
     } else {
         const idx = parseInt(trimmed, 10);
-        if (idx === 0){
-            note.categoryId = null;
-        } else if (idx >= 1 && idx <= db.categories.length){
-            note.categoryId = db.categories[idx - 1].id;
-        } else {
-            showToast("Invalid choice.", "error");
-            return;
-        }
+        if (idx === 0) note.categoryId = null;
+        else if (idx >= 1 && idx <= db.categories.length) note.categoryId = db.categories[idx - 1].id;
+        else { showToast("Invalid choice.", "error"); return; }
     }
 
     note.modifiedAt = new Date().toISOString();
@@ -2215,16 +2216,6 @@ function toggleSidebar(){
     }
 }
 
-function toggleSidebarSection(id){
-    const el = document.getElementById(id);
-    if (!el) return;
-    if (el.classList.contains("open")){
-        el.classList.remove("open");
-    } else {
-        el.classList.add("open");
-    }
-}
-
 function renderSidebar(){
     const activeNotes = db.notes.filter(n => !n.deleted);
     const catNotes = activeNotes.filter(n => n.categoryId);
@@ -2238,10 +2229,11 @@ function renderSidebar(){
 
     renderCategories();
     renderTags();
+    renderGlobalLinks();
 }
 
 /* =========================================================
-   RENDER CATEGORIES (only with notes)
+   RENDER CATEGORIES (with rename + remove buttons at LEFT)
    ========================================================= */
 function renderCategories(){
     const container = document.getElementById("categoryList");
@@ -2275,18 +2267,18 @@ function renderCategoryTree(cat, usedIds){
     const children = db.categories.filter(c => c.parentId === cat.id && usedIds.has(c.id));
     const count = countCategoryNotes(cat.id);
     const childrenHtml = children.length
-        ? `<div class="tree-children">${children.map(c => renderCategoryTree(c, usedIds)).join("")}</div>`
+        ? `<div class="tree-children" style="margin-left:14px;">${children.map(c => renderCategoryTree(c, usedIds)).join("")}</div>`
         : "";
 
     return `
-        <div class="sidebar-item" style="padding-left:22px;" onclick="setCategoryView('${cat.id}')">
-            <span class="sidebar-icon">↳</span>
-            <span class="sidebar-label">${escapeHtml(cat.name)}</span>
-            <span class="sidebar-count">${count}</span>
-            <div class="sidebar-controls">
+        <div class="cat-row" style="padding-left:22px;">
+            <div class="cat-row-btns">
                 <button class="sidebar-ctrl" title="Rename" onclick="event.stopPropagation(); renameCategory('${cat.id}')">✎</button>
                 <button class="sidebar-ctrl danger" title="Remove" onclick="event.stopPropagation(); removeCategory('${cat.id}')">🗑</button>
             </div>
+            <span class="sidebar-icon">↳</span>
+            <span class="sidebar-label" onclick="setCategoryView('${cat.id}')" style="cursor:pointer;">${escapeHtml(cat.name)}</span>
+            <span class="sidebar-count">${count}</span>
         </div>
         ${childrenHtml}
     `;
@@ -2340,7 +2332,7 @@ function renameCategory(id){
 function removeCategory(id){
     const cat = db.categories.find(c => c.id === id);
     if (!cat) return;
-    if (!confirm("Remove this category? Notes will NOT be deleted. They will be reassigned to the parent (or Uncat).")) return;
+    if (!confirm("Remove this category? Its notes will be reassigned to the parent category (or Uncat).")) return;
 
     const parentId = cat.parentId || null;
 
@@ -2371,7 +2363,7 @@ function removeCategory(id){
 }
 
 /* =========================================================
-   RENDER TAGS (only from active notes)
+   TAGS (flat list, only from active notes)
    ========================================================= */
 function renderTags(){
     const container = document.getElementById("tagList");
@@ -2395,13 +2387,13 @@ function renderTags(){
     container.innerHTML = sorted.map(tag => {
         const count = db.notes.filter(n => !n.deleted && n.tags.includes(tag)).length;
         return `
-            <div class="sidebar-item" onclick="setTagView('${escapeAttribute(tag)}')">
+            <div class="sidebar-item" style="padding-left:22px;">
                 <span class="sidebar-icon">🏷️</span>
-                <span class="sidebar-label">${escapeHtml(tag)}</span>
+                <span class="sidebar-label" onclick="setTagView('${escapeAttribute(tag)}')" style="cursor:pointer;">${escapeHtml(tag)}</span>
                 <span class="sidebar-count">${count}</span>
                 <div class="sidebar-controls">
                     <button class="sidebar-ctrl" title="Rename" onclick="event.stopPropagation(); renameTag('${escapeAttribute(tag)}')">✎</button>
-                    <button class="sidebar-ctrl danger" title="Remove tag from all notes" onclick="event.stopPropagation(); removeTagEverywhere('${escapeAttribute(tag)}')">🗑</button>
+                    <button class="sidebar-ctrl danger" title="Remove tag" onclick="event.stopPropagation(); removeTagEverywhere('${escapeAttribute(tag)}')">🗑</button>
                 </div>
             </div>
         `;
@@ -2444,9 +2436,11 @@ function setView(view){
     currentCategoryId = null;
     currentTagName = null;
     currentPage = 1;
+    multiselectIds.clear();
     updateSidebarActive();
     renderListTitle();
     renderNoteList();
+    renderBinToolbar();
 }
 
 function setCategoryView(id){
@@ -2454,9 +2448,11 @@ function setCategoryView(id){
     currentCategoryId = id;
     currentTagName = null;
     currentPage = 1;
+    multiselectIds.clear();
     updateSidebarActive();
     renderListTitle();
     renderNoteList();
+    renderBinToolbar();
 }
 
 function setTagView(tag){
@@ -2464,9 +2460,11 @@ function setTagView(tag){
     currentTagName = tag;
     currentCategoryId = null;
     currentPage = 1;
+    multiselectIds.clear();
     updateSidebarActive();
     renderListTitle();
     renderNoteList();
+    renderBinToolbar();
 }
 
 function updateSidebarActive(){
@@ -2490,7 +2488,7 @@ function renderListTitle(){
 }
 
 /* =========================================================
-   FILTER + SORT
+   FILTER / SORT
    ========================================================= */
 function getVisibleNotes(){
     let notes = [...db.notes];
@@ -2541,7 +2539,7 @@ function sortNotes(notes){
 }
 
 /* =========================================================
-   RENDER NOTE LIST (3 LINES)
+   RENDER NOTE LIST
    ========================================================= */
 function renderNoteList(){
     const container = document.getElementById("noteList");
@@ -2644,6 +2642,107 @@ function changePage(delta){
 }
 
 /* =========================================================
+   RECYCLE BIN TOOLBAR (only in trash view)
+   ========================================================= */
+function renderBinToolbar(){
+    const wrap = document.getElementById("binToolbarWrap");
+    if (!wrap) return;
+    if (currentView !== "trash"){
+        wrap.innerHTML = "";
+        return;
+    }
+    const total = db.notes.filter(n => n.deleted && !n.trashHidden).length;
+    const selCount = multiselectIds.size;
+    wrap.innerHTML = `
+        <div class="bin-toolbar">
+            <button class="ctrl-btn success" onclick="binRestoreSelected()" ${selCount ? "" : "disabled"}>Restore</button>
+            <button class="ctrl-btn danger" onclick="binPermanentDeleteSelected()" ${selCount ? "" : "disabled"}>Permanent Delete</button>
+            <button class="ctrl-btn danger" onclick="binDeleteAll()" ${total ? "" : "disabled"}>Delete All</button>
+            <span class="bin-toolbar-info">${selCount} of ${total} selected</span>
+        </div>
+    `;
+}
+
+function binRestoreSelected(){
+    if (!multiselectIds.size){ showToast("Select notes first.", "normal"); return; }
+    multiselectIds.forEach(id => {
+        const note = getNote(id);
+        if (note){
+            note.deleted = false;
+            note.trashHidden = false;
+            note.modifiedAt = new Date().toISOString();
+        }
+    });
+    multiselectIds.clear();
+    markChanged();
+    refreshUI();
+    showToast("Selected notes restored.", "success");
+}
+
+function binPermanentDeleteSelected(){
+    if (!multiselectIds.size){ showToast("Select notes first.", "normal"); return; }
+    if (!confirm("Permanently delete " + multiselectIds.size + " note(s)? This cannot be undone.")) return;
+    db.notes = db.notes.filter(n => !multiselectIds.has(n.id));
+    multiselectIds.clear();
+    markChanged();
+    refreshUI();
+    showToast("Selected notes permanently deleted.", "success");
+}
+
+function binDeleteAll(){
+    const deleted = db.notes.filter(n => n.deleted && !n.trashHidden);
+    if (!deleted.length){ showToast("Recycle Bin is empty.", "normal"); return; }
+    if (!confirm("Permanently delete ALL " + deleted.length + " notes in the Recycle Bin? This cannot be undone.")) return;
+    db.notes = db.notes.filter(n => !(n.deleted && !n.trashHidden));
+    multiselectIds.clear();
+    markChanged();
+    refreshUI();
+    showToast("Recycle Bin emptied permanently.", "success");
+}
+
+/* =========================================================
+   MULTISELECT
+   ========================================================= */
+function toggleMultiselect(){
+    multiselectMode = !multiselectMode;
+    multiselectIds.clear();
+    const btn = document.getElementById("multiselectBtn");
+    if (multiselectMode){
+        document.body.classList.add("multiselect");
+        btn.classList.add("active");
+        btn.textContent = "Cancel MS";
+        showToast("Multiselect ON. Tap notes to select.", "normal");
+    } else {
+        document.body.classList.remove("multiselect");
+        btn.classList.remove("active");
+        btn.textContent = "Multiselect";
+    }
+    renderNoteList();
+}
+
+function deleteSelected(){
+    if (!multiselectIds.size){ showToast("No notes selected.", "normal"); return; }
+    if (!confirm("Delete " + multiselectIds.size + " selected note(s)?")) return;
+    multiselectIds.forEach(id => {
+        const note = getNote(id);
+        if (note){
+            note.deleted = true;
+            note.trashHidden = false;
+            if (db.settings.autoAssignBinTag && !note.tags.includes("Bin")) note.tags.push("Bin");
+            note.modifiedAt = new Date().toISOString();
+        }
+    });
+    multiselectIds.clear();
+    multiselectMode = false;
+    document.body.classList.remove("multiselect");
+    document.getElementById("multiselectBtn").classList.remove("active");
+    document.getElementById("multiselectBtn").textContent = "Multiselect";
+    markChanged();
+    refreshUI();
+    showToast("Selected notes moved to Recycle Bin.", "success");
+}
+
+/* =========================================================
    SETTINGS
    ========================================================= */
 function openSettings(){
@@ -2651,6 +2750,8 @@ function openSettings(){
     document.getElementById("listTitle").textContent = "Settings";
     document.getElementById("listCount").textContent = "";
     document.getElementById("noteList").innerHTML = "";
+    document.getElementById("binToolbarWrap").innerHTML = "";
+    document.getElementById("pagination").style.display = "none";
     const detail = document.getElementById("detailBody");
     detail.innerHTML = renderSettings();
     selectedNoteId = null;
@@ -2683,8 +2784,13 @@ function renderSettings(){
                 </div>
                 <div class="setting">
                     <label>Notes Per Page</label>
-                    <select onchange="saveSetting('notesPerPage',this.value)">
-                        ${option("10", String(s.notesPerPage))}${option("20", String(s.notesPerPage))}${option("50", String(s.notesPerPage))}${option("100", String(s.notesPerPage))}${option("All", String(s.notesPerPage))}
+                    <select onchange="saveSetting('notesPerPage', this.value === 'All' ? 'All' : Number(this.value))">
+                        ${option("5", String(s.notesPerPage))}
+                        ${option("10", String(s.notesPerPage))}
+                        ${option("20", String(s.notesPerPage))}
+                        ${option("50", String(s.notesPerPage))}
+                        ${option("100", String(s.notesPerPage))}
+                        ${option("All", String(s.notesPerPage))}
                     </select>
                 </div>
                 <div class="setting">
@@ -2713,27 +2819,35 @@ function renderSettings(){
                         ${option("Local", s.dateTimeFormat)}${option("12 Hour", s.dateTimeFormat)}${option("24 Hour", s.dateTimeFormat)}
                     </select>
                 </div>
-            </div>
-
-            <div style="margin-top:15px;">
-                <div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:5px;">Checklist Web App URL</div>
-                <div style="display:flex;gap:7px;">
-                    <input id="checklistUrl" class="tags-input-inline" style="flex:1;height:34px;" value="${escapeAttribute(db.checklist.url || "")}" placeholder="https://...">
-                    <button class="small-action-btn primary" style="height:34px;" onclick="saveChecklistUrl()">Save</button>
+                <div class="setting">
+                    <label>Default Note Colour</label>
+                    <input type="color" value="${escapeAttribute(s.defaultNoteColor || '#64748b')}" onchange="saveSetting('defaultNoteColor',this.value)" style="width:100%;height:34px;border:1px solid var(--border);border-radius:7px;padding:0;cursor:pointer;">
+                </div>
+                <div class="setting">
+                    <label>Auto-assign "Bin" tag on delete</label>
+                    <select onchange="saveSetting('autoAssignBinTag',this.value === 'true')">
+                        <option value="true" ${s.autoAssignBinTag ? "selected" : ""}>On</option>
+                        <option value="false" ${!s.autoAssignBinTag ? "selected" : ""}>Off</option>
+                    </select>
+                </div>
+                <div class="setting">
+                    <label>Compact Note List</label>
+                    <select onchange="saveSetting('compactNoteList',this.value === 'true')">
+                        <option value="true" ${s.compactNoteList ? "selected" : ""}>On</option>
+                        <option value="false" ${!s.compactNoteList ? "selected" : ""}>Off</option>
+                    </select>
+                </div>
+                <div class="setting">
+                    <label>Recycle Bin Name</label>
+                    <select onchange="changeTrashLabel(this.value)">
+                        ${["Recycle Bin","Trash","Dustbin","Deleted Items","Bin","Waste Bin"].map(x => `<option ${x === db.trash.label ? "selected" : ""}>${escapeHtml(x)}</option>`).join("")}
+                    </select>
                 </div>
             </div>
 
-            <div style="margin-top:15px;">
-                <div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:5px;">Recycle Bin Name</div>
-                <select class="tags-input-inline" style="width:100%;height:34px;" onchange="changeTrashLabel(this.value)">
-                    ${["Recycle Bin","Trash","Dustbin","Deleted Items","Bin","Waste Bin"].map(x => `<option ${x === db.trash.label ? "selected" : ""}>${escapeHtml(x)}</option>`).join("")}
-                </select>
-            </div>
-
             <div style="margin-top:18px;display:flex;gap:6px;flex-wrap:wrap;">
-                <button class="ctrl-btn" onclick="restoreAllDeleted()">Restore All</button>
-                <button class="ctrl-btn" onclick="emptyTrash()">Empty Bin</button>
-                <button class="ctrl-btn" onclick="restoreTrash()">Restore Bin</button>
+                <button class="ctrl-btn" onclick="exportDatabaseJSON()">Export JSON</button>
+                <button class="ctrl-btn" onclick="showDatabaseStats()">Show Stats</button>
             </div>
         </div>
     `;
@@ -2750,18 +2864,37 @@ function saveSetting(key, value){
     showToast("Setting saved.", "success");
 }
 
-function saveChecklistUrl(){
-    const input = document.getElementById("checklistUrl");
-    db.checklist.url = input.value.trim();
-    markChanged();
-    showToast("Checklist link saved.", "success");
-}
-
 function changeTrashLabel(value){
     db.trash.label = value;
     markChanged();
     document.getElementById("trashLabel").textContent = value;
     renderListTitle();
+}
+
+function exportDatabaseJSON(){
+    const blob = new Blob([JSON.stringify(db, null, 2)], { type: "application/json" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "MasterDB_export_" + Date.now() + ".json";
+    a.click();
+    URL.revokeObjectURL(a.href);
+    showToast("Exported.", "success");
+}
+
+function showDatabaseStats(){
+    const active = db.notes.filter(n => !n.deleted).length;
+    const deleted = db.notes.filter(n => n.deleted).length;
+    const cats = db.categories.length;
+    const tags = new Set();
+    db.notes.forEach(n => n.tags.forEach(t => { if (t !== "Bin") tags.add(t); }));
+    alert(
+        "Database Stats:\n\n" +
+        "Active Notes: " + active + "\n" +
+        "Deleted Notes: " + deleted + "\n" +
+        "Categories: " + cats + "\n" +
+        "Unique Tags: " + tags.size + "\n" +
+        "Global Links: " + globalLinks.length
+    );
 }
 
 /* =========================================================
@@ -2780,57 +2913,16 @@ function applySettings(){
     const fontSizes = { "Small":"13px", "Normal":"15px", "Large":"17px", "Extra Large":"19px" };
     document.documentElement.style.setProperty("--font-size", fontSizes[db.settings.fontSize] || "15px");
     document.getElementById("trashLabel").textContent = db.trash.label || "Recycle Bin";
-}
 
-/* =========================================================
-   CHECKLIST
-   ========================================================= */
-function openChecklist(){
-    const url = db.checklist.url;
-    if (!url){ showToast("Checklist URL not set in Settings.", "error"); return; }
-    window.open(url, "_blank", "noopener,noreferrer");
-}
-
-/* =========================================================
-   MULTISELECT
-   ========================================================= */
-function toggleMultiselect(){
-    multiselectMode = !multiselectMode;
-    multiselectIds.clear();
-    const btn = document.getElementById("multiselectBtn");
-    if (multiselectMode){
-        document.body.classList.add("multiselect");
-        btn.classList.add("active");
-        btn.textContent = "Cancel MS";
-        showToast("Multiselect ON. Tap notes to select.", "normal");
-    } else {
-        document.body.classList.remove("multiselect");
-        btn.classList.remove("active");
-        btn.textContent = "Multiselect";
-    }
-    renderNoteList();
-}
-
-function deleteSelected(){
-    if (!multiselectIds.size){ showToast("No notes selected.", "normal"); return; }
-    if (!confirm("Delete " + multiselectIds.size + " selected note(s)?")) return;
-    multiselectIds.forEach(id => {
-        const note = getNote(id);
-        if (note){
-            note.deleted = true;
-            note.trashHidden = false;
-            if (!note.tags.includes("Bin")) note.tags.push("Bin");
-            note.modifiedAt = new Date().toISOString();
+    // Note list row height hint
+    const listEl = document.getElementById("noteList");
+    if (listEl){
+        if (db.settings.compactNoteList){
+            listEl.style.maxHeight = "480px";
+        } else {
+            listEl.style.maxHeight = "600px";
         }
-    });
-    multiselectIds.clear();
-    multiselectMode = false;
-    document.body.classList.remove("multiselect");
-    document.getElementById("multiselectBtn").classList.remove("active");
-    document.getElementById("multiselectBtn").textContent = "Multiselect";
-    markChanged();
-    refreshUI();
-    showToast("Selected notes moved to Recycle Bin.", "success");
+    }
 }
 
 /* =========================================================
@@ -2841,6 +2933,7 @@ function refreshUI(){
     renderSidebar();
     renderListTitle();
     renderNoteList();
+    renderBinToolbar();
     renderDetail();
 }
 
@@ -2936,10 +3029,12 @@ function initializeApp(){
     document.getElementById("sidebarOverlay").classList.remove("open");
     document.getElementById("sidebarToggle").textContent = "Show Sidebar";
     db = normalizeDatabase(db);
+    globalLinks = Array.isArray(db.globalLinks) ? db.globalLinks : [];
     applySettings();
     renderSidebar();
     renderListTitle();
     renderNoteList();
+    renderBinToolbar();
     renderDetail();
     updateSyncStatus();
     initializeGoogle();
