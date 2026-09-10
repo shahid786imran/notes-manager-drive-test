@@ -21,16 +21,14 @@
     --radius:12px;
     --font-size:15px;
     --sidebar-width:290px;
+    --sidebar-border:1px;
+    --note-list-bg:#ffffff;
+    --note-panel-bg:#ffffff;
+    --section-height:38px;
 }
 
 *{ box-sizing:border-box; }
-
-html,body{
-    margin:0;
-    padding:0;
-    min-height:100%;
-}
-
+html,body{ margin:0; padding:0; min-height:100%; }
 body{
     background:var(--bg);
     color:var(--text);
@@ -38,10 +36,7 @@ body{
     font-size:var(--font-size);
 }
 
-/* =========================================================
-   FLOATING SIDEBAR TOGGLE (FIXED TOP-LEFT, ALWAYS VISIBLE)
-   ========================================================= */
-
+/* FLOATING SIDEBAR TOGGLE */
 .floating-toggle{
     position:fixed;
     top:10px;
@@ -63,17 +58,12 @@ body{
     padding:0;
     transition:background .15s;
 }
-
 .floating-toggle:hover{ background:#eef2ff; }
-
-/* 3 lines icon (CSS-based) */
-
 .floating-toggle .hamburger{
     display:flex;
     flex-direction:column;
     gap:4px;
 }
-
 .floating-toggle .hamburger span{
     width:20px;
     height:2.5px;
@@ -81,16 +71,9 @@ body{
     border-radius:2px;
     display:block;
 }
+.floating-toggle .arrow-icon{ font-size:18px; line-height:1; }
 
-.floating-toggle .arrow-icon{
-    font-size:18px;
-    line-height:1;
-}
-
-/* =========================================================
-   TOP AREA (STICKY HEADER - TITLE + STATUS + BUTTONS)
-   ========================================================= */
-
+/* TOP AREA */
 .top-area{
     background:var(--surface);
     border-bottom:1px solid var(--border);
@@ -100,7 +83,6 @@ body{
     top:0;
     z-index:1000;
 }
-
 .app-title{
     font-size:20px;
     font-weight:800;
@@ -113,7 +95,6 @@ body{
     overflow:hidden;
     text-overflow:ellipsis;
 }
-
 .status-row{
     display:flex;
     gap:8px;
@@ -123,7 +104,6 @@ body{
     padding-bottom:2px;
     scrollbar-width:thin;
 }
-
 .status-card{
     flex:0 0 auto;
     padding:5px 12px;
@@ -136,7 +116,6 @@ body{
     color:var(--muted);
     line-height:1.4;
 }
-
 .status-card.drive-on{ color:#15803d; border-color:#bbf7d0; background:#f0fdf4; }
 .status-card.drive-off{ color:#dc2626; border-color:#fecaca; background:#fef2f2; }
 .status-card.sync-on{ color:#15803d; border-color:#bbf7d0; background:#f0fdf4; }
@@ -153,7 +132,6 @@ body{
     padding-bottom:2px;
     scrollbar-width:thin;
 }
-
 .top-buttons .btn{
     flex:0 0 auto;
     height:34px;
@@ -172,7 +150,6 @@ body{
     cursor:pointer;
     transition:.15s ease;
 }
-
 .top-buttons .btn:hover{ background:#f1f5f9; }
 .top-buttons .btn.primary{ background:var(--primary); color:#fff; border-color:var(--primary); }
 .top-buttons .btn.primary:hover{ background:var(--primary2); }
@@ -184,10 +161,7 @@ body{
 .btn{ cursor:pointer; font:inherit; }
 button,select,input,textarea{ font:inherit; }
 
-/* =========================================================
-   SIDEBAR OVERLAY
-   ========================================================= */
-
+/* SIDEBAR */
 .sidebar-overlay{
     position:fixed;
     inset:0;
@@ -195,12 +169,7 @@ button,select,input,textarea{ font:inherit; }
     background:rgba(0,0,0,.22);
     display:none;
 }
-
 .sidebar-overlay.open{ display:block; }
-
-/* =========================================================
-   SIDEBAR
-   ========================================================= */
 
 .sidebar{
     position:fixed;
@@ -210,7 +179,7 @@ button,select,input,textarea{ font:inherit; }
     width:var(--sidebar-width);
     z-index:2000;
     background:var(--surface);
-    border-right:1px solid var(--border);
+    border-right:var(--sidebar-border) solid var(--border);
     box-shadow:10px 0 25px rgba(0,0,0,.08);
     transform:translateX(-105%);
     transition:transform .2s ease;
@@ -218,15 +187,16 @@ button,select,input,textarea{ font:inherit; }
     overscroll-behavior:contain;
     padding:10px;
     padding-top:66px;
+    scrollbar-width:none;
 }
-
+.sidebar::-webkit-scrollbar{ display:none; }
 .sidebar.open{ transform:translateX(0); }
 
 .sidebar-section{ margin-bottom:4px; }
 
 .sidebar-item{
     position:relative;
-    min-height:38px;
+    min-height:var(--section-height);
     display:flex;
     align-items:center;
     gap:8px;
@@ -235,16 +205,9 @@ button,select,input,textarea{ font:inherit; }
     cursor:pointer;
     color:var(--text);
 }
-
 .sidebar-item:hover,
 .sidebar-item.active{ background:#eef2ff; }
-
-.sidebar-icon{
-    width:20px;
-    text-align:center;
-    flex:none;
-}
-
+.sidebar-icon{ width:20px; text-align:center; flex:none; }
 .sidebar-label{
     flex:1;
     min-width:0;
@@ -252,12 +215,7 @@ button,select,input,textarea{ font:inherit; }
     text-overflow:ellipsis;
     white-space:nowrap;
 }
-
-.sidebar-count{
-    color:var(--muted);
-    font-size:11px;
-    flex:none;
-}
+.sidebar-count{ color:var(--muted); font-size:11px; flex:none; }
 
 .bin-badge{
     background:#dc2626;
@@ -278,12 +236,7 @@ button,select,input,textarea{ font:inherit; }
     border:0;
 }
 
-.sidebar-controls{
-    display:flex;
-    gap:3px;
-    flex:none;
-}
-
+.sidebar-controls{ display:flex; gap:3px; flex:none; }
 .sidebar-ctrl{
     width:24px;
     height:24px;
@@ -300,18 +253,11 @@ button,select,input,textarea{ font:inherit; }
     line-height:1;
     cursor:pointer;
 }
-
 .sidebar-ctrl:hover{ background:#e2e8f0; }
 .sidebar-ctrl.danger:hover{ background:#fef2f2; border-color:#fecaca; color:#dc2626; }
 
-.sidebar-collapse{
-    margin-top:3px;
-    padding-left:12px;
-}
-
-.tag-list,
-.category-list{ display:block; }
-
+.sidebar-collapse{ margin-top:3px; padding-left:12px; }
+.tag-list, .category-list{ display:block; }
 .sidebar-subtitle{
     padding:6px 9px;
     color:var(--muted);
@@ -325,24 +271,29 @@ button,select,input,textarea{ font:inherit; }
     padding:2px 4px;
     border-radius:8px;
 }
-
 .cat-row:hover{ background:#f8fafc; }
+.cat-row-btns{ display:flex; gap:3px; flex:none; order:3; }
 
-.cat-row-btns{
-    display:flex;
-    gap:3px;
+.cat-expander{
+    width:18px;
+    height:18px;
+    padding:0;
+    border:1px solid var(--border);
+    border-radius:4px;
+    background:var(--surface);
+    cursor:pointer;
+    font-size:11px;
+    font-weight:700;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    line-height:1;
     flex:none;
 }
+.cat-expander:hover{ background:#e2e8f0; }
 
-/* =========================================================
-   MAIN
-   ========================================================= */
-
-.main{
-    min-height:calc(100vh - 160px);
-    padding:12px;
-}
-
+/* MAIN */
+.main{ min-height:calc(100vh - 160px); padding:12px; }
 .toolbar{
     display:flex;
     align-items:center;
@@ -350,12 +301,7 @@ button,select,input,textarea{ font:inherit; }
     margin-bottom:10px;
     flex-wrap:wrap;
 }
-
-.search-box{
-    flex:1;
-    min-width:180px;
-}
-
+.search-box{ flex:1; min-width:180px; }
 .search-box input{
     width:100%;
     height:36px;
@@ -365,7 +311,6 @@ button,select,input,textarea{ font:inherit; }
     background:var(--surface);
     outline:none;
 }
-
 .search-box input:focus{ border-color:var(--primary); }
 
 .workspace{
@@ -382,7 +327,6 @@ button,select,input,textarea{ font:inherit; }
     box-shadow:var(--shadow);
     overflow:hidden;
 }
-
 .panel-header{
     min-height:48px;
     display:flex;
@@ -392,16 +336,33 @@ button,select,input,textarea{ font:inherit; }
     padding:8px 12px;
     border-bottom:1px solid var(--border);
 }
-
 .panel-title{ font-weight:700; }
+
+/* Filter/Sort bar inside panel (N16-b) */
+.filter-sort-bar{
+    display:flex;
+    gap:6px;
+    padding:6px 10px;
+    border-bottom:1px solid var(--border);
+    background:var(--surface2);
+    flex-wrap:wrap;
+    align-items:center;
+}
+.filter-sort-bar select{
+    height:26px;
+    font-size:11px;
+    border:1px solid var(--border);
+    border-radius:6px;
+    background:var(--surface);
+    padding:0 6px;
+}
 
 .note-list{
     max-height:480px;
     overflow-y:auto;
     overscroll-behavior:contain;
+    background:var(--note-list-bg);
 }
-
-/* ===== 3-LINE NOTE ROW ===== */
 
 .note-row{
     display:flex;
@@ -410,12 +371,10 @@ button,select,input,textarea{ font:inherit; }
     padding:9px 11px;
     border-bottom:1px solid var(--border);
     cursor:pointer;
-    transition:background .12s;
+    transition:background .12s, transform .12s;
 }
-
-.note-row:hover{ background:#f8fafc; }
-.note-row.active{ background:#bfdbfe; }
-
+.note-row:hover{ background:#f8fafc; transform:scale(1.005); }
+.note-row.active{ background:#93c5fd; }
 .note-row.ms-selected{ background:#bfdbfe; }
 
 .note-marker{
@@ -426,19 +385,9 @@ button,select,input,textarea{ font:inherit; }
     border-radius:5px;
     background:var(--note-color,#94a3b8);
 }
+.note-row-body{ flex:1; min-width:0; }
 
-.note-row-body{
-    flex:1;
-    min-width:0;
-}
-
-.note-line1{
-    display:flex;
-    gap:6px;
-    align-items:baseline;
-    min-width:0;
-}
-
+.note-line1{ display:flex; gap:6px; align-items:baseline; min-width:0; }
 .note-line1-title{
     font-weight:700;
     white-space:nowrap;
@@ -447,7 +396,6 @@ button,select,input,textarea{ font:inherit; }
     flex:0 1 auto;
     max-width:55%;
 }
-
 .note-line1-content{
     color:var(--muted);
     font-size:12px;
@@ -457,7 +405,6 @@ button,select,input,textarea{ font:inherit; }
     flex:1 1 auto;
     min-width:0;
 }
-
 .note-line2{
     margin-top:4px;
     display:flex;
@@ -467,23 +414,11 @@ button,select,input,textarea{ font:inherit; }
     font-size:11px;
     color:var(--muted);
 }
-
-.note-line2 .mini-toggle{
-    cursor:pointer;
-    padding:2px 4px;
-    border-radius:4px;
-    user-select:none;
-    border:1px solid transparent;
+.note-line3{
+    margin-top:4px;
+    font-size:10px;
+    color:var(--muted);
 }
-
-.note-line2 .mini-toggle:hover{
-    background:#e2e8f0;
-    border-color:var(--border);
-}
-
-.note-line2 .mini-toggle.on{ color:#b45309; font-weight:700; }
-.note-line2 .mini-toggle.fav-on{ color:#d97706; font-weight:700; }
-
 .note-line2 .meta-chip{
     display:inline-flex;
     align-items:center;
@@ -494,19 +429,39 @@ button,select,input,textarea{ font:inherit; }
     white-space:nowrap;
 }
 
-.note-line3{
-    margin-top:4px;
-    font-size:10px;
-    color:var(--muted);
+.note-row-right{
+    display:flex;
+    flex-direction:column;
+    gap:4px;
+    align-items:flex-end;
+    flex:none;
 }
+.row-icon-btn{
+    width:24px;
+    height:24px;
+    padding:0;
+    border:1px solid var(--border);
+    border-radius:6px;
+    background:var(--surface);
+    color:#94a3b8;
+    font-size:12px;
+    cursor:pointer;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    line-height:1;
+}
+.row-icon-btn:hover{ background:#e2e8f0; }
+.row-icon-btn.pin-on{ color:#b45309; border-color:#fde68a; background:#fffbeb; }
+.row-icon-btn.fav-on{ color:#d97706; border-color:#fde68a; background:#fffbeb; }
+.row-icon-btn.success:hover{ color:#15803d; border-color:#bbf7d0; background:#f0fdf4; }
+.row-icon-btn.danger:hover{ color:#dc2626; border-color:#fecaca; background:#fef2f2; }
 
-/* Checkbox in note row (Recycle Bin + normal views) */
-
+/* Checkbox */
 .note-row.has-checkbox{
     padding-left:36px;
     position:relative;
 }
-
 .note-row.has-checkbox::before{
     content:"";
     position:absolute;
@@ -519,7 +474,6 @@ button,select,input,textarea{ font:inherit; }
     background:var(--surface);
     cursor:pointer;
 }
-
 .note-row.has-checkbox.ms-selected::before{
     background:var(--primary);
     border-color:var(--primary);
@@ -532,52 +486,15 @@ button,select,input,textarea{ font:inherit; }
     font-weight:700;
 }
 
-/* Per-note action buttons (Recycle Bin) */
-
-.note-row-actions{
-    display:flex;
-    gap:4px;
-    flex-direction:column;
-    align-items:flex-end;
-    flex:none;
-}
-
-.note-row-actions button{
-    width:26px;
-    height:26px;
-    border:1px solid var(--border);
-    border-radius:6px;
-    background:var(--surface);
-    cursor:pointer;
-    font-size:12px;
-    display:inline-flex;
-    align-items:center;
-    justify-content:center;
-    padding:0;
-}
-
-.note-row-actions button:hover{ background:#e2e8f0; }
-.note-row-actions button.success:hover{ background:#f0fdf4; color:#15803d; border-color:#bbf7d0; }
-.note-row-actions button.danger:hover{ background:#fef2f2; color:#dc2626; border-color:#fecaca; }
-
-/* =========================================================
-   NOTE DETAIL
-   ========================================================= */
-
+/* DETAIL PANEL */
 .detail{ min-width:0; }
-.detail-body{ padding:0; }
+.detail-body{ padding:0; background:var(--note-panel-bg); }
 
-.note-color-bar{
-    height:10px;
-    width:100%;
-    background:var(--note-color,#94a3b8);
-}
-
-.note-color-border{
-    border-top:3px solid var(--note-color,#94a3b8);
-    border-left:3px solid var(--note-color,#94a3b8);
-    border-right:3px solid var(--note-color,#94a3b8);
-    border-bottom:0;
+/* Colour border around whole panel (P1) */
+.note-panel-border{
+    border:5px solid var(--note-color,#94a3b8);
+    border-radius:12px;
+    overflow:hidden;
 }
 
 .note-controls-card{
@@ -589,19 +506,8 @@ button,select,input,textarea{ font:inherit; }
     background:var(--surface2);
     flex-wrap:wrap;
 }
-
-.note-controls-left{
-    display:flex;
-    gap:5px;
-    flex-wrap:wrap;
-}
-
-.note-controls-right{
-    display:flex;
-    gap:5px;
-    margin-left:auto;
-    flex-wrap:wrap;
-}
+.note-controls-left{ display:flex; gap:5px; flex-wrap:wrap; }
+.note-controls-right{ display:flex; gap:5px; margin-left:auto; flex-wrap:wrap; }
 
 .ctrl-btn{
     height:30px;
@@ -620,7 +526,6 @@ button,select,input,textarea{ font:inherit; }
     gap:3px;
     white-space:nowrap;
 }
-
 .ctrl-btn:hover{ background:#f1f5f9; }
 .ctrl-btn.primary{ background:var(--primary); color:#fff; border-color:var(--primary); }
 .ctrl-btn.danger{ background:var(--danger); color:#fff; border-color:var(--danger); }
@@ -630,7 +535,6 @@ button,select,input,textarea{ font:inherit; }
     padding:10px 12px;
     border-bottom:1px solid var(--border);
 }
-
 .heading-input{
     width:100%;
     border:0;
@@ -641,7 +545,6 @@ button,select,input,textarea{ font:inherit; }
     color:var(--text);
     padding:4px 0;
 }
-
 .heading-display{
     font-size:22px;
     font-weight:700;
@@ -651,7 +554,6 @@ button,select,input,textarea{ font:inherit; }
 }
 
 .content-bar{ border-bottom:1px solid var(--border); }
-
 .content-toolbar{
     display:flex;
     gap:4px;
@@ -661,7 +563,6 @@ button,select,input,textarea{ font:inherit; }
     border-bottom:1px solid var(--border);
     align-items:center;
 }
-
 .tool-btn{
     width:30px;
     height:28px;
@@ -678,22 +579,9 @@ button,select,input,textarea{ font:inherit; }
     align-items:center;
     justify-content:center;
 }
-
 .tool-btn:hover{ background:#e2e8f0; }
-
-.tool-btn.wide{
-    width:auto;
-    min-width:auto;
-    padding:0 8px;
-    gap:4px;
-}
-
-.tool-sep{
-    width:1px;
-    height:20px;
-    background:var(--border);
-    margin:0 3px;
-}
+.tool-btn.wide{ width:auto; min-width:auto; padding:0 8px; gap:4px; }
+.tool-sep{ width:1px; height:20px; background:var(--border); margin:0 3px; }
 
 .content-editable{
     min-height:220px;
@@ -703,12 +591,10 @@ button,select,input,textarea{ font:inherit; }
     word-break:break-word;
     font-size:14px;
 }
-
 .content-editable:empty:before{
     content:attr(data-placeholder);
     color:var(--muted);
 }
-
 .content-display{
     padding:10px 12px;
     white-space:pre-wrap;
@@ -717,10 +603,7 @@ button,select,input,textarea{ font:inherit; }
     min-height:120px;
 }
 
-/* =========================================================
-   LINKS CARD
-   ========================================================= */
-
+/* LINKS */
 .links-card{
     margin:10px;
     border:1px solid var(--border);
@@ -728,7 +611,6 @@ button,select,input,textarea{ font:inherit; }
     overflow:hidden;
     background:var(--surface);
 }
-
 .links-card-header{
     display:flex;
     align-items:center;
@@ -738,17 +620,8 @@ button,select,input,textarea{ font:inherit; }
     border-bottom:1px solid var(--border);
     gap:6px;
 }
-
-.links-card-title{
-    font-size:12px;
-    font-weight:700;
-    color:var(--muted);
-}
-
-.links-card-header-actions{
-    display:flex;
-    gap:4px;
-}
+.links-card-title{ font-size:12px; font-weight:700; color:var(--muted); }
+.links-card-header-actions{ display:flex; gap:4px; }
 
 .link-item{
     display:flex;
@@ -758,9 +631,7 @@ button,select,input,textarea{ font:inherit; }
     border-bottom:1px solid var(--border);
     font-size:12px;
 }
-
 .link-item:last-child{ border-bottom:0; }
-
 .link-item-text{
     flex:0 0 auto;
     font-weight:600;
@@ -769,7 +640,6 @@ button,select,input,textarea{ font:inherit; }
     text-overflow:ellipsis;
     white-space:nowrap;
 }
-
 .link-item-url{
     flex:1 1 auto;
     color:var(--primary);
@@ -779,13 +649,7 @@ button,select,input,textarea{ font:inherit; }
     white-space:nowrap;
     min-width:0;
 }
-
-.link-item-actions{
-    display:flex;
-    gap:3px;
-    flex:none;
-}
-
+.link-item-actions{ display:flex; gap:3px; flex:none; }
 .link-icon-btn{
     width:24px;
     height:24px;
@@ -800,14 +664,10 @@ button,select,input,textarea{ font:inherit; }
     align-items:center;
     justify-content:center;
 }
-
 .link-icon-btn:hover{ background:#e2e8f0; }
 .link-icon-btn.danger:hover{ background:#fef2f2; color:#dc2626; }
 
-/* =========================================================
-   TAGS + CAT
-   ========================================================= */
-
+/* TAGS + CAT */
 .tags-cat-card{
     margin:10px;
     border:1px solid var(--border);
@@ -815,7 +675,6 @@ button,select,input,textarea{ font:inherit; }
     background:var(--surface);
     padding:10px;
 }
-
 .tags-cat-row{
     display:flex;
     align-items:center;
@@ -823,16 +682,13 @@ button,select,input,textarea{ font:inherit; }
     flex-wrap:wrap;
     margin-bottom:8px;
 }
-
 .tags-cat-row:last-child{ margin-bottom:0; }
-
 .tags-cat-label{
     font-size:11px;
     font-weight:700;
     color:var(--muted);
     min-width:56px;
 }
-
 .tag-chip{
     display:inline-flex;
     align-items:center;
@@ -843,13 +699,7 @@ button,select,input,textarea{ font:inherit; }
     background:#f8fafc;
     font-size:11px;
 }
-
-.tag-chip .chip-x{
-    cursor:pointer;
-    color:#94a3b8;
-    font-weight:700;
-}
-
+.tag-chip .chip-x{ cursor:pointer; color:#94a3b8; font-weight:700; }
 .tag-chip .chip-x:hover{ color:#dc2626; }
 
 .tags-input-inline{
@@ -863,7 +713,6 @@ button,select,input,textarea{ font:inherit; }
     outline:none;
     font-size:12px;
 }
-
 .tags-input-inline:focus{ border-color:var(--primary); }
 
 .small-action-btn{
@@ -880,64 +729,80 @@ button,select,input,textarea{ font:inherit; }
     align-items:center;
     gap:3px;
 }
-
 .small-action-btn:hover{ background:#e2e8f0; }
 .small-action-btn.primary{ background:var(--primary); color:#fff; border-color:var(--primary); }
 .small-action-btn.danger{ background:var(--danger); color:#fff; border-color:var(--danger); }
 .small-action-btn.success{ background:var(--success); color:#fff; border-color:var(--success); }
 
-/* =========================================================
-   METADATA
-   ========================================================= */
-
+/* METADATA */
 .metadata-box{
     margin:10px;
     border:1px solid var(--border);
     border-radius:10px;
     overflow:hidden;
-    background:var(--surface);
+    background:#f8fafc;
+    color:#697386;
 }
-
 .metadata-title{
     padding:7px 10px;
     font-size:12px;
     font-weight:700;
-    background:var(--surface2);
+    background:#f1f5f9;
     border-bottom:1px solid var(--border);
-    color:var(--muted);
+    color:#697386;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    cursor:pointer;
+    user-select:none;
 }
+.metadata-title .toggle-icon{
+    font-size:11px;
+    color:#94a3b8;
+}
+.metadata-body{ display:block; }
+.metadata-body.collapsed{ display:none; }
 
 .metadata-table{
     width:100%;
     border-collapse:collapse;
     table-layout:fixed;
 }
-
 .metadata-table td{
-    padding:6px 9px;
+    padding:5px 8px;
     font-size:11px;
     line-height:1.3;
     vertical-align:top;
     border:1px solid var(--border);
     word-break:break-word;
+    color:#697386;
 }
-
 .metadata-table td.label{
     width:22%;
-    color:var(--muted);
+    color:#697386;
     font-weight:700;
-    background:var(--surface2);
+    background:#f1f5f9;
 }
-
 .metadata-table td.value{
     width:28%;
-    color:var(--text);
+    color:#697386;
+}
+.metadata-table a.cat-link{
+    color:#2563eb;
+    text-decoration:none;
+    cursor:pointer;
 }
 
-/* =========================================================
-   EMPTY
-   ========================================================= */
+.metadata-actions{
+    padding:8px 10px;
+    display:flex;
+    gap:5px;
+    flex-wrap:wrap;
+    border-top:1px solid var(--border);
+    background:#f1f5f9;
+}
 
+/* EMPTY */
 .empty{
     min-height:200px;
     display:flex;
@@ -950,24 +815,19 @@ button,select,input,textarea{ font:inherit; }
     gap:8px;
 }
 
-/* =========================================================
-   SETTINGS
-   ========================================================= */
-
+/* SETTINGS */
 .settings-grid{
     display:grid;
     grid-template-columns:1fr 1fr;
     gap:10px;
     padding:10px;
 }
-
 .setting{
     border:1px solid var(--border);
     border-radius:9px;
     padding:10px;
     background:var(--surface2);
 }
-
 .setting label{
     display:block;
     margin-bottom:6px;
@@ -975,7 +835,6 @@ button,select,input,textarea{ font:inherit; }
     font-size:12px;
     font-weight:700;
 }
-
 .setting select,
 .setting input[type="text"],
 .setting input[type="number"]{
@@ -987,10 +846,7 @@ button,select,input,textarea{ font:inherit; }
     padding:0 7px;
 }
 
-/* =========================================================
-   PAGINATION
-   ========================================================= */
-
+/* PAGINATION */
 .pagination{
     display:flex;
     align-items:center;
@@ -999,7 +855,6 @@ button,select,input,textarea{ font:inherit; }
     padding:9px;
     border-top:1px solid var(--border);
 }
-
 .pagination button{
     height:28px;
     min-width:60px;
@@ -1011,10 +866,7 @@ button,select,input,textarea{ font:inherit; }
     font-size:12px;
 }
 
-/* =========================================================
-   BIN TOOLBAR
-   ========================================================= */
-
+/* BIN TOOLBAR */
 .bin-toolbar{
     display:flex;
     gap:6px;
@@ -1024,17 +876,13 @@ button,select,input,textarea{ font:inherit; }
     flex-wrap:wrap;
     align-items:center;
 }
-
 .bin-toolbar-info{
     font-size:11px;
     color:var(--muted);
     margin-left:auto;
 }
 
-/* =========================================================
-   TOAST
-   ========================================================= */
-
+/* TOAST */
 .toast{
     position:fixed;
     right:15px;
@@ -1052,16 +900,88 @@ button,select,input,textarea{ font:inherit; }
     pointer-events:none;
     transition:.2s ease;
 }
+.toast.show{ transform:translateY(0); opacity:1; }
 
-.toast.show{
-    transform:translateY(0);
+/* UNDO BAR */
+.undo-bar{
+    position:fixed;
+    left:50%;
+    transform:translateX(-50%) translateY(80px);
+    bottom:20px;
+    z-index:5000;
+    background:#172033;
+    color:#fff;
+    padding:10px 16px;
+    border-radius:8px;
+    font-size:13px;
+    box-shadow:0 8px 30px rgba(0,0,0,.25);
+    display:flex;
+    align-items:center;
+    gap:12px;
+    opacity:0;
+    pointer-events:none;
+    transition:.2s ease;
+}
+.undo-bar.show{
+    transform:translateX(-50%) translateY(0);
     opacity:1;
+    pointer-events:auto;
+}
+.undo-bar button{
+    background:transparent;
+    color:#60a5fa;
+    border:1px solid #60a5fa;
+    border-radius:6px;
+    padding:3px 10px;
+    cursor:pointer;
+    font-size:12px;
+    font-weight:700;
 }
 
-/* =========================================================
-   NIGHT MODE
-   ========================================================= */
+/* FOOTER */
+.app-footer{
+    padding:14px 12px;
+    text-align:center;
+    border-top:1px solid var(--border);
+    background:var(--surface);
+    color:var(--muted);
+    font-size:11px;
+    margin-top:20px;
+}
+.app-footer a{
+    color:var(--primary);
+    text-decoration:none;
+    font-weight:600;
+}
+.app-footer a:hover{ text-decoration:underline; }
 
+/* CONTEXT MENU */
+.context-menu{
+    position:fixed;
+    z-index:6000;
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:8px;
+    box-shadow:0 8px 30px rgba(0,0,0,.2);
+    padding:4px 0;
+    min-width:160px;
+    display:none;
+}
+.context-menu.show{ display:block; }
+.context-menu button{
+    display:block;
+    width:100%;
+    padding:8px 14px;
+    border:0;
+    background:transparent;
+    text-align:left;
+    cursor:pointer;
+    font-size:12px;
+    color:var(--text);
+}
+.context-menu button:hover{ background:#eef2ff; }
+
+/* NIGHT MODE */
 body.night{
     --bg:#0f172a;
     --surface:#172033;
@@ -1070,7 +990,6 @@ body.night{
     --muted:#94a3b8;
     --border:#334155;
 }
-
 body.night .top-area,
 body.night .panel,
 body.night .sidebar,
@@ -1086,61 +1005,56 @@ body.night .content-editable,
 body.night .content-display,
 body.night .tags-input-inline,
 body.night .floating-toggle,
-body.night .note-row-actions button{
+body.night .row-icon-btn,
+body.night .context-menu{
     background:var(--surface);
     color:var(--text);
 }
-
 body.night .floating-toggle .hamburger span{ background:var(--text); }
-
 body.night .metadata-title,
 body.night .links-card-header,
 body.night .content-toolbar,
 body.night .note-controls-card,
-body.night .bin-toolbar{
+body.night .bin-toolbar,
+body.night .filter-sort-bar,
+body.night .metadata-actions{
     background:var(--surface2);
 }
-
+body.night .metadata-box,
+body.night .metadata-table td,
+body.night .metadata-table td.label,
+body.night .metadata-table td.value{
+    background:#1e293b;
+    color:#94a3b8;
+    border-color:var(--border);
+}
+body.night .metadata-title{ background:#263449; color:#94a3b8; }
 body.night .note-row:hover{ background:#1e293b; }
-body.night .note-row.active{ background:#1e3a5f; }
+body.night .note-row.active{ background:#1e40af; }
 body.night .note-row.ms-selected{ background:#1e3a5f; }
 body.night .cat-row:hover{ background:#1e293b; }
-
 body.night .status-card.drive-on,
 body.night .status-card.sync-on{
     background:#14532d; border-color:#166534; color:#bbf7d0;
 }
-
 body.night .status-card.drive-off,
 body.night .status-card.sync-err{
     background:#7f1d1d; border-color:#991b1b; color:#fecaca;
 }
-
 body.night .status-card.sync-off{
     background:#78350f; border-color:#92400e; color:#fde68a;
 }
-
 body.night .status-card.last-sync{
     background:#1e3a8a; border-color:#1e40af; color:#bfdbfe;
 }
-
 body.night .status-card.last-change{
     background:#4c1d95; border-color:#5b21b6; color:#ddd6fe;
 }
-
 body.night .app-title{ color:#60a5fa; }
 body.night .sidebar-divider{ background:#334155; }
+body.night .tag-chip{ background:#1e293b; border-color:#334155; color:var(--text); }
 
-body.night .tag-chip{
-    background:#1e293b;
-    border-color:#334155;
-    color:var(--text);
-}
-
-/* =========================================================
-   RESPONSIVE
-   ========================================================= */
-
+/* RESPONSIVE */
 @media(max-width:850px){
     .app-title{ font-size:17px; }
     .workspace{ grid-template-columns:1fr; }
@@ -1149,7 +1063,6 @@ body.night .tag-chip{
     .status-card{ font-size:11px; padding:4px 9px; }
     .top-buttons .btn{ min-width:64px; font-size:11px; padding:0 8px; }
 }
-
 @media(max-width:550px){
     .main{ padding:7px; }
     .app-title{ font-size:15px; }
@@ -1170,11 +1083,9 @@ body.night .tag-chip{
 
 <body>
 
-<!-- FLOATING SIDEBAR TOGGLE (FIXED TOP-LEFT) -->
+<!-- FLOATING SIDEBAR TOGGLE -->
 <button id="floatingToggle" class="floating-toggle" type="button" title="Show/Hide Sidebar">
-    <span class="hamburger">
-        <span></span><span></span><span></span>
-    </span>
+    <span class="hamburger"><span></span><span></span><span></span></span>
 </button>
 
 <!-- TOP AREA -->
@@ -1192,7 +1103,6 @@ body.night .tag-chip{
         <button id="connectBtn" class="btn primary" type="button">Connect</button>
         <button id="syncBtn" class="btn" type="button">Sync</button>
         <button id="addBtn" class="btn success" type="button">+ Add</button>
-        <button id="multiselectBtn" class="btn" type="button">Multi</button>
         <button id="deleteSelectedBtn" class="btn danger" type="button">Delete</button>
     </div>
 </div>
@@ -1239,22 +1149,9 @@ body.night .tag-chip{
         <div class="sidebar-item">
             <span class="sidebar-icon">🏷️</span>
             <span class="sidebar-label"><strong>Tags</strong></span>
+            <span id="tagCountTotal" class="sidebar-count">0</span>
         </div>
         <div id="tagList" class="tag-list sidebar-collapse"></div>
-    </div>
-
-    <hr class="sidebar-divider">
-
-    <div class="sidebar-section">
-        <div class="sidebar-item">
-            <span class="sidebar-icon">🔗</span>
-            <span class="sidebar-label"><strong>Links</strong></span>
-            <span style="margin-left:auto;display:flex;gap:3px;">
-                <button class="sidebar-ctrl" title="Add Link" onclick="event.stopPropagation(); addGlobalLink()">+</button>
-                <button class="sidebar-ctrl" title="Edit Link" onclick="event.stopPropagation(); editGlobalLink()">✎</button>
-            </span>
-        </div>
-        <div id="globalLinksList" class="sidebar-collapse"></div>
     </div>
 
     <hr class="sidebar-divider">
@@ -1274,6 +1171,19 @@ body.night .tag-chip{
 
     <hr class="sidebar-divider">
 
+    <div class="sidebar-section">
+        <div class="sidebar-item">
+            <span class="sidebar-icon">🔗</span>
+            <span class="sidebar-label"><strong>Links</strong></span>
+            <span style="margin-left:auto;display:flex;gap:3px;">
+                <button class="sidebar-ctrl" title="Add Link" onclick="event.stopPropagation(); addGlobalLink()">+</button>
+            </span>
+        </div>
+        <div id="globalLinksList" class="sidebar-collapse"></div>
+    </div>
+
+    <hr class="sidebar-divider">
+
 </aside>
 
 <!-- MAIN -->
@@ -1285,39 +1195,56 @@ body.night .tag-chip{
     </div>
 
     <section class="workspace">
-
-        <!-- NOTE LIST -->
         <div class="panel">
             <div class="panel-header">
                 <span id="listTitle" class="panel-title">All Notes</span>
                 <span id="listCount" class="sidebar-count">0</span>
+            </div>
+            <div class="filter-sort-bar">
+                <select id="sortFilter" onchange="changeSortFromBar(this.value)">
+                    <option value="Last Modified First">Sort: Last Modified</option>
+                    <option value="Newest">Sort: Newest</option>
+                    <option value="Oldest">Sort: Oldest</option>
+                    <option value="Alphabetical">Sort: A-Z</option>
+                </select>
             </div>
             <div id="binToolbarWrap"></div>
             <div id="noteList" class="note-list"></div>
             <div id="pagination" class="pagination" style="display:none;"></div>
         </div>
 
-        <!-- DETAIL -->
         <div class="panel detail">
             <div id="detailBody" class="detail-body">
                 <div class="empty">Select a note to view it.</div>
             </div>
         </div>
-
     </section>
 </main>
 
+<!-- FOOTER -->
+<footer class="app-footer" id="appFooter">
+    <div>Database File: <strong id="dbFileName">NotesManagerDB.json</strong></div>
+    <div style="margin-top:4px;">
+        Drive Folder: <a id="driveFolderLink" href="#" target="_blank" rel="noopener">Not connected</a>
+    </div>
+</footer>
+
 <div id="toast" class="toast"></div>
+<div id="undoBar" class="undo-bar">
+    <span id="undoMsg">Note deleted.</span>
+    <button onclick="undoDelete()">Undo</button>
+</div>
+
+<div id="contextMenu" class="context-menu"></div>
 
 <script src="https://accounts.google.com/gsi/client"></script>
-
 <script>
 /* =========================================================
    CONFIG
    ========================================================= */
 const CLIENT_ID = "262106898132-tsn94p3vvpf34do0ommc6rai2mtc5sh6.apps.googleusercontent.com";
 const DRIVE_SCOPE = "https://www.googleapis.com/auth/drive";
-const DATABASE_NAME = "MasterDB.json";
+const DATABASE_NAME = "NotesManagerDB.json";
 const DATABASE_FOLDER_ID = "";
 
 /* =========================================================
@@ -1326,6 +1253,7 @@ const DATABASE_FOLDER_ID = "";
 let accessToken = null;
 let tokenClient = null;
 let databaseFileId = null;
+let databaseFolderId = null;
 let db = createEmptyDatabase();
 let selectedNoteId = null;
 let editingNoteId = null;
@@ -1340,29 +1268,48 @@ let saveInProgress = false;
 let pendingChanges = false;
 let lastSuccessfulSync = null;
 let lastChangeTime = null;
-let multiselectMode = false;
-let multiselectIds = new Set();
+let selectedIds = new Set();
 let globalLinks = [];
+let undoDeleteSnapshot = null;
+let undoTimer = null;
+
+/* 20 Predefined colours (P14-b) */
+const COLOR_PALETTE = [
+    "#64748b","#dc2626","#ea580c","#d97706","#ca8a04","#65a30d","#16a34a","#059669",
+    "#0d9488","#0891b2","#0284c7","#2563eb","#4f46e5","#7c3aed","#9333ea","#c026d3",
+    "#db2777","#e11d48","#78350f","#1e293b"
+];
 
 /* =========================================================
    DEFAULT DB
    ========================================================= */
 function createEmptyDatabase(){
     return {
-        version: 2,
+        version: 8,
         settings: {
             theme: "System",
             fontSize: "Normal",
             sorting: "Last Modified First",
             notesPerPage: 5,
+            notesVisibleNoScroll: 5,
             sidebarWidth: 290,
+            mobileSidebarWidth: "85%",
+            sidebarBorder: 1,
+            sectionHeight: 38,
+            noteListBg: "#ffffff",
+            notePanelBg: "#ffffff",
+            noteLineCount: 3,
+            noteRowHeight: "Auto",
+            contentPreviewLength: 60,
             deleteConfirmation: true,
             autosave: true,
             autosaveInterval: 5,
             dateTimeFormat: "12 Hour",
             defaultNoteColor: "#64748b",
-            defaultCategory: "",
-            autoAssignBinTag: true
+            autoAssignBinTag: true,
+            toolbarButtons: ["bold","underline","italic","color","link"],
+            catAssignMethod: "prompt",
+            metadataCollapsed: true
         },
         trash: { label: "Recycle Bin" },
         categories: [],
@@ -1381,7 +1328,7 @@ function createEmptyDatabase(){
    ========================================================= */
 function initializeGoogle(){
     if (typeof google === "undefined" || !google.accounts || !google.accounts.oauth2){
-        showToast("Google Identity Services load نہیں ہوئی۔", "error");
+        showToast("Google Identity Services load nahi hui.", "error");
         return;
     }
     tokenClient = google.accounts.oauth2.initTokenClient({
@@ -1463,11 +1410,13 @@ async function createDatabaseFile(){
     form.append("metadata", new Blob([JSON.stringify(metadata)], { type: "application/json" }));
     form.append("file", new Blob([body], { type: "application/json" }));
     const response = await driveRequest(
-        "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name,modifiedTime",
+        "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name,modifiedTime,parents",
         { method: "POST", body: form }
     );
     const result = await response.json();
     databaseFileId = result.id;
+    if (result.parents && result.parents.length) databaseFolderId = result.parents[0];
+    updateFooter();
     return result;
 }
 
@@ -1486,11 +1435,12 @@ async function loadDatabase(){
             pendingChanges = false;
             updateSyncStatus();
             setLastSync(new Date());
-            showToast("New MasterDB.json created.", "success");
+            showToast("New NotesManagerDB.json created.", "success");
             refreshUI();
             return;
         }
         databaseFileId = file.id;
+        if (file.parents && file.parents.length) databaseFolderId = file.parents[0];
         const response = await driveRequest(
             "https://www.googleapis.com/drive/v3/files/" + encodeURIComponent(file.id) + "?alt=media"
         );
@@ -1499,7 +1449,7 @@ async function loadDatabase(){
             db = createEmptyDatabase();
         } else {
             try { db = normalizeDatabase(JSON.parse(text)); }
-            catch(e){ throw new Error("MasterDB.json invalid JSON."); }
+            catch(e){ throw new Error("NotesManagerDB.json invalid JSON."); }
         }
         pendingChanges = false;
         updateSyncStatus();
@@ -1507,6 +1457,7 @@ async function loadDatabase(){
         setLastSync(lastSuccessfulSync);
         applySettings();
         refreshUI();
+        updateFooter();
         showToast("Database loaded.", "success");
     } catch(error){
         console.error(error);
@@ -1544,8 +1495,12 @@ function normalizeNote(note){
         color: n.color || "#64748b",
         createdAt: n.createdAt || new Date().toISOString(),
         modifiedAt: n.modifiedAt || n.createdAt || new Date().toISOString(),
+        deletedAt: n.deletedAt || null,
         lastViewedAt: n.lastViewedAt || null,
-        viewCount: Number(n.viewCount || 0)
+        lastRestoredAt: n.lastRestoredAt || null,
+        viewCount: Number(n.viewCount || 0),
+        editCount: Number(n.editCount || 0),
+        restoredCount: Number(n.restoredCount || 0)
     };
 }
 
@@ -1664,6 +1619,24 @@ function updateLastChangeStatus(){
 }
 
 /* =========================================================
+   FOOTER
+   ========================================================= */
+function updateFooter(){
+    document.getElementById("dbFileName").textContent = DATABASE_NAME;
+    const linkEl = document.getElementById("driveFolderLink");
+    if (databaseFolderId){
+        linkEl.href = "https://drive.google.com/drive/folders/" + databaseFolderId;
+        linkEl.textContent = "Open Folder";
+    } else if (databaseFileId){
+        linkEl.href = "https://drive.google.com/file/d/" + databaseFileId + "/view";
+        linkEl.textContent = "Open File";
+    } else {
+        linkEl.href = "#";
+        linkEl.textContent = "Not connected";
+    }
+}
+
+/* =========================================================
    NOTE CRUD
    ========================================================= */
 function addNote(){
@@ -1672,7 +1645,7 @@ function addNote(){
         id: generateId("note"),
         title: "New Note",
         content: "",
-        categoryId: db.settings.defaultCategory || null,
+        categoryId: null,
         tags: [],
         links: [],
         favorite: false,
@@ -1682,8 +1655,12 @@ function addNote(){
         color: db.settings.defaultNoteColor || "#64748b",
         createdAt: now,
         modifiedAt: now,
+        deletedAt: null,
         lastViewedAt: null,
-        viewCount: 0
+        lastRestoredAt: null,
+        viewCount: 0,
+        editCount: 0,
+        restoredCount: 0
     };
     db.notes.unshift(note);
     selectedNoteId = note.id;
@@ -1691,6 +1668,24 @@ function addNote(){
     markChanged();
     refreshUI();
     renderDetail();
+}
+
+function duplicateNote(id){
+    const note = getNote(id);
+    if (!note) return;
+    const copy = JSON.parse(JSON.stringify(note));
+    copy.id = generateId("note");
+    copy.title = note.title + " (Copy)";
+    copy.createdAt = new Date().toISOString();
+    copy.modifiedAt = copy.createdAt;
+    copy.editCount = 0;
+    copy.restoredCount = 0;
+    copy.viewCount = 0;
+    copy.lastViewedAt = null;
+    db.notes.unshift(copy);
+    markChanged();
+    refreshUI();
+    showToast("Note duplicated.", "success");
 }
 
 function getNote(id){ return db.notes.find(n => n.id === id); }
@@ -1701,15 +1696,52 @@ function deleteNote(id){
     if (db.settings.deleteConfirmation){
         if (!confirm("Move this note to the Recycle Bin?")) return;
     }
+
+    /* Snapshot for undo */
+    const snapshot = JSON.parse(JSON.stringify(note));
+
     note.deleted = true;
     note.trashHidden = false;
+    note.deletedAt = new Date().toISOString();
     if (db.settings.autoAssignBinTag && !note.tags.includes("Bin")) note.tags.push("Bin");
     note.modifiedAt = new Date().toISOString();
-    markChanged();
+
     if (selectedNoteId === id) selectedNoteId = null;
     if (editingNoteId === id) editingNoteId = null;
+
+    markChanged();
     refreshUI();
-    showToast("Note moved to Recycle Bin.", "success");
+
+    /* Undo bar */
+    showUndoBar("Note moved to Recycle Bin.", snapshot);
+}
+
+function showUndoBar(msg, snapshot){
+    undoDeleteSnapshot = snapshot;
+    document.getElementById("undoMsg").textContent = msg;
+    document.getElementById("undoBar").classList.add("show");
+    clearTimeout(undoTimer);
+    undoTimer = setTimeout(() => {
+        document.getElementById("undoBar").classList.remove("show");
+        undoDeleteSnapshot = null;
+    }, 5000);
+}
+
+function undoDelete(){
+    if (!undoDeleteSnapshot) return;
+    const snapshot = undoDeleteSnapshot;
+    const note = getNote(snapshot.id);
+    if (note){
+        Object.assign(note, snapshot);
+        note.modifiedAt = new Date().toISOString();
+    } else {
+        db.notes.unshift(snapshot);
+    }
+    undoDeleteSnapshot = null;
+    document.getElementById("undoBar").classList.remove("show");
+    markChanged();
+    refreshUI();
+    showToast("Delete undone.", "success");
 }
 
 /* =========================================================
@@ -1734,17 +1766,28 @@ function togglePinned(id){
 }
 
 /* =========================================================
-   SELECT NOTE
+   SELECT NOTE (checkbox toggle)
    ========================================================= */
 function selectNote(id){
-    // Checkbox toggle in multiselect mode OR trash view
-    if (multiselectMode || currentView === "trash"){
-        if (multiselectIds.has(id)) multiselectIds.delete(id);
-        else multiselectIds.add(id);
+    /* Trash view: only checkbox toggle */
+    if (currentView === "trash"){
+        if (selectedIds.has(id)) selectedIds.delete(id);
+        else selectedIds.add(id);
         renderNoteList();
-        if (currentView === "trash") renderBinToolbar();
+        renderBinToolbar();
         return;
     }
+
+    /* Click on checkbox (prefix) toggles selection */
+    if (selectedIds.size > 0){
+        /* In selection mode, toggle selection */
+        if (selectedIds.has(id)) selectedIds.delete(id);
+        else selectedIds.add(id);
+        renderNoteList();
+        return;
+    }
+
+    /* Normal: open note preview */
     const note = getNote(id);
     if (!note) return;
     selectedNoteId = id;
@@ -1754,6 +1797,13 @@ function selectNote(id){
     markChanged();
     renderNoteList();
     renderDetail();
+}
+
+function toggleSelect(id){
+    if (selectedIds.has(id)) selectedIds.delete(id);
+    else selectedIds.add(id);
+    renderNoteList();
+    if (currentView === "trash") renderBinToolbar();
 }
 
 /* =========================================================
@@ -1790,76 +1840,59 @@ function renderDetail(){
     `).join("");
 
     container.innerHTML = `
-        <div class="note-color-bar" style="--note-color:${escapeAttribute(note.color)}"></div>
-
-        <div class="note-controls-card">
-            <div class="note-controls-left">
-                <button class="ctrl-btn primary" onclick="addNote()">+ Add</button>
-                <button class="ctrl-btn" onclick="startEdit()">✎ Edit</button>
-                <button class="ctrl-btn danger" onclick="deleteNote('${note.id}')">🗑 Delete</button>
-            </div>
-            <div class="note-controls-right">
-                <button class="ctrl-btn success" onclick="saveCurrent()">💾 Save</button>
-                <button class="ctrl-btn" onclick="cancelEdit()">✕ Cancel</button>
-            </div>
-        </div>
-
-        <div class="heading-card">
-            <div class="heading-display">${escapeHtml(note.title)}</div>
-        </div>
-
-        <div class="content-bar">
-            <div class="content-toolbar">
-                <button class="tool-btn" title="Bold" onclick="execCmd('bold')"><b>B</b></button>
-                <button class="tool-btn" title="Underline" onclick="execCmd('underline')"><u>U</u></button>
-                <button class="tool-btn" title="Italic" onclick="execCmd('italic')"><i>I</i></button>
-                <span class="tool-sep"></span>
-                <button class="tool-btn" title="Text Colour" onclick="pickColor()">🎨</button>
-                <button class="tool-btn wide" title="Insert Link" onclick="insertLinkDialog()">🔗 Link</button>
-            </div>
-            <div class="content-display">${escapeHtml(note.content)}</div>
-        </div>
-
-        <div class="links-card">
-            <div class="links-card-header">
-                <span class="links-card-title">Links (${(note.links||[]).length})</span>
-                <div class="links-card-header-actions">
-                    <button class="small-action-btn primary" onclick="addLinkInline('${note.id}')">+ Add</button>
-                    <button class="small-action-btn" onclick="toggleLinksEdit('${note.id}')">✎ Edit</button>
+        <div class="note-panel-border" style="--note-color:${escapeAttribute(note.color)}">
+            <div class="note-controls-card">
+                <div class="note-controls-left">
+                    <button class="ctrl-btn primary" onclick="addNote()">+ Add</button>
+                    <button class="ctrl-btn" onclick="startEdit()">✎ Edit</button>
+                    <button class="ctrl-btn danger" onclick="deleteNote('${note.id}')">🗑 Delete</button>
+                    <button class="ctrl-btn" onclick="duplicateNote('${note.id}')">⎘ Copy</button>
                 </div>
             </div>
-            ${linksHtml || `<div class="empty" style="min-height:60px;font-size:12px;">No links yet.</div>`}
-        </div>
 
-        <div class="tags-cat-card">
-            <div class="tags-cat-row">
-                <span class="tags-cat-label">🏷️ Tags:</span>
-                ${tagsHtml || `<span style="color:var(--muted);font-size:11px;">No tags</span>`}
-                <input id="detailTagsInput" class="tags-input-inline" placeholder="Add tag..." onkeydown="if(event.key==='Enter'){assignTagFromInput('${note.id}');}">
-                <button class="small-action-btn primary" onclick="assignTagFromInput('${note.id}')">Add</button>
+            <div class="heading-card">
+                <div class="heading-display">${escapeHtml(note.title)}</div>
             </div>
-            <div class="tags-cat-row">
-                <span class="tags-cat-label">📁 Cat:</span>
-                <span style="font-size:12px;">${escapeHtml(categoryPath || "Uncat")}</span>
-                <button class="small-action-btn" onclick="openCategoryMenuForNote('${note.id}')">Edit Cat</button>
-            </div>
-        </div>
 
-        ${renderMetadata(note, categoryPath)}
+            <div class="content-bar">
+                <div class="content-toolbar">
+                    <button class="tool-btn" title="Bold" onclick="execCmd('bold')"><b>B</b></button>
+                    <button class="tool-btn" title="Underline" onclick="execCmd('underline')"><u>U</u></button>
+                    <button class="tool-btn" title="Italic" onclick="execCmd('italic')"><i>I</i></button>
+                    <span class="tool-sep"></span>
+                    <button class="tool-btn" title="Text Colour" onclick="pickColor()">🎨</button>
+                    <button class="tool-btn wide" title="Insert Link" onclick="insertLinkDialog()">🔗 Link</button>
+                </div>
+                <div class="content-display">${escapeHtml(note.content)}</div>
+            </div>
+
+            <div class="links-card">
+                <div class="links-card-header">
+                    <span class="links-card-title">Links (${(note.links||[]).length})</span>
+                    <div class="links-card-header-actions">
+                        <button class="small-action-btn primary" onclick="addLinkInline('${note.id}')">+ Add</button>
+                    </div>
+                </div>
+                ${linksHtml || `<div class="empty" style="min-height:60px;font-size:12px;">No links yet.</div>`}
+            </div>
+
+            <div class="tags-cat-card">
+                <div class="tags-cat-row">
+                    <span class="tags-cat-label">🏷️ Tags:</span>
+                    ${tagsHtml || `<span style="color:var(--muted);font-size:11px;">No tags</span>`}
+                    <input id="detailTagsInput" class="tags-input-inline" placeholder="Add tag..." onkeydown="if(event.key==='Enter'){assignTagFromInput('${note.id}');}">
+                    <button class="small-action-btn primary" onclick="assignTagFromInput('${note.id}')">Add</button>
+                </div>
+                <div class="tags-cat-row">
+                    <span class="tags-cat-label">📁 Cat:</span>
+                    <span style="font-size:12px;">${escapeHtml(categoryPath || "Uncat")}</span>
+                    <button class="small-action-btn" onclick="openCategoryMenuForNote('${note.id}')">Edit Cat</button>
+                </div>
+            </div>
+
+            ${renderMetadata(note, categoryPath)}
+        </div>
     `;
-}
-
-function toggleLinksEdit(noteId){
-    const note = getNote(noteId);
-    if (!note || !note.links || !note.links.length){
-        showToast("No links to edit.", "normal");
-        return;
-    }
-    const list = note.links.map((l, i) => `${i+1}. ${l.title} → ${l.url}`).join("\n");
-    const choice = prompt("Enter link number to edit:\n\n" + list, "1");
-    if (choice === null) return;
-    const idx = parseInt(choice, 10) - 1;
-    if (idx >= 0 && idx < note.links.length) editLinkInline(noteId, idx);
 }
 
 function startEdit(){
@@ -1886,6 +1919,7 @@ function saveCurrent(){
     if (contentEl) note.content = contentEl.innerText;
     if (colorEl) note.color = colorEl.value || "#64748b";
 
+    note.editCount = Number(note.editCount || 0) + 1;
     note.modifiedAt = new Date().toISOString();
     markChanged();
     editingNoteId = null;
@@ -1912,65 +1946,104 @@ function renderEditMode(note){
     `).join("");
 
     container.innerHTML = `
-        <div class="note-color-bar" style="--note-color:${escapeAttribute(note.color)}"></div>
-
-        <div class="note-controls-card">
-            <div class="note-controls-left">
-                <button class="ctrl-btn primary" onclick="addNote()">+ Add</button>
-                <button class="ctrl-btn" onclick="startEdit()">✎ Edit</button>
-                <button class="ctrl-btn danger" onclick="deleteNote('${note.id}')">🗑 Delete</button>
-            </div>
-            <div class="note-controls-right">
-                <button class="ctrl-btn success" onclick="saveCurrent()">💾 Save</button>
-                <button class="ctrl-btn" onclick="cancelEdit()">✕ Cancel</button>
-            </div>
-        </div>
-
-        <div class="heading-card">
-            <input id="editTitle" class="heading-input" value="${escapeAttribute(note.title)}" placeholder="Note title...">
-        </div>
-
-        <div class="content-bar">
-            <div class="content-toolbar">
-                <button class="tool-btn" title="Bold" onclick="execCmd('bold')"><b>B</b></button>
-                <button class="tool-btn" title="Underline" onclick="execCmd('underline')"><u>U</u></button>
-                <button class="tool-btn" title="Italic" onclick="execCmd('italic')"><i>I</i></button>
-                <span class="tool-sep"></span>
-                <button class="tool-btn" title="Text Colour" onclick="pickColor()">🎨</button>
-                <button class="tool-btn wide" title="Insert Link" onclick="insertLinkDialog()">🔗 Link</button>
-                <span class="tool-sep"></span>
-                <span style="font-size:11px;color:var(--muted);">Colour:</span>
-                <input id="editColor" type="color" value="${escapeAttribute(note.color)}" style="width:34px;height:28px;border:1px solid var(--border);border-radius:6px;padding:0;cursor:pointer;">
-            </div>
-            <div id="editContent" class="content-editable" contenteditable="true" data-placeholder="Write your note...">${escapeHtml(note.content)}</div>
-        </div>
-
-        <div class="links-card">
-            <div class="links-card-header">
-                <span class="links-card-title">Links (${(note.links||[]).length})</span>
-                <div class="links-card-header-actions">
-                    <button class="small-action-btn primary" onclick="addLinkInline('${note.id}')">+ Add</button>
+        <div class="note-panel-border" style="--note-color:${escapeAttribute(note.color)}">
+            <div class="note-controls-card">
+                <div class="note-controls-left">
+                    <button class="ctrl-btn primary" onclick="addNote()">+ Add</button>
+                    <button class="ctrl-btn" onclick="startEdit()">✎ Edit</button>
+                    <button class="ctrl-btn danger" onclick="deleteNote('${note.id}')">🗑 Delete</button>
+                    <button class="ctrl-btn" onclick="duplicateNote('${note.id}')">⎘ Copy</button>
+                </div>
+                <div class="note-controls-right">
+                    <button class="ctrl-btn success" onclick="saveCurrent()">💾 Save</button>
+                    <button class="ctrl-btn" onclick="cancelEdit()">✕ Cancel</button>
                 </div>
             </div>
-            ${linksHtml || `<div class="empty" style="min-height:60px;font-size:12px;">No links yet.</div>`}
-        </div>
 
-        <div class="tags-cat-card">
-            <div class="tags-cat-row">
-                <span class="tags-cat-label">🏷️ Tags:</span>
-                ${tagsHtml || `<span style="color:var(--muted);font-size:11px;">No tags</span>`}
-                <input id="detailTagsInput" class="tags-input-inline" placeholder="Add tag..." onkeydown="if(event.key==='Enter'){assignTagFromInput('${note.id}');}">
-                <button class="small-action-btn primary" onclick="assignTagFromInput('${note.id}')">Add</button>
+            <div class="heading-card">
+                <input id="editTitle" class="heading-input" value="${escapeAttribute(note.title)}" placeholder="Untitled Note">
             </div>
-            <div class="tags-cat-row">
-                <span class="tags-cat-label">📁 Cat:</span>
-                <span style="font-size:12px;">${escapeHtml(categoryPath || "Uncat")}</span>
-                <button class="small-action-btn" onclick="openCategoryMenuForNote('${note.id}')">Edit Cat</button>
-            </div>
-        </div>
 
-        ${renderMetadata(note, categoryPath)}
+            <div class="content-bar">
+                <div class="content-toolbar">
+                    <button class="tool-btn" title="Bold" onclick="execCmd('bold')"><b>B</b></button>
+                    <button class="tool-btn" title="Underline" onclick="execCmd('underline')"><u>U</u></button>
+                    <button class="tool-btn" title="Italic" onclick="execCmd('italic')"><i>I</i></button>
+                    <span class="tool-sep"></span>
+                    <button class="tool-btn" title="Text Colour" onclick="pickColor()">🎨</button>
+                    <button class="tool-btn wide" title="Insert Link" onclick="insertLinkDialog()">🔗 Link</button>
+                    <span class="tool-sep"></span>
+                    <span style="font-size:11px;color:var(--muted);">Colour:</span>
+                    <button class="tool-btn wide" onclick="openColorPalette('${note.id}')">🎨 Pick</button>
+                </div>
+                <div id="editContent" class="content-editable" contenteditable="true" data-placeholder="Write your note...">${escapeHtml(note.content)}</div>
+            </div>
+
+            <div class="links-card">
+                <div class="links-card-header">
+                    <span class="links-card-title">Links (${(note.links||[]).length})</span>
+                    <div class="links-card-header-actions">
+                        <button class="small-action-btn primary" onclick="addLinkInline('${note.id}')">+ Add</button>
+                    </div>
+                </div>
+                ${linksHtml || `<div class="empty" style="min-height:60px;font-size:12px;">No links yet.</div>`}
+            </div>
+
+            <div class="tags-cat-card">
+                <div class="tags-cat-row">
+                    <span class="tags-cat-label">🏷️ Tags:</span>
+                    ${tagsHtml || `<span style="color:var(--muted);font-size:11px;">No tags</span>`}
+                    <input id="detailTagsInput" class="tags-input-inline" placeholder="Add tag..." onkeydown="if(event.key==='Enter'){assignTagFromInput('${note.id}');}">
+                    <button class="small-action-btn primary" onclick="assignTagFromInput('${note.id}')">Add</button>
+                </div>
+                <div class="tags-cat-row">
+                    <span class="tags-cat-label">📁 Cat:</span>
+                    <span style="font-size:12px;">${escapeHtml(categoryPath || "Uncat")}</span>
+                    <button class="small-action-btn" onclick="openCategoryMenuForNote('${note.id}')">Edit Cat</button>
+                </div>
+            </div>
+
+            ${renderMetadata(note, categoryPath)}
+        </div>
     `;
+}
+
+/* =========================================================
+   COLOR PALETTE (20 predefined)
+   ========================================================= */
+function openColorPalette(noteId){
+    const note = getNote(noteId);
+    if (!note) return;
+    const current = note.color;
+    const html = COLOR_PALETTE.map(c =>
+        `<button class="tool-btn" style="background:${c};width:28px;height:28px;border:${c === current ? '3px solid #2563eb' : '1px solid #dfe4ec'}" onclick="applyColor('${noteId}','${c}')"></button>`
+    ).join("");
+    const w = window.open("", "ColorPicker", "width=340,height=180");
+    if (!w){
+        const c = prompt("Enter colour hex:", current);
+        if (c) applyColor(noteId, c);
+        return;
+    }
+    w.document.write(`<!DOCTYPE html><html><head><title>Pick Colour</title>
+        <style>body{font-family:Arial;padding:12px;background:#f4f6f9;margin:0}
+        h4{margin:0 0 8px;font-size:13px}
+        .grid{display:grid;grid-template-columns:repeat(10,1fr);gap:6px}</style>
+        </head><body>
+        <h4>Pick a colour</h4>
+        <div class="grid">${html.replace(/class="tool-btn"/g,'class="tool-btn" style="width:26px;height:26px;padding:0;border-radius:6px"')}</div>
+        <script>function applyColor(id,c){if(window.opener){window.opener.applyColor(id,c);window.close();}}<\/script>
+        </body></html>`);
+    w.document.close();
+    window.applyColor = function(id, color){
+        const n = getNote(id);
+        if (n) {
+            n.color = color;
+            n.modifiedAt = new Date().toISOString();
+            markChanged();
+            renderDetail();
+            showToast("Colour updated.", "success");
+        }
+    };
 }
 
 /* =========================================================
@@ -2073,9 +2146,6 @@ function deleteLinkInline(noteId, index){
     renderDetail();
 }
 
-/* =========================================================
-   LINK POPUP
-   ========================================================= */
 function openLinkPopup(title, initialTitle, initialUrl, onSave){
     const w = window.open("", "LinkWindow", "width=420,height=280,resizable=yes,scrollbars=yes");
     if (!w){
@@ -2137,15 +2207,16 @@ function renderGlobalLinks(){
         return;
     }
     container.innerHTML = globalLinks.map((link, i) => `
-        <div class="sidebar-item" style="padding-left:22px;">
-            <span class="sidebar-icon">🔗</span>
-            <span class="sidebar-label" title="${escapeAttribute(link.url)}">
-                <a href="${escapeAttribute(link.url)}" target="_blank" rel="noopener" style="color:var(--primary);text-decoration:none;" onclick="event.stopPropagation()">${escapeHtml(link.title || link.url)}</a>
-            </span>
-            <div class="sidebar-controls">
-                <button class="sidebar-ctrl" title="Edit" onclick="event.stopPropagation(); editGlobalLinkAt(${i})">✎</button>
-                <button class="sidebar-ctrl danger" title="Remove" onclick="event.stopPropagation(); removeGlobalLinkAt(${i})">🗑</button>
+        <div class="sidebar-item" style="padding-left:22px;flex-direction:column;align-items:flex-start;gap:2px;padding-top:6px;padding-bottom:6px;">
+            <div style="display:flex;width:100%;align-items:center;gap:6px;">
+                <span class="sidebar-icon">🔗</span>
+                <a href="${escapeAttribute(link.url)}" target="_blank" rel="noopener" style="color:var(--primary);text-decoration:none;font-size:12px;font-weight:600;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" onclick="event.stopPropagation()">${escapeHtml(link.title || link.url)}</a>
+                <div class="sidebar-controls">
+                    <button class="sidebar-ctrl" title="Edit" onclick="event.stopPropagation(); editGlobalLinkAt(${i})">✎</button>
+                    <button class="sidebar-ctrl danger" title="Remove" onclick="event.stopPropagation(); removeGlobalLinkAt(${i})">🗑</button>
+                </div>
             </div>
+            <div style="font-size:10px;color:var(--muted);padding-left:26px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%;">${escapeHtml(link.url)}</div>
         </div>
     `).join("");
 }
@@ -2157,15 +2228,6 @@ function addGlobalLink(){
         renderGlobalLinks();
         showToast("Link added.", "success");
     });
-}
-
-function editGlobalLink(){
-    if (!globalLinks.length){ showToast("No links to edit.", "normal"); return; }
-    const list = globalLinks.map((l, i) => `${i+1}. ${l.title} → ${l.url}`).join("\n");
-    const choice = prompt("Enter link number to edit:\n\n" + list, "1");
-    if (choice === null) return;
-    const idx = parseInt(choice, 10) - 1;
-    if (idx >= 0 && idx < globalLinks.length) editGlobalLinkAt(idx);
 }
 
 function editGlobalLinkAt(index){
@@ -2240,64 +2302,240 @@ function openCategoryMenuForNote(noteId){
 }
 
 /* =========================================================
-   METADATA
+   METADATA (comprehensive with 20+ fields)
    ========================================================= */
 function renderMetadata(note, categoryPath){
+    const collapsed = db.settings.metadataCollapsed ? "collapsed" : "";
     const isSynced = lastSuccessfulSync ? "Google Drive" : "Not Synced";
+    const lastSyncStr = lastSuccessfulSync ? formatShortTime(lastSuccessfulSync) : "—";
+
+    const words = countWords(note.content);
+    const chars = (note.content || "").length;
+    const lines = (note.content || "").split(/\n/).length;
+    const size = new Blob([JSON.stringify(note)]).size;
+    const externalLinks = ((note.content || "").match(/https?:\/\/[^\s]+/g) || []).length;
+    const tagsCount = note.tags.length;
+    const catDepth = note.categoryId ? getCategoryDepth(note.categoryId) : 0;
+    const siblings = note.categoryId ? countSiblingNotes(note.id, note.categoryId) : 0;
+    const totalEdits = Number(note.editCount || 0);
+    const noteAge = daysBetween(new Date(note.createdAt), new Date());
+    const daysSinceMod = daysBetween(new Date(note.modifiedAt), new Date());
+    const timeSinceEdit = relativeTime(note.modifiedAt);
+    const deletedDateStr = note.deleted ? formatDateTime(note.deletedAt) : "—";
+
     return `
         <div class="metadata-box">
-            <div class="metadata-title">Note Metadata</div>
-            <table class="metadata-table">
-                <tr>
-                    <td class="label">Created</td>
-                    <td class="value">${escapeHtml(formatDateTime(note.createdAt))}</td>
-                    <td class="label">Modified</td>
-                    <td class="value">${escapeHtml(formatDateTime(note.modifiedAt))}</td>
-                </tr>
-                <tr>
-                    <td class="label">Last Viewed</td>
-                    <td class="value">${note.lastViewedAt ? escapeHtml(formatDateTime(note.lastViewedAt)) : "Never"}</td>
-                    <td class="label">View Count</td>
-                    <td class="value">${note.viewCount || 0}</td>
-                </tr>
-                <tr>
-                    <td class="label">Synced</td>
-                    <td class="value">${isSynced}</td>
-                    <td class="label">Category</td>
-                    <td class="value">${escapeHtml(categoryPath || "Uncat")}</td>
-                </tr>
-                <tr>
-                    <td class="label">Tags</td>
-                    <td class="value">${note.tags.length ? escapeHtml(note.tags.join(", ")) : "None"}</td>
-                    <td class="label">Status</td>
-                    <td class="value">${note.deleted ? "In Recycle Bin" : "Active"}</td>
-                </tr>
-                <tr>
-                    <td class="label">Favorite</td>
-                    <td class="value">${note.favorite ? "Yes" : "No"}</td>
-                    <td class="label">Pinned</td>
-                    <td class="value">${note.pinned ? "Yes" : "No"}</td>
-                </tr>
-                <tr>
-                    <td class="label">Note ID</td>
-                    <td class="value">${escapeHtml(note.id)}</td>
-                    <td class="label">Colour</td>
-                    <td class="value">${escapeHtml(note.color)}</td>
-                </tr>
-                <tr>
-                    <td class="label">Links</td>
-                    <td class="value">${(note.links || []).length}</td>
-                    <td class="label">Words</td>
-                    <td class="value">${countWords(note.content)}</td>
-                </tr>
-            </table>
+            <div class="metadata-title" onclick="toggleMetadata()">
+                <span>📊 Note Metadata</span>
+                <span class="toggle-icon" id="metaToggleIcon">${collapsed ? "▸" : "▾"}</span>
+            </div>
+            <div class="metadata-body ${collapsed}" id="metaBody">
+                <table class="metadata-table">
+                    <tr>
+                        <td class="label">Created</td>
+                        <td class="value">${escapeHtml(formatDateTime(note.createdAt))}</td>
+                        <td class="label">Modified</td>
+                        <td class="value">${escapeHtml(formatDateTime(note.modifiedAt))}</td>
+                    </tr>
+                    <tr>
+                        <td class="label">Category</td>
+                        <td class="value">${categoryPath ? `<a class="cat-link" onclick="setCategoryView('${note.categoryId}')">${escapeHtml(categoryPath)}</a>` : "Uncat"}</td>
+                        <td class="label">Tags</td>
+                        <td class="value">${note.tags.length ? escapeHtml(note.tags.join(", ")) : "None"}</td>
+                    </tr>
+                    <tr>
+                        <td class="label">Status</td>
+                        <td class="value">${note.deleted ? "In Recycle Bin" : "Active"}</td>
+                        <td class="label">Favorite</td>
+                        <td class="value">${note.favorite ? "Yes" : "No"}</td>
+                    </tr>
+                    <tr>
+                        <td class="label">Pinned</td>
+                        <td class="value">${note.pinned ? "Yes" : "No"}</td>
+                        <td class="label">Colour</td>
+                        <td class="value">${escapeHtml(note.color)}</td>
+                    </tr>
+                    <tr>
+                        <td class="label">Note ID</td>
+                        <td class="value">${escapeHtml(note.id.slice(0,12))}</td>
+                        <td class="label">Words</td>
+                        <td class="value">${words}</td>
+                    </tr>
+                    <tr>
+                        <td class="label">Characters</td>
+                        <td class="value">${chars}</td>
+                        <td class="label">Lines</td>
+                        <td class="value">${lines}</td>
+                    </tr>
+                    <tr>
+                        <td class="label">Last Viewed</td>
+                        <td class="value">${note.lastViewedAt ? escapeHtml(formatDateTime(note.lastViewedAt)) : "Never"}</td>
+                        <td class="label">View Count</td>
+                        <td class="value">${note.viewCount || 0}</td>
+                    </tr>
+                    <tr>
+                        <td class="label">Synced</td>
+                        <td class="value">${isSynced}</td>
+                        <td class="label">Last Sync</td>
+                        <td class="value">${lastSyncStr}</td>
+                    </tr>
+                    <tr>
+                        <td class="label">Note Age</td>
+                        <td class="value">${noteAge} days</td>
+                        <td class="label">Days Since Mod</td>
+                        <td class="value">${daysSinceMod} days</td>
+                    </tr>
+                    <tr>
+                        <td class="label">Edit Count</td>
+                        <td class="value">${totalEdits}</td>
+                        <td class="label">Restored Count</td>
+                        <td class="value">${note.restoredCount || 0}</td>
+                    </tr>
+                    <tr>
+                        <td class="label">Total Edits</td>
+                        <td class="value">${totalEdits} (all time)</td>
+                        <td class="label">Size (bytes)</td>
+                        <td class="value">${size}</td>
+                    </tr>
+                    <tr>
+                        <td class="label">External Links</td>
+                        <td class="value">${externalLinks}</td>
+                        <td class="label">Tags Count</td>
+                        <td class="value">${tagsCount}</td>
+                    </tr>
+                    <tr>
+                        <td class="label">Category Depth</td>
+                        <td class="value">${catDepth}</td>
+                        <td class="label">Sibling Notes</td>
+                        <td class="value">${siblings}</td>
+                    </tr>
+                    <tr>
+                        <td class="label">Time Since Edit</td>
+                        <td class="value">${timeSinceEdit}</td>
+                        <td class="label">Last Restore</td>
+                        <td class="value">${note.lastRestoredAt ? escapeHtml(formatDateTime(note.lastRestoredAt)) : "Never"}</td>
+                    </tr>
+                    ${note.deleted ? `<tr>
+                        <td class="label">Deleted Date</td>
+                        <td class="value" colspan="3">${escapeHtml(deletedDateStr)}</td>
+                    </tr>` : ""}
+                </table>
+                <div class="metadata-actions">
+                    <button class="small-action-btn" onclick="duplicateNote('${note.id}')">⎘ Duplicate</button>
+                    <button class="small-action-btn" onclick="openExportDialog('${note.id}')">↗ Export</button>
+                    <button class="small-action-btn" onclick="resetViewCount('${note.id}')">Reset Views</button>
+                </div>
+            </div>
         </div>
     `;
+}
+
+function toggleMetadata(){
+    db.settings.metadataCollapsed = !db.settings.metadataCollapsed;
+    const body = document.getElementById("metaBody");
+    const icon = document.getElementById("metaToggleIcon");
+    if (db.settings.metadataCollapsed){
+        body.classList.add("collapsed");
+        if (icon) icon.textContent = "▸";
+    } else {
+        body.classList.remove("collapsed");
+        if (icon) icon.textContent = "▾";
+    }
+    markChanged();
+}
+
+function resetViewCount(noteId){
+    const note = getNote(noteId);
+    if (!note) return;
+    if (!confirm("Reset view count to 0?")) return;
+    note.viewCount = 0;
+    note.modifiedAt = new Date().toISOString();
+    markChanged();
+    renderDetail();
+    showToast("View count reset.", "success");
 }
 
 function countWords(text){
     if (!text) return 0;
     return text.trim().split(/\s+/).filter(Boolean).length;
+}
+
+function countSiblingNotes(noteId, categoryId){
+    let count = 0;
+    db.notes.forEach(n => {
+        if (!n.deleted && n.id !== noteId && n.categoryId === categoryId) count++;
+    });
+    return count;
+}
+
+function getCategoryDepth(catId){
+    let depth = 0;
+    let current = db.categories.find(c => c.id === catId);
+    const guard = new Set();
+    while (current && !guard.has(current.id)){
+        guard.add(current.id);
+        depth++;
+        current = current.parentId ? db.categories.find(c => c.id === current.parentId) : null;
+    }
+    return depth;
+}
+
+function daysBetween(d1, d2){
+    const ms = Math.abs(d2 - d1);
+    return Math.floor(ms / (1000 * 60 * 60 * 24));
+}
+
+function relativeTime(value){
+    if (!value) return "—";
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "—";
+    const sec = Math.floor((Date.now() - date.getTime()) / 1000);
+    if (sec < 60) return sec + "s ago";
+    const min = Math.floor(sec / 60);
+    if (min < 60) return min + " min ago";
+    const hrs = Math.floor(min / 60);
+    if (hrs < 24) return hrs + " hr ago";
+    const days = Math.floor(hrs / 24);
+    if (days < 30) return days + " days ago";
+    const months = Math.floor(days / 30);
+    if (months < 12) return months + " months ago";
+    const years = Math.floor(months / 12);
+    return years + " years ago";
+}
+
+/* =========================================================
+   EXPORT DIALOG (P15: QR / Print / Copy / PDF)
+   ========================================================= */
+function openExportDialog(noteId){
+    const note = getNote(noteId);
+    if (!note) return;
+    const choice = prompt(
+        "Export as:\n1 = Copy to Clipboard\n2 = Print\n3 = PDF\n4 = QR Code",
+        "1"
+    );
+    if (choice === null) return;
+    if (choice === "1"){
+        const text = note.title + "\n\n" + note.content;
+        navigator.clipboard.writeText(text).then(() => {
+            showToast("Copied to clipboard.", "success");
+        }).catch(() => {
+            showToast("Copy failed.", "error");
+        });
+    } else if (choice === "2"){
+        const w = window.open("", "_blank");
+        w.document.write(`<pre style="font-family:Arial;padding:20px;white-space:pre-wrap;">${escapeHtml(note.title)}\n\n${escapeHtml(note.content)}</pre>`);
+        w.document.close();
+        w.print();
+    } else if (choice === "3"){
+        showToast("Use browser Print → Save as PDF.", "normal");
+        const w = window.open("", "_blank");
+        w.document.write(`<pre style="font-family:Arial;padding:20px;white-space:pre-wrap;">${escapeHtml(note.title)}\n\n${escapeHtml(note.content)}</pre>`);
+        w.document.close();
+        setTimeout(() => w.print(), 300);
+    } else if (choice === "4"){
+        const url = "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=" + encodeURIComponent(note.title + "\n" + note.content.slice(0, 500));
+        window.open(url, "_blank");
+    }
 }
 
 /* =========================================================
@@ -2344,7 +2582,7 @@ function renderSidebar(){
 }
 
 /* =========================================================
-   RENDER CATEGORIES (with +child count)
+   RENDER CATEGORIES
    ========================================================= */
 function renderCategories(){
     const container = document.getElementById("categoryList");
@@ -2377,22 +2615,40 @@ function renderCategoryTree(cat, usedIds){
     if (!usedIds.has(cat.id)) return "";
     const children = db.categories.filter(c => c.parentId === cat.id && usedIds.has(c.id));
     const count = countCategoryNotes(cat.id);
-    const childrenHtml = children.length
-        ? `<div class="tree-children" style="margin-left:14px;">${children.map(c => renderCategoryTree(c, usedIds)).join("")}</div>`
+    const hasChildren = children.length > 0;
+    const childrenHtml = hasChildren
+        ? `<div class="tree-children" style="margin-left:14px;display:none;" id="catChildren-${cat.id}">${children.map(c => renderCategoryTree(c, usedIds)).join("")}</div>`
         : "";
+
+    const expander = hasChildren
+        ? `<button class="cat-expander" onclick="event.stopPropagation(); toggleCatNode('${cat.id}', this)">+</button>`
+        : `<span style="width:18px;display:inline-block;"></span>`;
 
     return `
         <div class="cat-row" style="padding-left:22px;">
+            ${expander}
+            <span class="sidebar-icon">📁</span>
+            <span class="sidebar-label" onclick="setCategoryView('${cat.id}')" style="cursor:pointer;">${escapeHtml(cat.name)}</span>
+            <span class="sidebar-count">${count}</span>
             <div class="cat-row-btns">
                 <button class="sidebar-ctrl" title="Rename" onclick="event.stopPropagation(); renameCategory('${cat.id}')">✎</button>
                 <button class="sidebar-ctrl danger" title="Remove" onclick="event.stopPropagation(); removeCategory('${cat.id}')">🗑</button>
             </div>
-            <span class="sidebar-icon">↳</span>
-            <span class="sidebar-label" onclick="setCategoryView('${cat.id}')" style="cursor:pointer;">${escapeHtml(cat.name)}</span>
-            <span class="sidebar-count">${count}</span>
         </div>
         ${childrenHtml}
     `;
+}
+
+function toggleCatNode(catId, btn){
+    const el = document.getElementById("catChildren-" + catId);
+    if (!el) return;
+    if (el.style.display === "none"){
+        el.style.display = "block";
+        btn.textContent = "−";
+    } else {
+        el.style.display = "none";
+        btn.textContent = "+";
+    }
 }
 
 function countCategoryNotes(catId){
@@ -2490,8 +2746,10 @@ function renderTags(){
 
     const sorted = [...used].sort((a,b) => a.localeCompare(b));
 
+    document.getElementById("tagCountTotal").textContent = sorted.length;
+
     if (!sorted.length){
-        container.innerHTML = `<div class="sidebar-subtitle">No tags in use</div>`;
+        container.innerHTML = `<div class="sidebar-subtitle" style="display:none;">No tags</div>`;
         return;
     }
 
@@ -2504,7 +2762,7 @@ function renderTags(){
                 <span class="sidebar-count">${count}</span>
                 <div class="sidebar-controls">
                     <button class="sidebar-ctrl" title="Rename" onclick="event.stopPropagation(); renameTag('${escapeAttribute(tag)}')">✎</button>
-                    <button class="sidebar-ctrl danger" title="Remove tag" onclick="event.stopPropagation(); removeTagEverywhere('${escapeAttribute(tag)}')">🗑</button>
+                    <button class="sidebar-ctrl danger" title="Remove" onclick="event.stopPropagation(); removeTagEverywhere('${escapeAttribute(tag)}')">🗑</button>
                 </div>
             </div>
         `;
@@ -2547,7 +2805,7 @@ function setView(view){
     currentCategoryId = null;
     currentTagName = null;
     currentPage = 1;
-    multiselectIds.clear();
+    selectedIds.clear();
     updateSidebarActive();
     renderListTitle();
     renderNoteList();
@@ -2559,7 +2817,7 @@ function setCategoryView(id){
     currentCategoryId = id;
     currentTagName = null;
     currentPage = 1;
-    multiselectIds.clear();
+    selectedIds.clear();
     updateSidebarActive();
     renderListTitle();
     renderNoteList();
@@ -2571,7 +2829,7 @@ function setTagView(tag){
     currentTagName = tag;
     currentCategoryId = null;
     currentPage = 1;
-    multiselectIds.clear();
+    selectedIds.clear();
     updateSidebarActive();
     renderListTitle();
     renderNoteList();
@@ -2649,6 +2907,12 @@ function sortNotes(notes){
     return notes.sort((a,b) => new Date(b.modifiedAt) - new Date(a.modifiedAt));
 }
 
+function changeSortFromBar(value){
+    db.settings.sorting = value;
+    markChanged();
+    renderNoteList();
+}
+
 /* =========================================================
    RENDER NOTE LIST
    ========================================================= */
@@ -2681,78 +2945,98 @@ function renderNoteList(){
 }
 
 function renderNoteRow(note){
-    const contentPreview = note.content.replace(/\s+/g, " ").trim().slice(0, 60);
-    const catPath = getCategoryPath(note.categoryId);
+    const previewLen = db.settings.contentPreviewLength || 60;
+    const contentPreview = note.content.replace(/\s+/g, " ").trim().slice(0, previewLen);
+    const lastCat = note.categoryId ? (db.categories.find(c => c.id === note.categoryId) || {}).name || "" : "";
     const date = formatDateTime(note.modifiedAt);
-    const isMs = multiselectIds.has(note.id);
+    const relTime = relativeTime(note.modifiedAt);
+    const isMs = selectedIds.has(note.id);
     const isTrash = currentView === "trash";
 
-    const tagsPreview = note.tags
-        .filter(t => t !== "Bin")
-        .slice(0, 3)
-        .map(t => `<span class="meta-chip">🏷️ ${escapeHtml(t)}</span>`)
-        .join(" ");
+    /* Tags preview: max 5, then "..." */
+    const filteredTags = note.tags.filter(t => t !== "Bin");
+    const tagsShown = filteredTags.slice(0, 5);
+    const tagsMore = filteredTags.length > 5 ? " ..." : "";
+    const tagsPreview = tagsShown.map(t => `<span class="meta-chip">🏷️ ${escapeHtml(t)}</span>`).join(" ");
 
-    // Recycle Bin row has per-note Restore / Permanent Delete + checkbox
+    const lineCount = db.settings.noteLineCount || 3;
+
     if (isTrash){
         return `
-            <div class="note-row has-checkbox ${isMs ? "ms-selected" : ""}"
-                 onclick="selectNote('${note.id}')">
-
+            <div class="note-row has-checkbox ${isMs ? "ms-selected" : ""}" onclick="selectNote('${note.id}')">
                 <div class="note-marker" style="--note-color:${escapeAttribute(note.color)}"></div>
-
                 <div class="note-row-body">
                     <div class="note-line1">
                         <span class="note-line1-title">${escapeHtml(note.title)}</span>
-                        <span class="note-line1-content">${escapeHtml(contentPreview || "No content")}</span>
+                        ${lineCount >= 2 ? `<span class="note-line1-content">${escapeHtml(contentPreview || "No content")}</span>` : ""}
                     </div>
-                    <div class="note-line2">
-                        ${catPath ? `<span class="meta-chip">📁 ${escapeHtml(catPath)}</span>` : `<span class="meta-chip" style="color:var(--muted);">📁 Uncat</span>`}
-                        ${tagsPreview || ""}
-                    </div>
-                    <div class="note-line3">🕒 ${escapeHtml(date)}</div>
+                    ${lineCount >= 3 ? `<div class="note-line2">
+                        ${lastCat ? `<span class="meta-chip">📁 ${escapeHtml(lastCat)}</span>` : `<span class="meta-chip" style="color:var(--muted);">📁 Uncat</span>`}
+                        ${tagsPreview || ""}${tagsMore}
+                    </div>` : ""}
+                    ${lineCount >= 4 ? `<div class="note-line3">🕒 ${escapeHtml(date)} (${escapeHtml(relTime)})</div>` : (lineCount === 3 ? `<div class="note-line3">🕒 ${escapeHtml(date)} (${escapeHtml(relTime)})</div>` : "")}
                 </div>
-
-                <div class="note-row-actions">
-                    <button class="success" title="Restore" onclick="event.stopPropagation(); restoreNote('${note.id}')">↩</button>
-                    <button class="danger" title="Permanent Delete" onclick="event.stopPropagation(); permanentDeleteNote('${note.id}')">🗑</button>
+                <div class="note-row-right">
+                    <button class="row-icon-btn success" title="Restore" onclick="event.stopPropagation(); restoreNote('${note.id}')">↩</button>
+                    <button class="row-icon-btn danger" title="Permanent Delete" onclick="event.stopPropagation(); permanentDeleteNote('${note.id}')">🗑</button>
                 </div>
             </div>
         `;
     }
 
-    // Normal rows
-    const hasCheckbox = multiselectMode;
     return `
-        <div class="note-row ${hasCheckbox ? "has-checkbox" : ""} ${selectedNoteId === note.id ? "active" : ""} ${isMs ? "ms-selected" : ""}"
-             onclick="selectNote('${note.id}')">
-
+        <div class="note-row has-checkbox ${selectedNoteId === note.id ? "active" : ""} ${isMs ? "ms-selected" : ""}"
+             onclick="selectNote('${note.id}')"
+             oncontextmenu="event.preventDefault(); showContextMenu(event, '${note.id}');">
             <div class="note-marker" style="--note-color:${escapeAttribute(note.color)}"></div>
-
             <div class="note-row-body">
                 <div class="note-line1">
                     <span class="note-line1-title">${escapeHtml(note.title)}</span>
-                    <span class="note-line1-content">${escapeHtml(contentPreview || "No content")}</span>
+                    ${lineCount >= 2 ? `<span class="note-line1-content">${escapeHtml(contentPreview || "No content")}</span>` : ""}
                 </div>
-                <div class="note-line2">
-                    <span class="mini-toggle ${note.pinned ? "on" : ""}"
-                          title="${note.pinned ? "Unpin" : "Pin"}"
-                          onclick="event.stopPropagation(); togglePinned('${note.id}')">
-                        📌 ${note.pinned ? "Pinned" : "Pin"}
-                    </span>
-                    <span class="mini-toggle ${note.favorite ? "fav-on" : ""}"
-                          title="${note.favorite ? "Unfavorite" : "Favorite"}"
-                          onclick="event.stopPropagation(); toggleFavorite('${note.id}')">
-                        ${note.favorite ? "★ Fav" : "☆ Fav"}
-                    </span>
-                    ${catPath ? `<span class="meta-chip">📁 ${escapeHtml(catPath)}</span>` : `<span class="meta-chip" style="color:var(--muted);">📁 Uncat</span>`}
-                    ${tagsPreview || ""}
-                </div>
-                <div class="note-line3">🕒 ${escapeHtml(date)}</div>
+                ${lineCount >= 3 ? `<div class="note-line2">
+                    ${lastCat ? `<span class="meta-chip">📁 ${escapeHtml(lastCat)}</span>` : `<span class="meta-chip" style="color:var(--muted);">📁 Uncat</span>`}
+                    ${tagsPreview || ""}${tagsMore}
+                </div>` : ""}
+                ${lineCount >= 4 ? `<div class="note-line3">🕒 ${escapeHtml(date)} (${escapeHtml(relTime)})</div>` : (lineCount === 3 ? `<div class="note-line3">🕒 ${escapeHtml(date)} (${escapeHtml(relTime)})</div>` : "")}
+            </div>
+            <div class="note-row-right">
+                <button class="row-icon-btn ${note.pinned ? "pin-on" : ""}" title="${note.pinned ? "Unpin" : "Pin"}" onclick="event.stopPropagation(); togglePinned('${note.id}')">📌</button>
+                <button class="row-icon-btn ${note.favorite ? "fav-on" : ""}" title="${note.favorite ? "Unfavorite" : "Favorite"}" onclick="event.stopPropagation(); toggleFavorite('${note.id}')">${note.favorite ? "★" : "☆"}</button>
             </div>
         </div>
     `;
 }
+
+/* =========================================================
+   CONTEXT MENU (long-press / right-click)
+   ========================================================= */
+function showContextMenu(event, noteId){
+    event.preventDefault();
+    const menu = document.getElementById("contextMenu");
+    menu.innerHTML = `
+        <button onclick="ctxDuplicate('${noteId}')">⎘ Duplicate</button>
+        <button onclick="ctxTogglePin('${noteId}')">📌 Toggle Pin</button>
+        <button onclick="ctxToggleFav('${noteId}')">⭐ Toggle Favorite</button>
+        <button onclick="ctxExport('${noteId}')">↗ Export</button>
+        <button style="color:#dc2626;" onclick="ctxDelete('${noteId}')">🗑 Delete</button>
+    `;
+    menu.style.left = event.pageX + "px";
+    menu.style.top = event.pageY + "px";
+    menu.classList.add("show");
+}
+
+document.addEventListener("click", (e) => {
+    const menu = document.getElementById("contextMenu");
+    if (menu && !menu.contains(e.target)) menu.classList.remove("show");
+});
+
+function ctxDuplicate(id){ duplicateNote(id); closeCtx(); }
+function ctxTogglePin(id){ togglePinned(id); closeCtx(); }
+function ctxToggleFav(id){ toggleFavorite(id); closeCtx(); }
+function ctxExport(id){ openExportDialog(id); closeCtx(); }
+function ctxDelete(id){ deleteNote(id); closeCtx(); }
+function closeCtx(){ document.getElementById("contextMenu").classList.remove("show"); }
 
 /* =========================================================
    PAGINATION
@@ -2784,12 +3068,12 @@ function renderBinToolbar(){
         return;
     }
     const total = db.notes.filter(n => n.deleted && !n.trashHidden).length;
-    const selCount = multiselectIds.size;
+    const selCount = selectedIds.size;
     wrap.innerHTML = `
         <div class="bin-toolbar">
             <button class="ctrl-btn success" onclick="binRestoreSelected()" ${selCount ? "" : "disabled"}>↩ Restore</button>
-            <button class="ctrl-btn danger" onclick="binPermanentDeleteSelected()" ${selCount ? "" : "disabled"}>🗑 Permanently Delete</button>
-            <button class="ctrl-btn danger" onclick="emptyBin()" ${total ? "" : "disabled"}>🗑 Empty Bin</button>
+            <button class="ctrl-btn danger" onclick="binPermanentDeleteSelected()" ${selCount ? "" : "disabled"}>🗑 Delete</button>
+            <button class="ctrl-btn danger" onclick="emptyBin()" ${total ? "" : "disabled"}>Empty Bin</button>
             <span class="bin-toolbar-info">${selCount} of ${total} selected</span>
         </div>
     `;
@@ -2800,7 +3084,8 @@ function restoreNote(id){
     if (!note) return;
     note.deleted = false;
     note.trashHidden = false;
-    // Bin tag stays (history)
+    note.restoredCount = Number(note.restoredCount || 0) + 1;
+    note.lastRestoredAt = new Date().toISOString();
     note.modifiedAt = new Date().toISOString();
     markChanged();
     refreshUI();
@@ -2812,33 +3097,35 @@ function permanentDeleteNote(id){
     if (!note) return;
     if (!confirm("Permanently delete '" + note.title + "'? This cannot be undone.")) return;
     db.notes = db.notes.filter(n => n.id !== id);
-    multiselectIds.delete(id);
+    selectedIds.delete(id);
     markChanged();
     refreshUI();
     showToast("Note permanently deleted.", "success");
 }
 
 function binRestoreSelected(){
-    if (!multiselectIds.size){ showToast("Select notes first.", "normal"); return; }
-    multiselectIds.forEach(id => {
+    if (!selectedIds.size){ showToast("Select notes first.", "normal"); return; }
+    selectedIds.forEach(id => {
         const note = getNote(id);
         if (note){
             note.deleted = false;
             note.trashHidden = false;
+            note.restoredCount = Number(note.restoredCount || 0) + 1;
+            note.lastRestoredAt = new Date().toISOString();
             note.modifiedAt = new Date().toISOString();
         }
     });
-    multiselectIds.clear();
+    selectedIds.clear();
     markChanged();
     refreshUI();
     showToast("Selected notes restored.", "success");
 }
 
 function binPermanentDeleteSelected(){
-    if (!multiselectIds.size){ showToast("Select notes first.", "normal"); return; }
-    if (!confirm("Permanently delete " + multiselectIds.size + " note(s)? This cannot be undone.")) return;
-    db.notes = db.notes.filter(n => !multiselectIds.has(n.id));
-    multiselectIds.clear();
+    if (!selectedIds.size){ showToast("Select notes first.", "normal"); return; }
+    if (!confirm("Permanently delete " + selectedIds.size + " note(s)? This cannot be undone.")) return;
+    db.notes = db.notes.filter(n => !selectedIds.has(n.id));
+    selectedIds.clear();
     markChanged();
     refreshUI();
     showToast("Selected notes permanently deleted.", "success");
@@ -2849,46 +3136,33 @@ function emptyBin(){
     if (!deleted.length){ showToast("Recycle Bin is empty.", "normal"); return; }
     if (!confirm("Empty Recycle Bin? All " + deleted.length + " notes will be PERMANENTLY deleted. This cannot be undone.")) return;
     db.notes = db.notes.filter(n => !(n.deleted && !n.trashHidden));
-    multiselectIds.clear();
+    selectedIds.clear();
     markChanged();
     refreshUI();
     showToast("Recycle Bin emptied permanently.", "success");
 }
 
 /* =========================================================
-   MULTISELECT (normal views)
+   DELETE SELECTED (from top bar)
    ========================================================= */
-function toggleMultiselect(){
-    multiselectMode = !multiselectMode;
-    multiselectIds.clear();
-    const btn = document.getElementById("multiselectBtn");
-    if (multiselectMode){
-        btn.classList.add("active");
-        btn.textContent = "Cancel";
-        showToast("Multi ON. Tap notes to select.", "normal");
-    } else {
-        btn.classList.remove("active");
-        btn.textContent = "Multi";
-    }
-    renderNoteList();
-}
-
 function deleteSelected(){
-    if (!multiselectIds.size){ showToast("No notes selected.", "normal"); return; }
-    if (!confirm("Delete " + multiselectIds.size + " selected note(s)?")) return;
-    multiselectIds.forEach(id => {
+    if (!selectedIds.size){ showToast("No notes selected.", "normal"); return; }
+    if (currentView === "trash"){
+        binPermanentDeleteSelected();
+        return;
+    }
+    if (!confirm("Delete " + selectedIds.size + " selected note(s)?")) return;
+    selectedIds.forEach(id => {
         const note = getNote(id);
         if (note){
             note.deleted = true;
             note.trashHidden = false;
+            note.deletedAt = new Date().toISOString();
             if (db.settings.autoAssignBinTag && !note.tags.includes("Bin")) note.tags.push("Bin");
             note.modifiedAt = new Date().toISOString();
         }
     });
-    multiselectIds.clear();
-    multiselectMode = false;
-    document.getElementById("multiselectBtn").classList.remove("active");
-    document.getElementById("multiselectBtn").textContent = "Multi";
+    selectedIds.clear();
     markChanged();
     refreshUI();
     showToast("Selected notes moved to Recycle Bin.", "success");
@@ -2937,12 +3211,31 @@ function renderSettings(){
                 <div class="setting">
                     <label>Notes Per Page</label>
                     <select onchange="saveSetting('notesPerPage', this.value === 'All' ? 'All' : Number(this.value))">
-                        ${option("5", String(s.notesPerPage))}
-                        ${option("10", String(s.notesPerPage))}
-                        ${option("20", String(s.notesPerPage))}
-                        ${option("50", String(s.notesPerPage))}
-                        ${option("100", String(s.notesPerPage))}
-                        ${option("All", String(s.notesPerPage))}
+                        ${["5","10","20","50","100","All"].map(x => `<option value="${x}" ${String(s.notesPerPage) === x ? "selected" : ""}>${x}</option>`).join("")}
+                    </select>
+                </div>
+                <div class="setting">
+                    <label>Notes Visible (no scroll)</label>
+                    <select onchange="saveSetting('notesVisibleNoScroll', this.value === 'All' ? 'All' : Number(this.value))">
+                        ${["5","10","20","All"].map(x => `<option value="${x}" ${String(s.notesVisibleNoScroll) === x ? "selected" : ""}>${x}</option>`).join("")}
+                    </select>
+                </div>
+                <div class="setting">
+                    <label>Note Line Count</label>
+                    <select onchange="saveSetting('noteLineCount',Number(this.value))">
+                        ${[2,3,4].map(x => `<option value="${x}" ${s.noteLineCount === x ? "selected" : ""}>${x} lines</option>`).join("")}
+                    </select>
+                </div>
+                <div class="setting">
+                    <label>Note Row Height</label>
+                    <select onchange="saveSetting('noteRowHeight',this.value)">
+                        ${["Auto","60px","72px","90px"].map(x => `<option value="${x}" ${s.noteRowHeight === x ? "selected" : ""}>${x}</option>`).join("")}
+                    </select>
+                </div>
+                <div class="setting">
+                    <label>Content Preview Length</label>
+                    <select onchange="saveSetting('contentPreviewLength',Number(this.value))">
+                        ${[40,60,100,150].map(x => `<option value="${x}" ${Number(s.contentPreviewLength) === x ? "selected" : ""}>${x} chars</option>`).join("")}
                     </select>
                 </div>
                 <div class="setting">
@@ -2953,6 +3246,35 @@ function renderSettings(){
                         <option value="340" ${s.sidebarWidth === 340 ? "selected" : ""}>Wide (340px)</option>
                         <option value="400" ${s.sidebarWidth === 400 ? "selected" : ""}>Extra Wide (400px)</option>
                     </select>
+                </div>
+                <div class="setting">
+                    <label>Mobile Sidebar Width</label>
+                    <select onchange="saveSetting('mobileSidebarWidth',this.value)">
+                        <option value="75%" ${s.mobileSidebarWidth === "75%" ? "selected" : ""}>75%</option>
+                        <option value="85%" ${s.mobileSidebarWidth === "85%" ? "selected" : ""}>85%</option>
+                        <option value="95%" ${s.mobileSidebarWidth === "95%" ? "selected" : ""}>95%</option>
+                        <option value="100%" ${s.mobileSidebarWidth === "100%" ? "selected" : ""}>100%</option>
+                    </select>
+                </div>
+                <div class="setting">
+                    <label>Sidebar Border Width</label>
+                    <select onchange="saveSetting('sidebarBorder',Number(this.value))">
+                        ${[0,1,2,3].map(x => `<option value="${x}" ${Number(s.sidebarBorder) === x ? "selected" : ""}>${x}px</option>`).join("")}
+                    </select>
+                </div>
+                <div class="setting">
+                    <label>Section Height</label>
+                    <select onchange="saveSetting('sectionHeight',Number(this.value))">
+                        ${[32,38,44,50].map(x => `<option value="${x}" ${Number(s.sectionHeight) === x ? "selected" : ""}>${x}px</option>`).join("")}
+                    </select>
+                </div>
+                <div class="setting">
+                    <label>Note List Background</label>
+                    <input type="color" value="${escapeAttribute(s.noteListBg || '#ffffff')}" onchange="saveSetting('noteListBg',this.value)" style="width:100%;height:34px;border:1px solid var(--border);border-radius:7px;padding:0;cursor:pointer;">
+                </div>
+                <div class="setting">
+                    <label>Note Panel Background</label>
+                    <input type="color" value="${escapeAttribute(s.notePanelBg || '#ffffff')}" onchange="saveSetting('notePanelBg',this.value)" style="width:100%;height:34px;border:1px solid var(--border);border-radius:7px;padding:0;cursor:pointer;">
                 </div>
                 <div class="setting">
                     <label>Autosave</label>
@@ -2992,6 +3314,13 @@ function renderSettings(){
                     </select>
                 </div>
                 <div class="setting">
+                    <label>Metadata Default State</label>
+                    <select onchange="saveSetting('metadataCollapsed',this.value === 'true')">
+                        <option value="true" ${s.metadataCollapsed ? "selected" : ""}>Collapsed</option>
+                        <option value="false" ${!s.metadataCollapsed ? "selected" : ""}>Expanded</option>
+                    </select>
+                </div>
+                <div class="setting">
                     <label>Recycle Bin Name</label>
                     <select onchange="changeTrashLabel(this.value)">
                         ${["Recycle Bin","Trash","Dustbin","Deleted Items","Bin","Waste Bin"].map(x => `<option ${x === db.trash.label ? "selected" : ""}>${escapeHtml(x)}</option>`).join("")}
@@ -3002,6 +3331,13 @@ function renderSettings(){
             <div style="margin-top:18px;display:flex;gap:6px;flex-wrap:wrap;">
                 <button class="ctrl-btn" onclick="exportDatabaseJSON()">Export JSON</button>
                 <button class="ctrl-btn" onclick="showDatabaseStats()">Show Stats</button>
+            </div>
+
+            <div style="margin-top:20px;padding:12px;border:1px solid var(--border);border-radius:9px;background:var(--surface2);font-size:11px;color:var(--muted);">
+                <strong style="color:var(--text);">Database File:</strong> ${escapeHtml(DATABASE_NAME)}<br>
+                <strong style="color:var(--text);">Drive Link:</strong> 
+                ${databaseFolderId ? `<a href="https://drive.google.com/drive/folders/${databaseFolderId}" target="_blank" style="color:var(--primary);">Open Folder</a>` : 
+                  databaseFileId ? `<a href="https://drive.google.com/file/d/${databaseFileId}/view" target="_blank" style="color:var(--primary);">Open File</a>` : "Not connected"}
             </div>
         </div>
     `;
@@ -3029,7 +3365,7 @@ function exportDatabaseJSON(){
     const blob = new Blob([JSON.stringify(db, null, 2)], { type: "application/json" });
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
-    a.download = "MasterDB_export_" + Date.now() + ".json";
+    a.download = "NotesManagerDB_export_" + Date.now() + ".json";
     a.click();
     URL.revokeObjectURL(a.href);
     showToast("Exported.", "success");
@@ -3070,8 +3406,33 @@ function applySettings(){
     if (db.settings.sidebarWidth){
         document.documentElement.style.setProperty("--sidebar-width", db.settings.sidebarWidth + "px");
     }
+    if (db.settings.sidebarBorder !== undefined){
+        document.documentElement.style.setProperty("--sidebar-border", db.settings.sidebarBorder + "px");
+    }
+    if (db.settings.sectionHeight){
+        document.documentElement.style.setProperty("--section-height", db.settings.sectionHeight + "px");
+    }
+    if (db.settings.noteListBg){
+        document.documentElement.style.setProperty("--note-list-bg", db.settings.noteListBg);
+    }
+    if (db.settings.notePanelBg){
+        document.documentElement.style.setProperty("--note-panel-bg", db.settings.notePanelBg);
+    }
+
+    /* Notes visible without scroll */
+    const listEl = document.getElementById("noteList");
+    if (listEl){
+        const visible = db.settings.notesVisibleNoScroll;
+        if (visible === "All"){
+            listEl.style.maxHeight = "none";
+        } else {
+            const rowHeight = 80;
+            listEl.style.maxHeight = (Number(visible) * rowHeight) + "px";
+        }
+    }
 
     document.getElementById("trashLabel").textContent = db.trash.label || "Recycle Bin";
+    updateFooter();
 }
 
 /* =========================================================
@@ -3084,6 +3445,8 @@ function refreshUI(){
     renderNoteList();
     renderBinToolbar();
     renderDetail();
+    const sf = document.getElementById("sortFilter");
+    if (sf) sf.value = db.settings.sorting;
 }
 
 /* =========================================================
@@ -3103,8 +3466,20 @@ document.getElementById("sidebarOverlay").addEventListener("click", () => { if (
 document.getElementById("connectBtn").addEventListener("click", connectDrive);
 document.getElementById("syncBtn").addEventListener("click", synchronize);
 document.getElementById("addBtn").addEventListener("click", addNote);
-document.getElementById("multiselectBtn").addEventListener("click", toggleMultiselect);
 document.getElementById("deleteSelectedBtn").addEventListener("click", deleteSelected);
+
+/* Long press on mobile */
+let longPressTimer = null;
+document.addEventListener("touchstart", (e) => {
+    const row = e.target.closest(".note-row");
+    if (!row) return;
+    longPressTimer = setTimeout(() => {
+        const noteId = row.getAttribute("onclick")?.match(/'([^']+)'/)?.[1];
+        if (noteId) showContextMenu(e, noteId);
+    }, 600);
+});
+document.addEventListener("touchend", () => clearTimeout(longPressTimer));
+document.addEventListener("touchmove", () => clearTimeout(longPressTimer));
 
 /* =========================================================
    KEYBOARD
@@ -3118,7 +3493,8 @@ document.addEventListener("keydown", function(e){
     if (e.key === "Escape"){
         if (sidebarOpen) toggleSidebar();
         if (editingNoteId) cancelEdit();
-        if (multiselectMode) toggleMultiselect();
+        const menu = document.getElementById("contextMenu");
+        if (menu) menu.classList.remove("show");
     }
 });
 
@@ -3185,6 +3561,7 @@ function initializeApp(){
     renderBinToolbar();
     renderDetail();
     updateSyncStatus();
+    updateFooter();
     initializeGoogle();
 }
 
