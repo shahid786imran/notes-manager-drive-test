@@ -2,13 +2,28 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Notes Manager — Google Drive</title>
-
-<script src="https://accounts.google.com/gsi/client" async defer></script>
+<title>Notes Manager</title>
 
 <style>
+:root{
+    --bg:#f4f6f9;
+    --surface:#ffffff;
+    --surface2:#f8fafc;
+    --text:#172033;
+    --muted:#697386;
+    --border:#dfe4ec;
+    --primary:#2563eb;
+    --primary2:#1d4ed8;
+    --danger:#dc2626;
+    --success:#15803d;
+    --warning:#b45309;
+    --shadow:0 8px 25px rgba(20,30,50,.08);
+    --radius:12px;
+    --font-size:15px;
+}
+
 *{
     box-sizing:border-box;
 }
@@ -16,17 +31,99 @@
 html,body{
     margin:0;
     padding:0;
-    width:100%;
-    height:100%;
+    min-height:100%;
+}
+
+body{
+    background:var(--bg);
+    color:var(--text);
     font-family:Arial,Helvetica,sans-serif;
-    background:#f4f6f8;
-    color:#202124;
+    font-size:var(--font-size);
+}
+
+/* =========================================================
+   TOP HEADER
+   ========================================================= */
+
+.app-header{
+    position:sticky;
+    top:0;
+    z-index:1000;
+    height:62px;
+    background:var(--surface);
+    border-bottom:1px solid var(--border);
+    display:flex;
+    align-items:center;
+    gap:8px;
+    padding:8px 12px;
+    box-shadow:0 2px 8px rgba(0,0,0,.04);
+}
+
+.header-left{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    min-width:0;
+}
+
+.header-title{
+    font-size:19px;
+    font-weight:700;
+    white-space:nowrap;
+}
+
+.header-status{
+    display:flex;
+    align-items:center;
+    gap:7px;
+    flex-wrap:wrap;
+    min-width:0;
+    margin-left:8px;
+}
+
+.status-pill{
+    display:inline-flex;
+    align-items:center;
+    min-height:32px;
+    padding:0 10px;
+    border:1px solid var(--border);
+    border-radius:8px;
+    background:var(--surface2);
+    color:var(--muted);
+    font-size:12px;
+    white-space:nowrap;
+}
+
+.status-pill.connected{
+    color:var(--success);
+    border-color:#bbf7d0;
+    background:#f0fdf4;
+}
+
+.status-pill.pending{
+    color:var(--warning);
+    border-color:#fde68a;
+    background:#fffbeb;
+}
+
+.status-pill.error{
+    color:var(--danger);
+    border-color:#fecaca;
+    background:#fef2f2;
+}
+
+.header-actions{
+    margin-left:auto;
+    display:flex;
+    align-items:center;
+    gap:6px;
+    flex-wrap:nowrap;
 }
 
 button,
+select,
 input,
-textarea,
-select{
+textarea{
     font:inherit;
 }
 
@@ -34,535 +131,736 @@ button{
     cursor:pointer;
 }
 
-.app{
-    display:flex;
-    width:100%;
-    height:100vh;
-    overflow:hidden;
+.btn{
+    height:34px;
+    min-width:86px;
+    padding:0 12px;
+    border:1px solid var(--border);
+    border-radius:8px;
+    background:var(--surface);
+    color:var(--text);
+    font-size:13px;
+    font-weight:600;
+    transition:.15s ease;
 }
 
-/* =========================
+.btn:hover{
+    background:#f1f5f9;
+}
+
+.btn.primary{
+    background:var(--primary);
+    color:white;
+    border-color:var(--primary);
+}
+
+.btn.primary:hover{
+    background:var(--primary2);
+}
+
+.btn.danger{
+    color:white;
+    background:var(--danger);
+    border-color:var(--danger);
+}
+
+.btn.success{
+    color:white;
+    background:var(--success);
+    border-color:var(--success);
+}
+
+.btn.small{
+    min-width:65px;
+    height:30px;
+    font-size:12px;
+}
+
+.btn.icon{
+    min-width:34px;
+    width:34px;
+    padding:0;
+}
+
+/* =========================================================
+   FIXED SHOW / HIDE BUTTON
+   ========================================================= */
+
+.sidebar-toggle{
+    position:fixed;
+    top:8px;
+    left:8px;
+    z-index:3000;
+    height:34px;
+    min-width:72px;
+    padding:0 13px;
+    border:1px solid var(--border);
+    border-radius:8px;
+    background:var(--surface);
+    color:var(--text);
+    box-shadow:0 4px 15px rgba(0,0,0,.12);
+    font-size:13px;
+    font-weight:700;
+}
+
+.sidebar-toggle:hover{
+    background:#eef2ff;
+}
+
+.app-header{
+    padding-left:92px;
+}
+
+/* =========================================================
    SIDEBAR
-========================= */
+   ========================================================= */
+
+.sidebar-overlay{
+    position:fixed;
+    inset:0;
+    z-index:1900;
+    background:rgba(0,0,0,.22);
+    display:none;
+}
+
+.sidebar-overlay.open{
+    display:block;
+}
 
 .sidebar{
     position:fixed;
+    top:62px;
     left:0;
-    top:0;
     bottom:0;
-    width:270px;
-    background:#202124;
-    color:white;
-    z-index:1000;
-    transform:translateX(-100%);
-    transition:.25s ease;
-    display:flex;
-    flex-direction:column;
-    box-shadow:3px 0 15px rgba(0,0,0,.25);
+    width:280px;
+    z-index:2000;
+    background:var(--surface);
+    border-right:1px solid var(--border);
+    box-shadow:10px 0 25px rgba(0,0,0,.08);
+    transform:translateX(-105%);
+    transition:transform .2s ease;
+    overflow-y:auto;
+    padding:10px;
 }
 
 .sidebar.open{
     transform:translateX(0);
 }
 
-.sidebar-header{
-    padding:16px;
-    border-bottom:1px solid #444;
+.sidebar-section{
+    margin-bottom:8px;
 }
 
-.sidebar-title{
-    font-size:20px;
-    font-weight:bold;
-}
-
-.sidebar-scroll{
-    overflow-y:auto;
-    flex:1;
-    padding:8px;
-}
-
-.side-item{
+.sidebar-item{
     position:relative;
+    min-height:38px;
     display:flex;
     align-items:center;
-    gap:10px;
-    padding:11px 10px;
-    margin:2px 0;
-    border-radius:7px;
-    color:#eee;
+    gap:8px;
+    padding:0 9px;
+    border-radius:8px;
+    cursor:pointer;
+    color:var(--text);
 }
 
-.side-item:hover{
-    background:#303134;
+.sidebar-item:hover,
+.sidebar-item.active{
+    background:#eef2ff;
 }
 
-.side-item.active{
-    background:#3c4043;
+.sidebar-icon{
+    width:20px;
+    text-align:center;
+    flex:none;
 }
 
-.side-count{
-    margin-left:auto;
-    opacity:.7;
-    font-size:12px;
+.sidebar-label{
+    flex:1;
+    min-width:0;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
 }
 
-.side-edit{
+.sidebar-count{
+    color:var(--muted);
+    font-size:11px;
+}
+
+.sidebar-edit{
     display:none;
-    margin-left:5px;
-    background:none;
+    width:28px;
+    height:26px;
+    min-width:28px;
+    padding:0;
     border:0;
-    color:white;
+    border-radius:6px;
+    background:#e2e8f0;
+    cursor:pointer;
 }
 
-.side-item:hover .side-edit{
+.sidebar-item:hover .sidebar-edit,
+.sidebar-item.selected .sidebar-edit{
     display:block;
 }
 
-.section{
-    margin-top:8px;
-}
-
-.section-title{
-    padding:8px 10px;
-    font-size:12px;
-    color:#aaa;
-    text-transform:uppercase;
-}
-
-.nested{
+.sidebar-collapse{
+    margin-top:3px;
     padding-left:18px;
 }
 
-.overlay{
-    position:fixed;
-    inset:0;
-    background:rgba(0,0,0,.35);
-    z-index:999;
+.sidebar-tree{
+    margin-left:8px;
+}
+
+.tree-row{
+    display:flex;
+    align-items:center;
+    gap:5px;
+    min-height:32px;
+    padding-left:4px;
+}
+
+.tree-arrow{
+    width:20px;
+    min-width:20px;
+    text-align:center;
+    cursor:pointer;
+}
+
+.tree-content{
+    flex:1;
+    min-width:0;
+}
+
+.tree-children{
+    margin-left:17px;
+}
+
+.tag-list,
+.category-list{
     display:none;
 }
 
-.overlay.show{
+.tag-list.open,
+.category-list.open{
     display:block;
 }
 
-/* =========================
+.sidebar-subtitle{
+    padding:6px 9px;
+    color:var(--muted);
+    font-size:11px;
+}
+
+/* =========================================================
    MAIN
-========================= */
+   ========================================================= */
 
 .main{
-    width:100%;
-    height:100%;
-    display:flex;
-    flex-direction:column;
-}
-
-.topbar{
-    min-height:64px;
-    background:white;
-    border-bottom:1px solid #ddd;
-    display:flex;
-    align-items:center;
-    gap:10px;
-    padding:10px;
-    z-index:10;
-}
-
-.menu-btn{
-    width:44px;
-    height:44px;
-    border:0;
-    border-radius:8px;
-    background:#202124;
-    color:white;
-    font-size:20px;
-}
-
-.app-name{
-    font-size:19px;
-    font-weight:bold;
-    white-space:nowrap;
-}
-
-.search{
-    flex:1;
-    min-width:100px;
-    max-width:500px;
-    margin-left:auto;
-}
-
-.search input{
-    width:100%;
-    padding:11px 14px;
-    border:1px solid #ccc;
-    border-radius:8px;
-    outline:none;
-}
-
-.drive-status{
-    display:flex;
-    align-items:center;
-    gap:6px;
-    font-size:12px;
-    white-space:nowrap;
-}
-
-.status-dot{
-    width:9px;
-    height:9px;
-    border-radius:50%;
-    background:#aaa;
-}
-
-.status-dot.connected{
-    background:#0f9d58;
-}
-
-.status-dot.error{
-    background:#d93025;
+    min-height:calc(100vh - 62px);
+    padding:12px;
 }
 
 .toolbar{
-    background:white;
-    border-bottom:1px solid #ddd;
-    padding:8px 10px;
     display:flex;
+    align-items:center;
+    gap:8px;
+    margin-bottom:10px;
     flex-wrap:wrap;
-    gap:7px;
 }
 
-.btn{
-    border:1px solid #c9cdd1;
-    background:white;
-    border-radius:7px;
-    padding:8px 12px;
-}
-
-.btn:hover{
-    background:#f1f3f4;
-}
-
-.btn.primary{
-    background:#1a73e8;
-    border-color:#1a73e8;
-    color:white;
-}
-
-.btn.danger{
-    background:#d93025;
-    border-color:#d93025;
-    color:white;
-}
-
-.btn.success{
-    background:#188038;
-    border-color:#188038;
-    color:white;
-}
-
-.btn.warning{
-    background:#f9ab00;
-    border-color:#f9ab00;
-    color:#202124;
-}
-
-.btn:disabled{
-    opacity:.5;
-    cursor:not-allowed;
-}
-
-.sync-area{
-    margin-left:auto;
-    display:flex;
-    align-items:center;
-    gap:8px;
-    font-size:12px;
-    color:#5f6368;
-}
-
-/* =========================
-   WORK AREA
-========================= */
-
-.workspace{
+.search-box{
     flex:1;
-    min-height:0;
-    display:flex;
+    min-width:180px;
 }
 
-.note-list{
-    width:340px;
-    min-width:260px;
-    background:white;
-    border-right:1px solid #ddd;
-    overflow-y:auto;
-}
-
-.list-header{
-    padding:12px;
-    border-bottom:1px solid #ddd;
-    font-weight:bold;
-    display:flex;
-    justify-content:space-between;
-}
-
-.note-card{
-    padding:12px;
-    border-bottom:1px solid #eee;
-    cursor:pointer;
-    position:relative;
-}
-
-.note-card:hover{
-    background:#f8f9fa;
-}
-
-.note-card.selected{
-    background:#e8f0fe;
-}
-
-.note-card-title{
-    font-weight:bold;
-    margin-bottom:6px;
-    padding-left:10px;
-}
-
-.note-card-preview{
-    color:#5f6368;
-    font-size:13px;
-    line-height:1.4;
-    padding-left:10px;
-}
-
-.note-marker{
-    position:absolute;
-    left:4px;
-    top:12px;
-    width:4px;
-    height:42px;
-    border-radius:3px;
-}
-
-.note-card-meta{
-    margin-top:7px;
-    font-size:11px;
-    color:#80868b;
-    display:flex;
-    gap:8px;
-    padding-left:10px;
-}
-
-.detail{
-    flex:1;
-    min-width:0;
-    overflow-y:auto;
-    padding:20px;
-}
-
-.empty{
-    height:100%;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    color:#777;
-    text-align:center;
-}
-
-.detail-card{
-    background:white;
-    border:1px solid #ddd;
-    border-radius:10px;
-    padding:20px;
-    max-width:1000px;
-    margin:auto;
-}
-
-.detail-title{
-    font-size:24px;
-    font-weight:bold;
-    margin-bottom:15px;
-}
-
-.field{
-    margin-bottom:15px;
-}
-
-.field label{
-    display:block;
-    font-size:12px;
-    color:#5f6368;
-    margin-bottom:5px;
-}
-
-.field input,
-.field textarea,
-.field select{
+.search-box input{
     width:100%;
-    border:1px solid #ccc;
-    border-radius:7px;
-    padding:10px;
+    height:36px;
+    padding:0 12px;
+    border:1px solid var(--border);
+    border-radius:8px;
+    background:var(--surface);
     outline:none;
 }
 
-.field textarea{
-    min-height:260px;
-    resize:vertical;
+.search-box input:focus{
+    border-color:var(--primary);
 }
 
-.readonly-box{
+.workspace{
+    display:grid;
+    grid-template-columns:minmax(250px,32%) 1fr;
+    gap:10px;
+    min-height:calc(100vh - 130px);
+}
+
+.panel{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    overflow:hidden;
+}
+
+.panel-header{
+    min-height:48px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+    padding:8px 12px;
+    border-bottom:1px solid var(--border);
+}
+
+.panel-title{
+    font-weight:700;
+}
+
+.note-list{
+    max-height:calc(100vh - 180px);
+    overflow-y:auto;
+}
+
+.note-row{
+    display:flex;
+    align-items:flex-start;
+    gap:9px;
+    padding:10px 11px;
+    border-bottom:1px solid var(--border);
+    cursor:pointer;
+}
+
+.note-row:hover{
+    background:#f8fafc;
+}
+
+.note-row.active{
+    background:#eff6ff;
+}
+
+.note-marker{
+    width:5px;
+    min-width:5px;
+    height:42px;
+    border-radius:5px;
+    background:var(--note-color,#94a3b8);
+}
+
+.note-row-body{
+    flex:1;
+    min-width:0;
+}
+
+.note-row-title{
+    font-weight:700;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+}
+
+.note-row-preview{
+    margin-top:4px;
+    color:var(--muted);
+    font-size:12px;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+}
+
+.note-row-meta{
+    margin-top:5px;
+    display:flex;
+    gap:6px;
+    flex-wrap:wrap;
+    font-size:10px;
+    color:var(--muted);
+}
+
+.note-actions{
+    display:flex;
+    gap:4px;
+}
+
+.note-actions button{
+    border:0;
+    background:transparent;
+    padding:3px;
+    cursor:pointer;
+    font-size:14px;
+}
+
+/* =========================================================
+   NOTE DETAIL
+   ========================================================= */
+
+.detail{
+    min-width:0;
+}
+
+.detail-body{
+    padding:14px;
+}
+
+.note-title-display{
+    font-size:24px;
+    font-weight:750;
+    line-height:1.25;
+    margin-bottom:12px;
+    word-break:break-word;
+}
+
+.note-content-display{
     white-space:pre-wrap;
     line-height:1.6;
-    padding:12px;
-    background:#fafafa;
-    border:1px solid #eee;
-    border-radius:7px;
-    min-height:180px;
+    word-break:break-word;
+    min-height:100px;
 }
 
-.action-row{
-    display:flex;
-    flex-wrap:wrap;
-    gap:8px;
-    margin:12px 0;
-}
-
-.meta{
-    background:#f8f9fa;
+.editor-field{
+    width:100%;
+    border:1px solid var(--border);
     border-radius:8px;
-    padding:12px;
+    padding:9px 10px;
+    outline:none;
+    background:var(--surface);
+    color:var(--text);
+}
+
+.editor-field:focus{
+    border-color:var(--primary);
+}
+
+.editor-title{
+    font-size:23px;
+    font-weight:700;
+}
+
+.editor-content{
+    min-height:280px;
+    resize:vertical;
+    line-height:1.55;
+}
+
+.field-group{
+    margin-bottom:12px;
+}
+
+.field-label{
+    display:block;
+    margin-bottom:5px;
+    color:var(--muted);
     font-size:12px;
-    color:#5f6368;
+    font-weight:700;
+}
+
+.detail-actions{
+    display:flex;
+    gap:6px;
+    flex-wrap:wrap;
+}
+
+/* =========================================================
+   LINKS / TAGS
+   ========================================================= */
+
+.links-box{
+    margin-top:18px;
 }
 
 .link-row{
     display:flex;
+    align-items:center;
     gap:8px;
-    margin-bottom:8px;
+    padding:6px 0;
+    border-bottom:1px solid var(--border);
 }
 
-.link-row input:first-child{
-    width:35%;
+.link-row a{
+    color:var(--primary);
+    text-decoration:none;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
 }
 
-.link-row input:last-child{
-    flex:1;
+.tags{
+    display:flex;
+    flex-wrap:wrap;
+    gap:5px;
+    margin-top:7px;
 }
 
-/* =========================
-   MODAL
-========================= */
+.tag-chip{
+    border:1px solid #cbd5e1;
+    border-radius:999px;
+    padding:3px 8px;
+    background:#f8fafc;
+    font-size:11px;
+}
 
-.modal{
-    position:fixed;
-    inset:0;
-    background:rgba(0,0,0,.45);
-    z-index:2000;
-    display:none;
+/* =========================================================
+   METADATA - COMPACT TWO COLUMN TABLE
+   ========================================================= */
+
+.metadata-box{
+    margin-top:20px;
+    border:1px solid var(--border);
+    border-radius:9px;
+    overflow:hidden;
+    background:var(--surface2);
+}
+
+.metadata-title{
+    padding:7px 10px;
+    font-size:12px;
+    font-weight:700;
+    background:#f1f5f9;
+    border-bottom:1px solid var(--border);
+}
+
+.metadata-table{
+    width:100%;
+    border-collapse:collapse;
+    table-layout:fixed;
+}
+
+.metadata-table tr{
+    border-bottom:1px solid #e7ebf0;
+}
+
+.metadata-table tr:last-child{
+    border-bottom:0;
+}
+
+.metadata-table td{
+    padding:5px 8px;
+    font-size:11px;
+    line-height:1.25;
+    vertical-align:middle;
+}
+
+.metadata-table td.label{
+    width:25%;
+    color:var(--muted);
+    font-weight:700;
+}
+
+.metadata-table td.value{
+    width:25%;
+    color:var(--text);
+    word-break:break-word;
+}
+
+/* =========================================================
+   EMPTY
+   ========================================================= */
+
+.empty{
+    min-height:180px;
+    display:flex;
     align-items:center;
     justify-content:center;
-    padding:15px;
-}
-
-.modal.show{
-    display:flex;
-}
-
-.modal-box{
-    width:100%;
-    max-width:600px;
-    max-height:90vh;
-    overflow-y:auto;
-    background:white;
-    border-radius:12px;
+    color:var(--muted);
     padding:20px;
-    box-shadow:0 10px 40px rgba(0,0,0,.3);
+    text-align:center;
 }
 
-.modal-title{
-    font-size:20px;
-    font-weight:bold;
-    margin-bottom:15px;
-}
-
-.modal-actions{
-    display:flex;
-    justify-content:flex-end;
-    gap:8px;
-    margin-top:15px;
-}
-
-/* =========================
+/* =========================================================
    SETTINGS
-========================= */
+   ========================================================= */
 
-.setting-row{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    gap:15px;
-    padding:12px 0;
-    border-bottom:1px solid #eee;
+.settings-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
 }
 
-.setting-row label{
-    font-weight:bold;
+.setting{
+    border:1px solid var(--border);
+    border-radius:9px;
+    padding:10px;
+    background:var(--surface2);
 }
 
-.setting-row small{
+.setting label{
     display:block;
-    color:#777;
-    font-weight:normal;
-    margin-top:3px;
+    margin-bottom:6px;
+    color:var(--muted);
+    font-size:12px;
+    font-weight:700;
 }
 
-.setting-row select{
-    width:180px;
-    padding:7px;
+.setting select{
+    width:100%;
+    height:34px;
+    border:1px solid var(--border);
+    border-radius:7px;
+    background:var(--surface);
+    padding:0 7px;
 }
 
-/* =========================
-   MOBILE
-========================= */
+/* =========================================================
+   PAGINATION
+   ========================================================= */
 
-@media(max-width:800px){
+.pagination{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:6px;
+    padding:9px;
+    border-top:1px solid var(--border);
+}
 
-    .app-name{
-        display:none;
-    }
+/* =========================================================
+   TOAST
+   ========================================================= */
 
-    .topbar{
+.toast{
+    position:fixed;
+    right:15px;
+    bottom:15px;
+    z-index:5000;
+    max-width:360px;
+    padding:10px 13px;
+    border-radius:8px;
+    background:#172033;
+    color:#fff;
+    font-size:13px;
+    box-shadow:0 8px 30px rgba(0,0,0,.2);
+    transform:translateY(20px);
+    opacity:0;
+    pointer-events:none;
+    transition:.2s ease;
+}
+
+.toast.show{
+    transform:translateY(0);
+    opacity:1;
+}
+
+/* =========================================================
+   NIGHT MODE
+   ========================================================= */
+
+body.night{
+    --bg:#0f172a;
+    --surface:#172033;
+    --surface2:#1e293b;
+    --text:#e5e7eb;
+    --muted:#94a3b8;
+    --border:#334155;
+}
+
+body.night .app-header,
+body.night .panel,
+body.night .sidebar,
+body.night .editor-field,
+body.night .search-box input,
+body.night .btn{
+    background:var(--surface);
+    color:var(--text);
+}
+
+body.night .metadata-title{
+    background:#263449;
+}
+
+body.night .note-row:hover{
+    background:#1e293b;
+}
+
+body.night .note-row.active{
+    background:#1e3a5f;
+}
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media(max-width:850px){
+
+    .app-header{
+        height:auto;
+        min-height:62px;
+        align-items:flex-start;
         flex-wrap:wrap;
+        padding-top:9px;
+        padding-bottom:9px;
     }
 
-    .search{
-        order:3;
+    .header-title{
+        font-size:17px;
+    }
+
+    .header-status{
         width:100%;
-        max-width:none;
-        margin:0;
+        margin-left:0;
+        order:3;
     }
 
-    .drive-status{
+    .header-actions{
         margin-left:auto;
     }
 
     .workspace{
-        flex-direction:column;
+        grid-template-columns:1fr;
     }
 
     .note-list{
-        width:100%;
-        min-width:0;
-        height:42%;
-        border-right:0;
-        border-bottom:1px solid #ddd;
+        max-height:40vh;
     }
 
-    .detail{
-        height:58%;
+    .settings-grid{
+        grid-template-columns:1fr;
+    }
+
+    .metadata-table td{
+        padding:5px 6px;
+        font-size:10px;
+    }
+}
+
+@media(max-width:550px){
+
+    .main{
+        padding:7px;
+    }
+
+    .app-header{
+        padding-left:88px;
+    }
+
+    .header-actions{
+        gap:4px;
+    }
+
+    .header-actions .btn{
+        min-width:65px;
+        padding:0 8px;
+        font-size:11px;
+    }
+
+    .toolbar .btn{
+        min-width:72px;
+    }
+
+    .detail-body{
         padding:10px;
     }
 
-    .detail-title{
+    .note-title-display{
         font-size:20px;
+    }
+
+    .metadata-table td.label{
+        width:24%;
+    }
+
+    .metadata-table td.value{
+        width:26%;
     }
 }
 </style>
@@ -570,377 +868,296 @@ button{
 
 <body>
 
-<div class="app">
+<!-- =========================================================
+     FIXED SHOW / HIDE
+     ========================================================= -->
 
-    <!-- SIDEBAR -->
-    <aside class="sidebar" id="sidebar">
+<button id="sidebarToggle" class="sidebar-toggle" type="button">Show</button>
 
-        <div class="sidebar-header">
-            <div class="sidebar-title">Notes Manager</div>
+<!-- =========================================================
+     HEADER
+     ========================================================= -->
+
+<header class="app-header">
+
+    <div class="header-left">
+        <div class="header-title">Notes Manager</div>
+    </div>
+
+    <div class="header-status">
+
+        <div id="driveStatus" class="status-pill">
+            Drive Not Connected
         </div>
 
-        <div class="sidebar-scroll">
-
-            <div class="side-item active" data-view="all">
-                📒
-                <span>All Notes</span>
-                <span class="side-count" id="allCount">0</span>
-            </div>
-
-            <div class="side-item" data-view="favorites">
-                ⭐
-                <span>Favorites</span>
-                <span class="side-count" id="favoriteCount">0</span>
-            </div>
-
-            <div class="section">
-                <div class="section-title">Categories</div>
-                <div id="categoryTree"></div>
-            </div>
-
-            <div class="section">
-                <div class="section-title">Tags</div>
-                <div id="tagTree"></div>
-            </div>
-
-            <div class="side-item" data-view="checklist">
-                ☑️
-                <span>Checklist</span>
-            </div>
-
-            <div class="side-item" data-view="trash">
-                🗑️
-                <span id="trashLabel">Trash</span>
-                <span class="side-count" id="trashCount">0</span>
-            </div>
-
-            <div class="side-item" data-view="settings">
-                ⚙️
-                <span>Settings</span>
-            </div>
-
-        </div>
-    </aside>
-
-    <div class="overlay" id="overlay"></div>
-
-    <!-- MAIN -->
-    <main class="main">
-
-        <div class="topbar">
-
-            <button class="menu-btn" id="menuBtn">☰</button>
-
-            <div class="app-name">
-                Google Drive Notes Manager
-            </div>
-
-            <div class="search">
-                <input
-                    id="searchInput"
-                    type="search"
-                    placeholder="Search notes..."
-                >
-            </div>
-
-            <div class="drive-status">
-                <span class="status-dot" id="statusDot"></span>
-                <span id="driveStatusText">Not Connected</span>
-            </div>
-
+        <div id="syncStatus" class="status-pill">
+            Not Synced
         </div>
 
-        <!-- DRIVE / MAIN ACTIONS -->
-        <div class="toolbar">
+        <div id="pendingStatus" class="status-pill">
+            No Changes Pending
+        </div>
 
-            <button class="btn primary" id="connectBtn">
-                Connect Google Drive
-            </button>
+        <div id="lastSyncStatus" class="status-pill">
+            Last Sync: —
+        </div>
 
-            <button class="btn" id="loadBtn">
-                Load Database
-            </button>
+    </div>
 
-            <button class="btn success" id="syncBtn">
-                Synchronize Time
-            </button>
+    <div class="header-actions">
 
-            <button class="btn" id="lastSyncBtn">
-                Last Synchronized Time
-            </button>
+        <button id="connectBtn"
+                class="btn primary"
+                type="button">
+            Connect
+        </button>
 
-            <button class="btn primary" id="addBtn">
-                + Add Note
-            </button>
+        <button id="loadBtn"
+                class="btn"
+                type="button">
+            Load
+        </button>
 
-            <button class="btn" id="editBtn">
-                Edit
-            </button>
+        <button id="syncBtn"
+                class="btn"
+                type="button">
+            Sync
+        </button>
 
-            <button class="btn warning" id="favoriteBtn">
-                Favorite
-            </button>
+    </div>
 
-            <button class="btn" id="pinBtn">
-                Pin
-            </button>
+</header>
 
-            <button class="btn danger" id="deleteBtn">
-                Delete
-            </button>
+<!-- =========================================================
+     SIDEBAR OVERLAY
+     ========================================================= -->
 
-            <div class="sync-area">
-                <span id="saveStatus">Not loaded</span>
-            </div>
+<div id="sidebarOverlay" class="sidebar-overlay"></div>
+
+<!-- =========================================================
+     SIDEBAR
+     ========================================================= -->
+
+<aside id="sidebar" class="sidebar">
+
+    <div class="sidebar-section">
+
+        <div class="sidebar-item active"
+             data-view="all"
+             onclick="setView('all')">
+
+            <span class="sidebar-icon">📒</span>
+            <span class="sidebar-label">All Notes</span>
+            <span id="allCount" class="sidebar-count">0</span>
 
         </div>
 
-        <div class="workspace">
+        <div class="sidebar-item"
+             data-view="favorites"
+             onclick="setView('favorites')">
 
-            <!-- NOTE LIST -->
-            <section class="note-list">
+            <span class="sidebar-icon">⭐</span>
+            <span class="sidebar-label">Favorites</span>
+            <span id="favoriteCount" class="sidebar-count">0</span>
 
-                <div class="list-header">
-                    <span id="listTitle">All Notes</span>
-                    <span id="listCount">0</span>
+        </div>
+
+        <div class="sidebar-item"
+             data-view="pinned"
+             onclick="setView('pinned')">
+
+            <span class="sidebar-icon">📌</span>
+            <span class="sidebar-label">Pinned</span>
+            <span id="pinnedCount" class="sidebar-count">0</span>
+
+        </div>
+
+    </div>
+
+    <!-- CATEGORIES -->
+
+    <div class="sidebar-section">
+
+        <div class="sidebar-item"
+             onclick="toggleSidebarSection('categoryList')">
+
+            <span class="sidebar-icon">📁</span>
+            <span class="sidebar-label">Categories</span>
+            <span id="categoryArrow">▸</span>
+
+        </div>
+
+        <div id="categoryList"
+             class="category-list sidebar-collapse">
+        </div>
+
+    </div>
+
+    <!-- TAGS -->
+
+    <div class="sidebar-section">
+
+        <div class="sidebar-item"
+             onclick="toggleSidebarSection('tagList')">
+
+            <span class="sidebar-icon">🏷️</span>
+            <span class="sidebar-label">Tags</span>
+            <span id="tagArrow">▸</span>
+
+        </div>
+
+        <div id="tagList"
+             class="tag-list sidebar-collapse">
+        </div>
+
+    </div>
+
+    <!-- CHECKLIST -->
+
+    <div class="sidebar-section">
+
+        <div class="sidebar-item"
+             onclick="openChecklist()">
+
+            <span class="sidebar-icon">☑️</span>
+            <span class="sidebar-label">Checklist</span>
+
+        </div>
+
+    </div>
+
+    <!-- TRASH -->
+
+    <div class="sidebar-section">
+
+        <div class="sidebar-item"
+             onclick="setView('trash')">
+
+            <span class="sidebar-icon">🗑️</span>
+            <span class="sidebar-label" id="trashLabel">Trash</span>
+            <span id="trashCount" class="sidebar-count">0</span>
+
+        </div>
+
+    </div>
+
+    <!-- SETTINGS -->
+
+    <div class="sidebar-section">
+
+        <div class="sidebar-item"
+             onclick="openSettings()">
+
+            <span class="sidebar-icon">⚙️</span>
+            <span class="sidebar-label">Settings</span>
+
+        </div>
+
+    </div>
+
+</aside>
+
+<!-- =========================================================
+     MAIN
+     ========================================================= -->
+
+<main class="main">
+
+    <div class="toolbar">
+
+        <div class="search-box">
+            <input id="searchInput"
+                   type="search"
+                   placeholder="Search notes...">
+        </div>
+
+        <button class="btn primary"
+                type="button"
+                onclick="addNote()">
+            + Add Note
+        </button>
+
+        <button class="btn"
+                type="button"
+                onclick="refreshUI()">
+            Refresh
+        </button>
+
+    </div>
+
+    <section class="workspace">
+
+        <!-- NOTE LIST -->
+
+        <div class="panel">
+
+            <div class="panel-header">
+
+                <span id="listTitle" class="panel-title">
+                    All Notes
+                </span>
+
+                <span id="listCount"
+                      class="sidebar-count">
+                    0
+                </span>
+
+            </div>
+
+            <div id="noteList"
+                 class="note-list">
+            </div>
+
+            <div id="pagination"
+                 class="pagination"
+                 style="display:none;">
+            </div>
+
+        </div>
+
+        <!-- DETAIL -->
+
+        <div class="panel detail">
+
+            <div class="panel-header">
+
+                <span class="panel-title">
+                    Note
+                </span>
+
+                <div id="detailActions"
+                     class="detail-actions">
                 </div>
 
-                <div id="noteList"></div>
+            </div>
 
-            </section>
-
-            <!-- DETAIL -->
-            <section class="detail" id="detail">
+            <div id="detailBody"
+                 class="detail-body">
 
                 <div class="empty">
-                    <div>
-                        <h2>Notes Manager</h2>
-                        <p>Connect Google Drive and Load Database.</p>
-                    </div>
+                    Select a note to view it.
                 </div>
 
-            </section>
-
-        </div>
-
-    </main>
-</div>
-
-
-<!-- =========================
-     NOTE MODAL
-========================= -->
-
-<div class="modal" id="noteModal">
-
-    <div class="modal-box">
-
-        <div class="modal-title" id="noteModalTitle">
-            Add Note
-        </div>
-
-        <div class="field">
-            <label>Title / Heading</label>
-            <input id="noteTitle">
-        </div>
-
-        <div class="field">
-            <label>Content</label>
-            <textarea id="noteContent"></textarea>
-        </div>
-
-        <div class="field">
-            <label>Category</label>
-            <select id="noteCategory"></select>
-        </div>
-
-        <div class="field">
-            <label>Tags</label>
-            <input
-                id="noteTags"
-                placeholder="tag1, tag2, tag3"
-            >
-        </div>
-
-        <div class="field">
-            <label>Note Color</label>
-            <input
-                id="noteColor"
-                type="color"
-                value="#1a73e8"
-            >
-        </div>
-
-        <div class="field">
-            <label>Links</label>
-
-            <div id="linksContainer"></div>
-
-            <button
-                class="btn"
-                type="button"
-                id="addLinkBtn"
-            >
-                + Add Link
-            </button>
-        </div>
-
-        <div class="modal-actions">
-
-            <button class="btn" id="cancelNoteBtn">
-                Cancel
-            </button>
-
-            <button class="btn primary" id="saveNoteBtn">
-                Save Note
-            </button>
-
-        </div>
-
-    </div>
-
-</div>
-
-
-<!-- =========================
-     SETTINGS MODAL
-========================= -->
-
-<div class="modal" id="settingsModal">
-
-    <div class="modal-box">
-
-        <div class="modal-title">
-            Settings
-        </div>
-
-        <div class="setting-row">
-            <div>
-                <label>Sidebar View</label>
-                <small>Compact / Normal / Expanded</small>
             </div>
 
-            <select id="settingSidebar">
-                <option>Compact</option>
-                <option selected>Normal</option>
-                <option>Expanded</option>
-            </select>
         </div>
 
-        <div class="setting-row">
-            <div>
-                <label>Theme</label>
-                <small>Day / Night / System</small>
-            </div>
+    </section>
 
-            <select id="settingTheme">
-                <option>Day</option>
-                <option>Night</option>
-                <option>System</option>
-            </select>
-        </div>
+</main>
 
-        <div class="setting-row">
-            <div>
-                <label>Font Size</label>
-            </div>
+<div id="toast" class="toast"></div>
 
-            <select id="settingFont">
-                <option>Small</option>
-                <option selected>Normal</option>
-                <option>Large</option>
-                <option>Extra Large</option>
-            </select>
-        </div>
+<!-- =========================================================
+     GOOGLE IDENTITY SERVICES
+     ========================================================= -->
 
-        <div class="setting-row">
-            <div>
-                <label>Note List Style</label>
-            </div>
-
-            <select id="settingListStyle">
-                <option>Compact</option>
-                <option selected>Normal</option>
-                <option>Detailed</option>
-            </select>
-        </div>
-
-        <div class="setting-row">
-            <div>
-                <label>Sort</label>
-            </div>
-
-            <select id="settingSort">
-                <option>Last Modified First</option>
-                <option>Newest</option>
-                <option>Oldest</option>
-                <option>Alphabetical</option>
-            </select>
-        </div>
-
-        <div class="setting-row">
-            <div>
-                <label>Notes Per Page</label>
-            </div>
-
-            <select id="settingPerPage">
-                <option>10</option>
-                <option>20</option>
-                <option>50</option>
-                <option>100</option>
-                <option>All</option>
-            </select>
-        </div>
-
-        <div class="setting-row">
-            <div>
-                <label>Delete Confirmation</label>
-            </div>
-
-            <select id="settingDeleteConfirm">
-                <option value="true">On</option>
-                <option value="false">Off</option>
-            </select>
-        </div>
-
-        <div class="setting-row">
-            <div>
-                <label>Auto Save</label>
-            </div>
-
-            <select id="settingAutoSave">
-                <option value="true">On</option>
-                <option value="false">Off</option>
-            </select>
-        </div>
-
-        <div class="modal-actions">
-
-            <button class="btn" id="closeSettingsBtn">
-                Close
-            </button>
-
-            <button class="btn primary" id="saveSettingsBtn">
-                Save Settings
-            </button>
-
-        </div>
-
-    </div>
-
-</div>
-
+<script src="https://accounts.google.com/gsi/client"></script>
 
 <script>
 /* =========================================================
-   NOTES MANAGER
-   GOOGLE DRIVE DIRECT API BACKEND
-========================================================= */
-
-
-/* =========================================================
-   GOOGLE CONFIG
-========================================================= */
+   CONFIGURATION
+   ========================================================= */
 
 const CLIENT_ID =
 "262106898132-tsn94p3vvpf34do0ommc6rai2mtc5sh6.apps.googleusercontent.com";
@@ -952,146 +1169,113 @@ const DATABASE_NAME =
 "MasterDB.json";
 
 /*
-   Optional:
-   اگر بعد میں ایک مخصوص Drive Folder استعمال کرنا ہو
-   تو یہاں Folder ID رکھا جا سکتا ہے۔
+   اگر آپ بعد میں MasterDB.json کو صرف ایک مخصوص Drive Folder
+   میں تلاش کروانا چاہیں تو یہاں Folder ID ڈال سکتے ہیں۔
 
-   ابھی خالی رہنے دیں۔
-   Code MasterDB.json کو Drive میں نام سے تلاش کرے گا۔
+   خالی ہونے کی صورت میں پورے Drive میں exact filename search ہوگا۔
 */
 const DATABASE_FOLDER_ID = "";
 
 
 /* =========================================================
-   GLOBAL STATE
-========================================================= */
+   APPLICATION STATE
+   ========================================================= */
 
-let tokenClient = null;
 let accessToken = null;
+let tokenClient = null;
 
 let databaseFileId = null;
 
-let db = {
-    version: 1,
-    notes: [],
-    categories: [],
-    tags: [],
-    settings: {},
-    checklistLink: "",
-    lastSynchronizedTime: null
-};
+let db = createEmptyDatabase();
 
 let selectedNoteId = null;
+
 let currentView = "all";
 let currentCategoryId = null;
-let currentTag = null;
+let currentTagName = null;
+
 let searchText = "";
 
-let editingNoteId = null;
+let sidebarOpen = false;
 
-let saveTimer = null;
+let categoryOpen = false;
+let tagOpen = false;
 
+let currentPage = 1;
 
-/* =========================================================
-   DEFAULT SETTINGS
-========================================================= */
+let autosaveTimer = null;
 
-const defaultSettings = {
+let saveInProgress = false;
+let pendingChanges = false;
 
-    sidebarView: "Normal",
-
-    theme: "Day",
-
-    fontSize: "Normal",
-
-    noteListStyle: "Normal",
-
-    sort: "Last Modified First",
-
-    notesPerPage: "All",
-
-    deleteConfirmation: true,
-
-    autoSave: true
-
-};
+let lastSuccessfulSync = null;
 
 
 /* =========================================================
-   HELPERS
-========================================================= */
+   DEFAULT DATABASE
+   ========================================================= */
 
-function $(id){
-    return document.getElementById(id);
-}
+function createEmptyDatabase(){
 
-function nowISO(){
-    return new Date().toISOString();
-}
+    return {
+        version: 1,
 
-function formatDate(value){
+        settings: {
+            sidebarState: "closed",
+            sidebarView: "Compact",
+            theme: "System",
+            fontSize: "Normal",
+            noteListStyle: "Normal",
+            sorting: "Last Modified First",
+            notesPerPage: "All",
+            deleteConfirmation: true,
+            saveConfirmationDuration: 2000,
+            autosave: true,
+            autosaveInterval: 5,
+            dateTimeFormat: "Local"
+        },
 
-    if(!value){
-        return "—";
-    }
+        checklist: {
+            url: ""
+        },
 
-    const d = new Date(value);
+        trash: {
+            label: "Trash",
+            trashHidden: false
+        },
 
-    if(isNaN(d.getTime())){
-        return value;
-    }
+        binCounter: 0,
 
-    return d.toLocaleString();
-}
+        categories: [],
 
-function uid(prefix="id"){
-    return prefix + "_" +
-        Date.now().toString(36) +
-        "_" +
-        Math.random().toString(36).slice(2,8);
-}
+        tags: [],
 
-function escapeHTML(value){
+        notes: [],
 
-    return String(value ?? "")
-        .replace(/&/g,"&amp;")
-        .replace(/</g,"&lt;")
-        .replace(/>/g,"&gt;")
-        .replace(/"/g,"&quot;")
-        .replace(/'/g,"&#039;");
-}
-
-function setStatus(text,type="normal"){
-
-    $("driveStatusText").textContent = text;
-
-    $("statusDot").className =
-        "status-dot " +
-        (type === "connected"
-            ? "connected"
-            : type === "error"
-            ? "error"
-            : "");
-
-}
-
-function setSaveStatus(text){
-    $("saveStatus").textContent = text;
+        meta: {
+            created: new Date().toISOString(),
+            updated: new Date().toISOString()
+        }
+    };
 }
 
 
 /* =========================================================
    GOOGLE AUTH
-========================================================= */
+   ========================================================= */
 
-function initGoogle(){
+function initializeGoogle(){
 
     if(
-        !window.google ||
+        typeof google === "undefined" ||
         !google.accounts ||
         !google.accounts.oauth2
     ){
-        setTimeout(initGoogle,500);
+        showToast(
+            "Google Identity Services load نہیں ہوئی۔ Internet connection check کریں۔",
+            "error"
+        );
+
         return;
     }
 
@@ -1102,77 +1286,120 @@ function initGoogle(){
 
             scope: DRIVE_SCOPE,
 
-            callback: handleTokenResponse
+            callback: function(response){
+
+                if(response.error){
+
+                    console.error(response);
+
+                    showToast(
+                        "Google Drive connection failed.",
+                        "error"
+                    );
+
+                    return;
+                }
+
+                accessToken = response.access_token;
+
+                setDriveConnected(true);
+
+                showToast(
+                    "Drive Connected",
+                    "success"
+                );
+
+                /*
+                   Connect کے بعد account authorization مکمل ہے۔
+                   Database automatically load کیا جاتا ہے۔
+                */
+                loadDatabase();
+            }
 
         });
-
-}
-
-function handleTokenResponse(response){
-
-    if(!response){
-        setStatus("Authorization failed","error");
-        return;
-    }
-
-    if(response.error){
-
-        console.error(response);
-
-        setStatus(
-            "Authorization failed: " +
-            response.error,
-            "error"
-        );
-
-        return;
-    }
-
-    accessToken = response.access_token;
-
-    setStatus(
-        "Google Drive Connected",
-        "connected"
-    );
-
-    $("connectBtn").textContent =
-        "Google Drive Connected";
-
-    setSaveStatus("Connected");
-
-}
-
-function connectGoogleDrive(){
-
-    if(!tokenClient){
-
-        alert(
-            "Google authorization system ابھی load نہیں ہوا۔ چند سیکنڈ بعد دوبارہ کوشش کریں۔"
-        );
-
-        initGoogle();
-
-        return;
-    }
-
-    setStatus(
-        "Google Account Selection..."
-    );
-
-    tokenClient.requestAccessToken({
-        prompt:""
-    });
-
 }
 
 
 /* =========================================================
-   DRIVE API
-========================================================= */
+   CONNECT
+   ========================================================= */
 
-async function driveFetch(
+function connectDrive(){
+
+    if(!tokenClient){
+
+        initializeGoogle();
+
+        setTimeout(() => {
+
+            if(tokenClient){
+                requestDriveToken();
+            }
+
+        },300);
+
+        return;
+    }
+
+    requestDriveToken();
+}
+
+
+function requestDriveToken(){
+
+    try{
+
+        tokenClient.requestAccessToken({
+            prompt: ""
+        });
+
+    }catch(error){
+
+        console.error(error);
+
+        showToast(
+            "Google Drive connection could not start.",
+            "error"
+        );
+    }
+}
+
+
+/* =========================================================
+   DRIVE STATUS
+   ========================================================= */
+
+function setDriveConnected(value){
+
+    const el =
+        document.getElementById("driveStatus");
+
+    if(value){
+
+        el.textContent =
+            "Drive Connected";
+
+        el.className =
+            "status-pill connected";
+
+    }else{
+
+        el.textContent =
+            "Drive Not Connected";
+
+        el.className =
+            "status-pill";
+    }
+}
+
+
+/* =========================================================
+   GOOGLE DRIVE API
+   ========================================================= */
+
+async function driveRequest(
     url,
-    options={}
+    options = {}
 ){
 
     if(!accessToken){
@@ -1182,13 +1409,14 @@ async function driveFetch(
     }
 
     const headers =
-        options.headers || {};
+        new Headers(
+            options.headers || {}
+        );
 
-    headers.Authorization =
-        "Bearer " + accessToken;
-
-    headers.Accept =
-        "application/json";
+    headers.set(
+        "Authorization",
+        "Bearer " + accessToken
+    );
 
     const response =
         await fetch(
@@ -1201,26 +1429,15 @@ async function driveFetch(
 
     if(!response.ok){
 
-        let message =
-            "Drive API Error " +
-            response.status;
+        const text =
+            await response.text();
 
-        try{
-
-            const errorData =
-                await response.json();
-
-            if(
-                errorData.error &&
-                errorData.error.message
-            ){
-                message =
-                    errorData.error.message;
-            }
-
-        }catch(e){}
-
-        throw new Error(message);
+        throw new Error(
+            "Drive API " +
+            response.status +
+            ": " +
+            text
+        );
     }
 
     return response;
@@ -1229,300 +1446,405 @@ async function driveFetch(
 
 /* =========================================================
    FIND MASTERDB.JSON
-========================================================= */
+   ========================================================= */
 
 async function findDatabaseFile(){
 
-    let q =
-        "name='" +
+    let query =
+        "name = '" +
         DATABASE_NAME.replace(/'/g,"\\'") +
-        "' and trashed=false";
+        "' and trashed = false";
 
     if(DATABASE_FOLDER_ID){
 
-        q +=
+        query +=
             " and '" +
             DATABASE_FOLDER_ID +
             "' in parents";
-
     }
 
     const url =
         "https://www.googleapis.com/drive/v3/files" +
         "?q=" +
-        encodeURIComponent(q) +
-        "&pageSize=20" +
-        "&fields=files(id,name,mimeType,modifiedTime,parents)";
+        encodeURIComponent(query) +
+        "&spaces=drive" +
+        "&fields=files(id,name,mimeType,modifiedTime,parents)" +
+        "&pageSize=100";
 
     const response =
-        await driveFetch(url);
+        await driveRequest(url);
 
     const data =
         await response.json();
 
     if(!data.files || !data.files.length){
 
-        throw new Error(
-            "MasterDB.json Google Drive میں نہیں ملی۔"
-        );
+        return null;
     }
-
-    if(data.files.length > 1){
-
-        console.warn(
-            "Multiple MasterDB.json files found.",
-            data.files
-        );
-
-        /*
-           پہلی matching file استعمال کی جائے گی۔
-           اگر مستقبل میں multiple files ہوں تو
-           DATABASE_FOLDER_ID set کیا جا سکتا ہے۔
-        */
-    }
-
-    databaseFileId =
-        data.files[0].id;
 
     return data.files[0];
 }
 
 
 /* =========================================================
-   LOAD DATABASE
-========================================================= */
+   CREATE MASTERDB.JSON
+   ========================================================= */
 
-async function loadDatabase(){
+async function createDatabaseFile(){
 
-    try{
-
-        if(!accessToken){
-
-            await ensureConnected();
-
-            if(!accessToken){
-                return;
-            }
-
-        }
-
-        setSaveStatus(
-            "Finding MasterDB.json..."
-        );
-
-        const file =
-            await findDatabaseFile();
-
-        databaseFileId =
-            file.id;
-
-        const response =
-            await driveFetch(
-                "https://www.googleapis.com/drive/v3/files/" +
-                encodeURIComponent(databaseFileId) +
-                "?alt=media"
-            );
-
-        const text =
-            await response.text();
-
-        let loaded;
-
-        try{
-
-            loaded =
-                JSON.parse(text);
-
-        }catch(error){
-
-            throw new Error(
-                "MasterDB.json valid JSON نہیں ہے۔"
-            );
-
-        }
-
-        db =
-            normalizeDatabase(loaded);
-
-        selectedNoteId = null;
-
-        currentView = "all";
-
-        currentCategoryId = null;
-
-        currentTag = null;
-
-        renderEverything();
-
-        setSaveStatus(
-            "Database Loaded"
-        );
-
-        setStatus(
-            "Google Drive Connected",
-            "connected"
-        );
-
-    }catch(error){
-
-        console.error(error);
-
-        setSaveStatus(
-            "Load failed"
-        );
-
-        setStatus(
-            "Database Load Error",
-            "error"
-        );
-
-        alert(
-            "Database Load Error:\n\n" +
-            error.message
-        );
-
-    }
-
-}
-
-
-/* =========================================================
-   NORMALIZE DATABASE
-========================================================= */
-
-function normalizeDatabase(data){
-
-    const result = {
-
-        version:
-            data?.version || 1,
-
-        notes:
-            Array.isArray(data?.notes)
-                ? data.notes
-                : [],
-
-        categories:
-            Array.isArray(data?.categories)
-                ? data.categories
-                : [],
-
-        tags:
-            Array.isArray(data?.tags)
-                ? data.tags
-                : [],
-
-        settings:
-            {
-                ...defaultSettings,
-                ...(data?.settings || {})
-            },
-
-        checklistLink:
-            data?.checklistLink || "",
-
-        lastSynchronizedTime:
-            data?.lastSynchronizedTime || null
-
+    const metadata = {
+        name: DATABASE_NAME,
+        mimeType: "application/json"
     };
 
-    result.notes =
-        result.notes.map(note => {
+    if(DATABASE_FOLDER_ID){
 
-            return {
+        metadata.parents =
+            [DATABASE_FOLDER_ID];
+    }
 
-                id:
-                    note.id || uid("note"),
+    const body =
+        JSON.stringify(
+            db,
+            null,
+            2
+        );
 
-                title:
-                    note.title || "",
+    const form =
+        new FormData();
 
-                content:
-                    note.content || "",
+    form.append(
+        "metadata",
+        new Blob(
+            [
+                JSON.stringify(metadata)
+            ],
+            {
+                type:"application/json"
+            }
+        )
+    );
 
-                categoryId:
-                    note.categoryId || null,
+    form.append(
+        "file",
+        new Blob(
+            [body],
+            {
+                type:"application/json"
+            }
+        )
+    );
 
-                tags:
-                    Array.isArray(note.tags)
-                        ? note.tags
-                        : [],
+    const response =
+        await driveRequest(
+            "https://www.googleapis.com/upload/drive/v3/files" +
+            "?uploadType=multipart" +
+            "&fields=id,name,modifiedTime",
+            {
+                method:"POST",
+                body:form
+            }
+        );
 
-                links:
-                    Array.isArray(note.links)
-                        ? note.links
-                        : [],
+    const result =
+        await response.json();
 
-                color:
-                    note.color || "#1a73e8",
-
-                favorite:
-                    !!note.favorite,
-
-                pinned:
-                    !!note.pinned,
-
-                deleted:
-                    !!note.deleted,
-
-                createdAt:
-                    note.createdAt || nowISO(),
-
-                modifiedAt:
-                    note.modifiedAt || nowISO(),
-
-                lastViewedAt:
-                    note.lastViewedAt || null,
-
-                viewCount:
-                    Number(note.viewCount || 0),
-
-                binNumber:
-                    note.binNumber || null
-
-            };
-
-        });
+    databaseFileId =
+        result.id;
 
     return result;
 }
 
 
 /* =========================================================
-   SAVE DATABASE
-========================================================= */
+   LOAD DATABASE
+   ========================================================= */
 
-async function saveDatabase(){
+async function loadDatabase(){
 
     if(!accessToken){
 
-        alert(
-            "پہلے Connect Google Drive کریں۔"
+        connectDrive();
+
+        return;
+    }
+
+    try{
+
+        setSyncStatus(
+            "Loading...",
+            "normal"
+        );
+
+        const file =
+            await findDatabaseFile();
+
+        if(!file){
+
+            db =
+                createEmptyDatabase();
+
+            const created =
+                await createDatabaseFile();
+
+            databaseFileId =
+                created.id;
+
+            pendingChanges = false;
+
+            updatePendingStatus();
+
+            setLastSync(
+                new Date()
+            );
+
+            showToast(
+                "New MasterDB.json created in Google Drive.",
+                "success"
+            );
+
+            refreshUI();
+
+            return;
+        }
+
+        databaseFileId =
+            file.id;
+
+        const response =
+            await driveRequest(
+                "https://www.googleapis.com/drive/v3/files/" +
+                encodeURIComponent(file.id) +
+                "?alt=media"
+            );
+
+        const text =
+            await response.text();
+
+        if(!text.trim()){
+
+            db =
+                createEmptyDatabase();
+
+        }else{
+
+            try{
+
+                db =
+                    normalizeDatabase(
+                        JSON.parse(text)
+                    );
+
+            }catch(error){
+
+                console.error(error);
+
+                throw new Error(
+                    "MasterDB.json contains invalid JSON."
+                );
+            }
+        }
+
+        pendingChanges = false;
+
+        updatePendingStatus();
+
+        lastSuccessfulSync =
+            file.modifiedTime
+                ? new Date(file.modifiedTime)
+                : new Date();
+
+        setLastSync(
+            lastSuccessfulSync
+        );
+
+        setSyncStatus(
+            "Synced",
+            "success"
+        );
+
+        applySettings();
+
+        refreshUI();
+
+        showToast(
+            "Database loaded from Google Drive.",
+            "success"
+        );
+
+    }catch(error){
+
+        console.error(error);
+
+        setSyncStatus(
+            "Sync Error",
+            "error"
+        );
+
+        showToast(
+            error.message,
+            "error"
+        );
+    }
+}
+
+
+/* =========================================================
+   NORMALIZE DATABASE
+   ========================================================= */
+
+function normalizeDatabase(data){
+
+    const base =
+        createEmptyDatabase();
+
+    if(!data || typeof data !== "object"){
+        return base;
+    }
+
+    const result = {
+        ...base,
+        ...data
+    };
+
+    result.settings = {
+        ...base.settings,
+        ...(data.settings || {})
+    };
+
+    result.checklist = {
+        ...base.checklist,
+        ...(data.checklist || {})
+    };
+
+    result.trash = {
+        ...base.trash,
+        ...(data.trash || {})
+    };
+
+    result.categories =
+        Array.isArray(data.categories)
+            ? data.categories
+            : [];
+
+    result.tags =
+        Array.isArray(data.tags)
+            ? data.tags
+            : [];
+
+    result.notes =
+        Array.isArray(data.notes)
+            ? data.notes.map(normalizeNote)
+            : [];
+
+    result.binCounter =
+        Number(data.binCounter || 0);
+
+    return result;
+}
+
+
+function normalizeNote(note){
+
+    const n = note || {};
+
+    return {
+
+        id:
+            n.id ||
+            generateId("note"),
+
+        title:
+            n.title ||
+            "Untitled Note",
+
+        content:
+            n.content ||
+            "",
+
+        categoryId:
+            n.categoryId ||
+            null,
+
+        tags:
+            Array.isArray(n.tags)
+                ? n.tags
+                : [],
+
+        links:
+            Array.isArray(n.links)
+                ? n.links
+                : [],
+
+        favorite:
+            !!n.favorite,
+
+        pinned:
+            !!n.pinned,
+
+        deleted:
+            !!n.deleted,
+
+        trashHidden:
+            !!n.trashHidden,
+
+        binNumber:
+            Number(n.binNumber || 0),
+
+        color:
+            n.color ||
+            "#64748b",
+
+        createdAt:
+            n.createdAt ||
+            new Date().toISOString(),
+
+        modifiedAt:
+            n.modifiedAt ||
+            n.createdAt ||
+            new Date().toISOString(),
+
+        lastViewedAt:
+            n.lastViewedAt ||
+            null,
+
+        viewCount:
+            Number(n.viewCount || 0)
+    };
+}
+
+
+/* =========================================================
+   WRITE DATABASE
+   ========================================================= */
+
+async function saveDatabaseToDrive(){
+
+    if(!accessToken){
+
+        showToast(
+            "پہلے Drive کو Connect کریں۔",
+            "error"
         );
 
         return false;
     }
 
-    if(!databaseFileId){
-
-        try{
-
-            await findDatabaseFile();
-
-        }catch(error){
-
-            alert(error.message);
-
-            return false;
-        }
-
+    if(saveInProgress){
+        return false;
     }
 
     try{
 
-        setSaveStatus(
-            "Saving to Google Drive..."
+        saveInProgress = true;
+
+        setSyncStatus(
+            "Saving...",
+            "normal"
         );
+
+        db.meta.updated =
+            new Date().toISOString();
 
         const body =
             JSON.stringify(
@@ -1531,40 +1853,56 @@ async function saveDatabase(){
                 2
             );
 
-        const response =
-            await fetch(
+        /*
+           اگر file موجود نہیں تو پہلے create کریں۔
+        */
+
+        if(!databaseFileId){
+
+            const file =
+                await findDatabaseFile();
+
+            if(file){
+                databaseFileId =
+                    file.id;
+            }
+        }
+
+        if(!databaseFileId){
+
+            await createDatabaseFile();
+
+        }else{
+
+            await driveRequest(
                 "https://www.googleapis.com/upload/drive/v3/files/" +
                 encodeURIComponent(databaseFileId) +
                 "?uploadType=media",
                 {
                     method:"PATCH",
-
                     headers:{
-                        Authorization:
-                            "Bearer " + accessToken,
-
                         "Content-Type":
-                            "application/json"
+                            "application/json; charset=UTF-8"
                     },
-
                     body
                 }
             );
-
-        if(!response.ok){
-
-            const errorText =
-                await response.text();
-
-            throw new Error(
-                "Save failed: " +
-                errorText
-            );
-
         }
 
-        setSaveStatus(
-            "Saved to Google Drive"
+        pendingChanges = false;
+
+        updatePendingStatus();
+
+        lastSuccessfulSync =
+            new Date();
+
+        setLastSync(
+            lastSuccessfulSync
+        );
+
+        setSyncStatus(
+            "Synced",
+            "success"
         );
 
         return true;
@@ -1573,333 +1911,1418 @@ async function saveDatabase(){
 
         console.error(error);
 
-        setSaveStatus(
-            "Save failed"
-        );
-
-        setStatus(
-            "Drive Save Error",
+        setSyncStatus(
+            "Save Error",
             "error"
         );
 
-        alert(
-            "Google Drive Save Error:\n\n" +
-            error.message
+        showToast(
+            "Drive save failed: " +
+            error.message,
+            "error"
         );
 
         return false;
-    }
 
+    }finally{
+
+        saveInProgress = false;
+    }
 }
 
 
 /* =========================================================
-   ENSURE CONNECTED
-========================================================= */
+   CHANGE TRACKING
+   ========================================================= */
 
-async function ensureConnected(){
+function markChanged(){
 
-    if(accessToken){
-        return true;
-    }
+    pendingChanges = true;
 
-    connectGoogleDrive();
+    db.meta.updated =
+        new Date().toISOString();
 
-    return false;
+    updatePendingStatus();
+
+    scheduleAutosave();
 }
 
 
-/* =========================================================
-   SYNCHRONIZE TIME
-========================================================= */
+function updatePendingStatus(){
 
-async function synchronizeTime(){
-
-    if(!accessToken){
-
-        alert(
-            "پہلے Google Drive Connect کریں۔"
+    const el =
+        document.getElementById(
+            "pendingStatus"
         );
 
-        return;
+    if(pendingChanges){
+
+        el.textContent =
+            "Changes Pending";
+
+        el.className =
+            "status-pill pending";
+
+    }else{
+
+        el.textContent =
+            "No Changes Pending";
+
+        el.className =
+            "status-pill";
     }
-
-    if(!databaseFileId){
-
-        const loaded =
-            await loadDatabase();
-
-        if(!loaded && !databaseFileId){
-
-            /*
-               loadDatabase itself handles error.
-            */
-
-            return;
-        }
-
-    }
-
-    db.lastSynchronizedTime =
-        nowISO();
-
-    const saved =
-        await saveDatabase();
-
-    if(saved){
-
-        renderEverything();
-
-        alert(
-            "Synchronization Time successfully save ہو گیا۔"
-        );
-
-    }
-
 }
 
 
-/* =========================================================
-   LAST SYNC TIME
-========================================================= */
+function scheduleAutosave(){
 
-function showLastSyncTime(){
+    clearTimeout(
+        autosaveTimer
+    );
 
     if(
-        !db.lastSynchronizedTime
+        !db.settings.autosave ||
+        !accessToken
     ){
+        return;
+    }
 
-        alert(
-            "ابھی کوئی Synchronization Time موجود نہیں ہے۔"
+    const seconds =
+        Math.max(
+            1,
+            Number(
+                db.settings.autosaveInterval || 5
+            )
         );
+
+    autosaveTimer =
+        setTimeout(
+            async function(){
+
+                if(pendingChanges){
+
+                    await saveDatabaseToDrive();
+
+                }
+
+            },
+            seconds * 1000
+        );
+}
+
+
+/* =========================================================
+   MANUAL SYNC
+   ========================================================= */
+
+async function synchronize(){
+
+    if(pendingChanges){
+
+        const saved =
+            await saveDatabaseToDrive();
+
+        if(saved){
+
+            showToast(
+                "Changes synchronized with Google Drive.",
+                "success"
+            );
+        }
 
         return;
     }
 
-    alert(
-        "Last Synchronized Time:\n\n" +
-        formatDate(
-            db.lastSynchronizedTime
-        )
+    await loadDatabase();
+}
+
+
+/* =========================================================
+   STATUS
+   ========================================================= */
+
+function setSyncStatus(text,type){
+
+    const el =
+        document.getElementById(
+            "syncStatus"
+        );
+
+    el.textContent =
+        text;
+
+    if(type === "success"){
+
+        el.className =
+            "status-pill connected";
+
+    }else if(type === "error"){
+
+        el.className =
+            "status-pill error";
+
+    }else{
+
+        el.className =
+            "status-pill";
+    }
+}
+
+
+function setLastSync(date){
+
+    const el =
+        document.getElementById(
+            "lastSyncStatus"
+        );
+
+    if(!date){
+
+        el.textContent =
+            "Last Sync: —";
+
+        return;
+    }
+
+    el.textContent =
+        "Last Sync: " +
+        formatDateTime(
+            date
+        );
+}
+
+
+/* =========================================================
+   NOTE CRUD
+   ========================================================= */
+
+function addNote(){
+
+    const now =
+        new Date().toISOString();
+
+    const note = {
+
+        id:
+            generateId("note"),
+
+        title:
+            "New Note",
+
+        content:
+            "",
+
+        categoryId:
+            null,
+
+        tags:
+            [],
+
+        links:
+            [],
+
+        favorite:
+            false,
+
+        pinned:
+            false,
+
+        deleted:
+            false,
+
+        trashHidden:
+            false,
+
+        binNumber:
+            0,
+
+        color:
+            "#64748b",
+
+        createdAt:
+            now,
+
+        modifiedAt:
+            now,
+
+        lastViewedAt:
+            null,
+
+        viewCount:
+            0
+    };
+
+    db.notes.unshift(note);
+
+    selectedNoteId =
+        note.id;
+
+    currentView =
+        "all";
+
+    markChanged();
+
+    refreshUI();
+
+    enterEditMode(
+        note.id
+    );
+}
+
+
+function getNote(id){
+
+    return db.notes.find(
+        n => n.id === id
+    );
+}
+
+
+function updateNote(id, changes){
+
+    const note =
+        getNote(id);
+
+    if(!note){
+        return;
+    }
+
+    Object.assign(
+        note,
+        changes
     );
 
+    note.modifiedAt =
+        new Date().toISOString();
+
+    markChanged();
+
+    refreshUI();
 }
 
 
-/* =========================================================
-   NOTE FILTERING
-========================================================= */
+function deleteNote(id){
 
-function getVisibleNotes(){
+    const note =
+        getNote(id);
 
-    let notes =
-        db.notes.filter(
-            note => !note.deleted
-        );
+    if(!note){
+        return;
+    }
 
-    if(currentView === "favorites"){
+    if(
+        db.settings.deleteConfirmation
+    ){
 
-        notes =
-            notes.filter(
-                note => note.favorite
+        const ok =
+            confirm(
+                "Delete this note and move it to Trash?"
             );
 
+        if(!ok){
+            return;
+        }
     }
 
-    if(currentView === "trash"){
+    note.deleted = true;
+    note.trashHidden = false;
 
-        notes =
-            db.notes.filter(
-                note => note.deleted
-            );
+    db.binCounter =
+        Math.max(
+            Number(db.binCounter || 0),
+            getHighestBinNumber()
+        ) + 1;
 
-    }
+    note.binNumber =
+        db.binCounter;
 
-    if(currentCategoryId){
+    /*
+       Bin tag is permanent.
+       Numbered Bin tag is assigned for this cycle.
+    */
 
-        notes =
-            notes.filter(
-                note =>
-                    note.categoryId ===
-                    currentCategoryId
-            );
-
-    }
-
-    if(currentTag){
-
-        notes =
-            notes.filter(
-                note =>
-                    Array.isArray(note.tags) &&
-                    note.tags.includes(currentTag)
-            );
-
-    }
-
-    if(searchText){
-
-        const query =
-            searchText.toLowerCase();
-
-        notes =
-            notes.filter(note => {
-
-                const text =
-                    [
-                        note.title,
-                        note.content,
-                        ...(note.tags || [])
-                    ]
-                    .join(" ")
-                    .toLowerCase();
-
-                return text.includes(query);
-
-            });
-
-    }
-
-    notes.sort(
-        getSortFunction()
+    addTagToNote(
+        note,
+        "Bin"
     );
 
-    return notes;
+    addTagToNote(
+        note,
+        "Bin " + note.binNumber
+    );
+
+    note.modifiedAt =
+        new Date().toISOString();
+
+    markChanged();
+
+    selectedNoteId = null;
+
+    refreshUI();
+
+    showToast(
+        "Note moved to Trash.",
+        "success"
+    );
 }
 
 
-/* =========================================================
-   SORT
-========================================================= */
+function restoreNote(id){
 
-function getSortFunction(){
+    const note =
+        getNote(id);
 
-    const sort =
-        db.settings.sort ||
-        "Last Modified First";
-
-    if(sort === "Alphabetical"){
-
-        return (a,b) =>
-            a.title.localeCompare(
-                b.title
-            );
-
+    if(!note){
+        return;
     }
 
-    if(sort === "Newest"){
+    note.deleted = false;
+    note.trashHidden = false;
 
-        return (a,b) =>
-            new Date(b.createdAt) -
-            new Date(a.createdAt);
+    note.modifiedAt =
+        new Date().toISOString();
 
-    }
+    markChanged();
 
-    if(sort === "Oldest"){
+    selectedNoteId =
+        note.id;
 
-        return (a,b) =>
-            new Date(a.createdAt) -
-            new Date(b.createdAt);
+    refreshUI();
 
-    }
-
-    return (a,b) =>
-        new Date(b.modifiedAt) -
-        new Date(a.modifiedAt);
-
+    showToast(
+        "Note restored.",
+        "success"
+    );
 }
 
 
-/* =========================================================
-   RENDER EVERYTHING
-========================================================= */
+function restoreAllDeleted(){
 
-function renderEverything(){
+    let count = 0;
 
-    renderSidebar();
+    db.notes.forEach(
+        note => {
 
-    renderNoteList();
+            if(note.deleted){
 
-    renderDetail();
+                note.deleted = false;
+                note.trashHidden = false;
 
-    applySettings();
+                note.modifiedAt =
+                    new Date().toISOString();
 
-}
+                count++;
+            }
 
+        }
+    );
 
-/* =========================================================
-   SIDEBAR
-========================================================= */
+    if(count){
 
-function renderSidebar(){
+        markChanged();
 
-    const activeNotes =
-        db.notes.filter(
-            n => !n.deleted
+        refreshUI();
+
+        showToast(
+            count +
+            " deleted notes restored.",
+            "success"
         );
+    }
+}
 
-    const favorites =
-        activeNotes.filter(
-            n => n.favorite
-        );
 
-    const trash =
+/*
+   Empty Trash does NOT permanently delete anything.
+
+   It simply hides deleted notes from the normal Trash view.
+*/
+function emptyTrash(){
+
+    const deleted =
         db.notes.filter(
             n => n.deleted
         );
 
-    $("allCount").textContent =
-        activeNotes.length;
+    if(!deleted.length){
 
-    $("favoriteCount").textContent =
-        favorites.length;
+        showToast(
+            "Trash is already empty.",
+            "normal"
+        );
 
-    $("trashCount").textContent =
-        trash.length;
+        return;
+    }
 
-    renderCategories();
+    const ok =
+        confirm(
+            "Empty Trash? Notes will NOT be permanently deleted. They will only be hidden from the normal Trash view."
+        );
 
-    renderTags();
+    if(!ok){
+        return;
+    }
 
+    deleted.forEach(
+        note => {
+
+            note.trashHidden =
+                true;
+
+            note.modifiedAt =
+                new Date().toISOString();
+        }
+    );
+
+    markChanged();
+
+    refreshUI();
+
+    showToast(
+        "Trash emptied from normal view. No permanent deletion occurred.",
+        "success"
+    );
+}
+
+
+function restoreTrash(){
+
+    db.notes.forEach(
+        note => {
+
+            if(note.deleted){
+
+                note.trashHidden =
+                    false;
+            }
+        }
+    );
+
+    markChanged();
+
+    refreshUI();
+
+    showToast(
+        "Trash restored.",
+        "success"
+    );
+}
+
+
+/* =========================================================
+   BIN HELPERS
+   ========================================================= */
+
+function getHighestBinNumber(){
+
+    let highest =
+        Number(db.binCounter || 0);
+
+    db.notes.forEach(
+        note => {
+
+            highest =
+                Math.max(
+                    highest,
+                    Number(
+                        note.binNumber || 0
+                    )
+                );
+        }
+    );
+
+    return highest;
+}
+
+
+function addTagToNote(note, tag){
+
+    if(!note.tags.includes(tag)){
+
+        note.tags.push(tag);
+    }
+
+    if(!db.tags.includes(tag)){
+
+        db.tags.push(tag);
+    }
+}
+
+
+/* =========================================================
+   FAVORITE / PIN
+   ========================================================= */
+
+function toggleFavorite(id){
+
+    const note =
+        getNote(id);
+
+    if(!note){
+        return;
+    }
+
+    note.favorite =
+        !note.favorite;
+
+    note.modifiedAt =
+        new Date().toISOString();
+
+    markChanged();
+
+    refreshUI();
+}
+
+
+function togglePinned(id){
+
+    const note =
+        getNote(id);
+
+    if(!note){
+        return;
+    }
+
+    note.pinned =
+        !note.pinned;
+
+    note.modifiedAt =
+        new Date().toISOString();
+
+    markChanged();
+
+    refreshUI();
+}
+
+
+/* =========================================================
+   NOTE VIEW
+   ========================================================= */
+
+function selectNote(id){
+
+    const note =
+        getNote(id);
+
+    if(!note){
+        return;
+    }
+
+    selectedNoteId =
+        id;
+
+    note.lastViewedAt =
+        new Date().toISOString();
+
+    note.viewCount =
+        Number(note.viewCount || 0) + 1;
+
+    /*
+       View metadata is a database change as well.
+    */
+    markChanged();
+
+    renderNoteList();
+    renderDetail();
+}
+
+
+function renderDetail(){
+
+    const container =
+        document.getElementById(
+            "detailBody"
+        );
+
+    const note =
+        getNote(selectedNoteId);
+
+    if(!note){
+
+        container.innerHTML =
+            `
+            <div class="empty">
+                Select a note to view it.
+            </div>
+            `;
+
+        return;
+    }
+
+    const categoryPath =
+        getCategoryPath(
+            note.categoryId
+        );
+
+    const tags =
+        note.tags
+            .map(
+                tag =>
+                    `<span class="tag-chip">${escapeHtml(tag)}</span>`
+            )
+            .join("");
+
+    const links =
+        (note.links || [])
+            .map(
+                link => {
+
+                    const title =
+                        link.title ||
+                        link.label ||
+                        link.url ||
+                        "Link";
+
+                    return `
+                        <div class="link-row">
+                            🔗
+                            <a href="${escapeAttribute(link.url)}"
+                               target="_blank"
+                               rel="noopener noreferrer">
+                                ${escapeHtml(title)}
+                            </a>
+                        </div>
+                    `;
+                }
+            )
+            .join("");
+
+    const trashAction =
+        note.deleted
+            ? `
+                <button class="btn success"
+                        onclick="restoreNote('${note.id}')">
+                    Restore
+                </button>
+              `
+            : `
+                <button class="btn danger"
+                        onclick="deleteNote('${note.id}')">
+                    Delete
+                </button>
+              `;
+
+    container.innerHTML =
+        `
+
+        <div class="detail-actions"
+             style="margin-bottom:12px;">
+
+            <button class="btn primary"
+                    onclick="enterEditMode('${note.id}')">
+                Edit
+            </button>
+
+            <button class="btn"
+                    onclick="toggleFavorite('${note.id}')">
+                ${note.favorite ? "★ Favorite" : "☆ Favorite"}
+            </button>
+
+            <button class="btn"
+                    onclick="togglePinned('${note.id}')">
+                ${note.pinned ? "📌 Pinned" : "📍 Pin"}
+            </button>
+
+            ${trashAction}
+
+        </div>
+
+        <div class="note-title-display">
+            ${escapeHtml(note.title)}
+        </div>
+
+        <div class="note-content-display">
+            ${escapeHtml(note.content)}
+        </div>
+
+        ${
+            links
+            ?
+            `
+            <div class="links-box">
+                <div class="field-label">
+                    Links
+                </div>
+                ${links}
+            </div>
+            `
+            :
+            ""
+        }
+
+        ${
+            tags
+            ?
+            `
+            <div class="links-box">
+                <div class="field-label">
+                    Tags
+                </div>
+
+                <div class="tags">
+                    ${tags}
+                </div>
+            </div>
+            `
+            :
+            ""
+        }
+
+        ${renderMetadata(note,categoryPath)}
+
+        `;
+}
+
+
+/* =========================================================
+   METADATA
+   ========================================================= */
+
+function renderMetadata(
+    note,
+    categoryPath
+){
+
+    return `
+        <div class="metadata-box">
+
+            <div class="metadata-title">
+                Note Metadata
+            </div>
+
+            <table class="metadata-table">
+
+                <tr>
+                    <td class="label">
+                        Created
+                    </td>
+
+                    <td class="value">
+                        ${escapeHtml(
+                            formatDateTime(note.createdAt)
+                        )}
+                    </td>
+
+                    <td class="label">
+                        Last Modified
+                    </td>
+
+                    <td class="value">
+                        ${escapeHtml(
+                            formatDateTime(note.modifiedAt)
+                        )}
+                    </td>
+                </tr>
+
+                <tr>
+                    <td class="label">
+                        Last Viewed
+                    </td>
+
+                    <td class="value">
+                        ${
+                            note.lastViewedAt
+                            ?
+                            escapeHtml(
+                                formatDateTime(
+                                    note.lastViewedAt
+                                )
+                            )
+                            :
+                            "Never"
+                        }
+                    </td>
+
+                    <td class="label">
+                        View Count
+                    </td>
+
+                    <td class="value">
+                        ${note.viewCount || 0}
+                    </td>
+                </tr>
+
+                <tr>
+                    <td class="label">
+                        Synced
+                    </td>
+
+                    <td class="value">
+                        ${
+                            lastSuccessfulSync
+                            ?
+                            "Google Drive"
+                            :
+                            "Not Synced"
+                        }
+                    </td>
+
+                    <td class="label">
+                        Category
+                    </td>
+
+                    <td class="value">
+                        ${escapeHtml(
+                            categoryPath || "No Category"
+                        )}
+                    </td>
+                </tr>
+
+                <tr>
+                    <td class="label">
+                        Tags
+                    </td>
+
+                    <td class="value">
+                        ${
+                            note.tags.length
+                            ?
+                            escapeHtml(
+                                note.tags.join(", ")
+                            )
+                            :
+                            "None"
+                        }
+                    </td>
+
+                    <td class="label">
+                        Status
+                    </td>
+
+                    <td class="value">
+                        ${
+                            note.deleted
+                            ?
+                            "In Trash"
+                            :
+                            "Active"
+                        }
+                    </td>
+                </tr>
+
+                <tr>
+                    <td class="label">
+                        Favorite
+                    </td>
+
+                    <td class="value">
+                        ${note.favorite ? "Yes" : "No"}
+                    </td>
+
+                    <td class="label">
+                        Pinned
+                    </td>
+
+                    <td class="value">
+                        ${note.pinned ? "Yes" : "No"}
+                    </td>
+                </tr>
+
+            </table>
+
+        </div>
+    `;
+}
+
+
+/* =========================================================
+   EDIT NOTE
+   ========================================================= */
+
+function enterEditMode(id){
+
+    const note =
+        getNote(id);
+
+    if(!note){
+        return;
+    }
+
+    selectedNoteId =
+        id;
+
+    const container =
+        document.getElementById(
+            "detailBody"
+        );
+
+    const categoryOptions =
+        buildCategoryOptions(
+            note.categoryId
+        );
+
+    const tagValue =
+        note.tags.join(", ");
+
+    const linksText =
+        (note.links || [])
+            .map(
+                link =>
+                    (link.title || "") +
+                    " | " +
+                    (link.url || "")
+            )
+            .join("\n");
+
+    container.innerHTML =
+        `
+
+        <div class="field-group">
+
+            <label class="field-label">
+                Title
+            </label>
+
+            <input id="editTitle"
+                   class="editor-field editor-title"
+                   value="${escapeAttribute(note.title)}">
+
+        </div>
+
+        <div class="field-group">
+
+            <label class="field-label">
+                Content
+            </label>
+
+            <textarea id="editContent"
+                      class="editor-field editor-content">${escapeHtml(note.content)}</textarea>
+
+        </div>
+
+        <div class="field-group">
+
+            <label class="field-label">
+                Category
+            </label>
+
+            <select id="editCategory"
+                    class="editor-field">
+
+                <option value="">
+                    No Category
+                </option>
+
+                ${categoryOptions}
+
+            </select>
+
+        </div>
+
+        <div class="field-group">
+
+            <label class="field-label">
+                Tags
+            </label>
+
+            <input id="editTags"
+                   class="editor-field"
+                   value="${escapeAttribute(tagValue)}"
+                   placeholder="Tag 1, Tag 2">
+
+        </div>
+
+        <div class="field-group">
+
+            <label class="field-label">
+                Note Color
+            </label>
+
+            <input id="editColor"
+                   class="editor-field"
+                   type="color"
+                   value="${escapeAttribute(note.color)}">
+
+        </div>
+
+        <div class="field-group">
+
+            <label class="field-label">
+                Links
+            </label>
+
+            <textarea id="editLinks"
+                      class="editor-field"
+                      style="min-height:100px;"
+                      placeholder="Title | https://example.com">${escapeHtml(linksText)}</textarea>
+
+        </div>
+
+        <div class="detail-actions">
+
+            <button class="btn primary"
+                    onclick="saveEditedNote('${note.id}')">
+                Save
+            </button>
+
+            <button class="btn"
+                    onclick="renderDetail()">
+                Cancel
+            </button>
+
+        </div>
+
+        `;
+}
+
+
+function saveEditedNote(id){
+
+    const note =
+        getNote(id);
+
+    if(!note){
+        return;
+    }
+
+    const title =
+        document.getElementById(
+            "editTitle"
+        ).value.trim();
+
+    const content =
+        document.getElementById(
+            "editContent"
+        ).value;
+
+    const category =
+        document.getElementById(
+            "editCategory"
+        ).value;
+
+    const tagsText =
+        document.getElementById(
+            "editTags"
+        ).value;
+
+    const color =
+        document.getElementById(
+            "editColor"
+        ).value;
+
+    const linksText =
+        document.getElementById(
+            "editLinks"
+        ).value;
+
+    note.title =
+        title || "Untitled Note";
+
+    note.content =
+        content;
+
+    note.categoryId =
+        category || null;
+
+    note.tags =
+        parseTags(
+            tagsText
+        );
+
+    note.color =
+        color || "#64748b";
+
+    note.links =
+        parseLinks(
+            linksText
+        );
+
+    /*
+       Keep global tag registry synchronized.
+    */
+
+    note.tags.forEach(
+        tag => {
+
+            if(!db.tags.includes(tag)){
+                db.tags.push(tag);
+            }
+        }
+    );
+
+    note.modifiedAt =
+        new Date().toISOString();
+
+    markChanged();
+
+    refreshUI();
+
+    showToast(
+        "Note saved.",
+        "success"
+    );
+}
+
+
+function parseTags(text){
+
+    return [
+        ...new Set(
+            text
+                .split(",")
+                .map(
+                    x => x.trim()
+                )
+                .filter(Boolean)
+        )
+    ];
+}
+
+
+function parseLinks(text){
+
+    return text
+        .split("\n")
+        .map(
+            line => line.trim()
+        )
+        .filter(Boolean)
+        .map(
+            line => {
+
+                const parts =
+                    line.split("|");
+
+                if(parts.length >= 2){
+
+                    return {
+                        title:
+                            parts[0].trim(),
+
+                        url:
+                            parts
+                                .slice(1)
+                                .join("|")
+                                .trim()
+                    };
+                }
+
+                return {
+                    title: line,
+                    url: line
+                };
+            }
+        );
 }
 
 
 /* =========================================================
    CATEGORIES
-========================================================= */
+   ========================================================= */
 
-function renderCategories(){
+function addCategory(
+    parentId = null
+){
 
-    const container =
-        $("categoryTree");
-
-    container.innerHTML = "";
-
-    const categories =
-        db.categories;
-
-    const roots =
-        categories.filter(
-            c => !c.parentId
+    const name =
+        prompt(
+            parentId
+            ?
+            "Child category name:"
+            :
+            "Category name:"
         );
 
-    roots.forEach(category => {
+    if(!name || !name.trim()){
+        return;
+    }
 
-        renderCategoryNode(
-            category,
-            container,
-            0
-        );
+    const category = {
 
-    });
+        id:
+            generateId("cat"),
 
+        name:
+            name.trim(),
+
+        parentId:
+            parentId || null,
+
+        collapsed:
+            true
+    };
+
+    db.categories.push(
+        category
+    );
+
+    markChanged();
+
+    renderSidebar();
+
+    showToast(
+        "Category added.",
+        "success"
+    );
 }
 
-function renderCategoryNode(
-    category,
-    container,
-    level
+
+function renameCategory(id){
+
+    const category =
+        db.categories.find(
+            c => c.id === id
+        );
+
+    if(!category){
+        return;
+    }
+
+    const name =
+        prompt(
+            "Rename category:",
+            category.name
+        );
+
+    if(!name || !name.trim()){
+        return;
+    }
+
+    category.name =
+        name.trim();
+
+    markChanged();
+
+    renderSidebar();
+}
+
+
+function removeCategory(id){
+
+    const category =
+        db.categories.find(
+            c => c.id === id
+        );
+
+    if(!category){
+        return;
+    }
+
+    const ok =
+        confirm(
+            "Remove this category? Notes will NOT be deleted."
+        );
+
+    if(!ok){
+        return;
+    }
+
+    const parentId =
+        category.parentId || null;
+
+    db.notes.forEach(
+        note => {
+
+            if(note.categoryId === id){
+
+                note.categoryId =
+                    parentId;
+            }
+        }
+    );
+
+    db.categories =
+        db.categories.filter(
+            c =>
+                c.id !== id &&
+                !isDescendantOf(
+                    c.id,
+                    id
+                )
+        );
+
+    markChanged();
+
+    renderSidebar();
+    refreshUI();
+}
+
+
+function isDescendantOf(
+    categoryId,
+    ancestorId
 ){
+
+    let current =
+        db.categories.find(
+            c => c.id === categoryId
+        );
+
+    const guard = new Set();
+
+    while(
+        current &&
+        current.parentId &&
+        !guard.has(current.id)
+    ){
+
+        guard.add(
+            current.id
+        );
+
+        if(
+            current.parentId ===
+            ancestorId
+        ){
+            return true;
+        }
+
+        current =
+            db.categories.find(
+                c =>
+                    c.id ===
+                    current.parentId
+            );
+    }
+
+    return false;
+}
+
+
+function buildCategoryOptions(
+    selectedId
+){
+
+    const roots =
+        db.categories.filter(
+            c =>
+                !c.parentId
+        );
+
+    let html = "";
+
+    roots.forEach(
+        category => {
+
+            html +=
+                buildCategoryOptionRecursive(
+                    category,
+                    0,
+                    selectedId
+                );
+        }
+    );
+
+    return html;
+}
+
+
+function buildCategoryOptionRecursive(
+    category,
+    depth,
+    selectedId
+){
+
+    let html =
+        `
+        <option value="${escapeAttribute(category.id)}"
+            ${category.id === selectedId ? "selected" : ""}>
+            ${escapeHtml(
+                "— ".repeat(depth) +
+                category.name
+            )}
+        </option>
+        `;
 
     const children =
         db.categories.filter(
@@ -1908,714 +3331,50 @@ function renderCategoryNode(
                 category.id
         );
 
-    const count =
-        db.notes.filter(
-            note =>
-                !note.deleted &&
-                note.categoryId ===
-                category.id
-        ).length;
+    children.forEach(
+        child => {
 
-    const item =
-        document.createElement("div");
-
-    item.className =
-        "side-item nested";
-
-    item.style.paddingLeft =
-        (10 + level * 15) + "px";
-
-    item.innerHTML = `
-        <span>📁</span>
-        <span>${escapeHTML(category.name)}</span>
-        <span class="side-count">${count}</span>
-        <button class="side-edit">✎</button>
-    `;
-
-    item.addEventListener(
-        "click",
-        event => {
-
-            if(
-                event.target.classList.contains(
-                    "side-edit"
-                )
-            ){
-                return;
-            }
-
-            currentView = "category";
-
-            currentCategoryId =
-                category.id;
-
-            currentTag = null;
-
-            renderNoteList();
-
+            html +=
+                buildCategoryOptionRecursive(
+                    child,
+                    depth + 1,
+                    selectedId
+                );
         }
     );
 
-    item.querySelector(
-        ".side-edit"
-    ).addEventListener(
-        "click",
-        event => {
-
-            event.stopPropagation();
-
-            editCategory(category);
-
-        }
-    );
-
-    container.appendChild(item);
-
-    children.forEach(child => {
-
-        renderCategoryNode(
-            child,
-            container,
-            level + 1
-        );
-
-    });
-
+    return html;
 }
 
 
-/* =========================================================
-   TAGS
-========================================================= */
-
-function renderTags(){
-
-    const container =
-        $("tagTree");
-
-    container.innerHTML = "";
-
-    db.tags.forEach(tag => {
-
-        const count =
-            db.notes.filter(
-                note =>
-                    !note.deleted &&
-                    (note.tags || [])
-                        .includes(tag)
-            ).length;
-
-        const item =
-            document.createElement("div");
-
-        item.className =
-            "side-item nested";
-
-        item.innerHTML = `
-            <span>🏷️</span>
-            <span>${escapeHTML(tag)}</span>
-            <span class="side-count">${count}</span>
-        `;
-
-        item.addEventListener(
-            "click",
-            () => {
-
-                currentTag =
-                    tag;
-
-                currentCategoryId =
-                    null;
-
-                currentView =
-                    "tag";
-
-                renderNoteList();
-
-            }
-        );
-
-        container.appendChild(item);
-
-    });
-
-}
-
-
-/* =========================================================
-   NOTE LIST
-========================================================= */
-
-function renderNoteList(){
-
-    const container =
-        $("noteList");
-
-    container.innerHTML = "";
-
-    const notes =
-        getVisibleNotes();
-
-    let title =
-        "All Notes";
-
-    if(currentView === "favorites"){
-        title = "Favorites";
-    }
-
-    if(currentView === "trash"){
-        title = "Trash";
-    }
-
-    if(currentCategoryId){
-
-        const category =
-            db.categories.find(
-                c =>
-                    c.id ===
-                    currentCategoryId
-            );
-
-        title =
-            category
-                ? category.name
-                : "Category";
-
-    }
-
-    if(currentTag){
-        title =
-            "Tag: " + currentTag;
-    }
-
-    if(searchText){
-        title =
-            "Search Results";
-    }
-
-    $("listTitle").textContent =
-        title;
-
-    $("listCount").textContent =
-        notes.length;
-
-    if(!notes.length){
-
-        container.innerHTML = `
-            <div style="
-                padding:30px;
-                text-align:center;
-                color:#777;
-            ">
-                No notes found.
-            </div>
-        `;
-
-        return;
-    }
-
-    notes.forEach(note => {
-
-        const card =
-            document.createElement("div");
-
-        card.className =
-            "note-card" +
-            (
-                note.id === selectedNoteId
-                    ? " selected"
-                    : ""
-            );
-
-        const preview =
-            note.content
-                .replace(/\s+/g," ")
-                .slice(0,120);
-
-        card.innerHTML = `
-
-            <div
-                class="note-marker"
-                style="background:${escapeHTML(note.color)}"
-            ></div>
-
-            <div class="note-card-title">
-                ${escapeHTML(
-                    note.title ||
-                    "Untitled Note"
-                )}
-            </div>
-
-            <div class="note-card-preview">
-                ${escapeHTML(preview)}
-            </div>
-
-            <div class="note-card-meta">
-
-                <span>
-                    ${formatDate(note.modifiedAt)}
-                </span>
-
-                ${
-                    note.favorite
-                        ? "<span>⭐</span>"
-                        : ""
-                }
-
-                ${
-                    note.pinned
-                        ? "<span>📌</span>"
-                        : ""
-                }
-
-            </div>
-        `;
-
-        card.addEventListener(
-            "click",
-            () => selectNote(note.id)
-        );
-
-        container.appendChild(card);
-
-    });
-
-}
-
-
-/* =========================================================
-   SELECT NOTE
-========================================================= */
-
-function selectNote(id){
-
-    selectedNoteId =
-        id;
-
-    const note =
-        db.notes.find(
-            n => n.id === id
-        );
-
-    if(!note){
-        return;
-    }
-
-    note.lastViewedAt =
-        nowISO();
-
-    note.viewCount =
-        Number(note.viewCount || 0) + 1;
-
-    renderNoteList();
-
-    renderDetail();
-
-    if(
-        db.settings.autoSave
-    ){
-
-        scheduleSave();
-
-    }
-
-}
-
-
-/* =========================================================
-   DETAIL VIEW
-========================================================= */
-
-function renderDetail(){
-
-    const detail =
-        $("detail");
-
-    if(!selectedNoteId){
-
-        detail.innerHTML = `
-            <div class="empty">
-                <div>
-                    <h2>No Note Selected</h2>
-                    <p>Select a note or create a new note.</p>
-                </div>
-            </div>
-        `;
-
-        return;
-    }
-
-    const note =
-        db.notes.find(
-            n =>
-                n.id ===
-                selectedNoteId
-        );
-
-    if(!note){
-
-        selectedNoteId =
-            null;
-
-        renderDetail();
-
-        return;
-    }
-
-    const category =
-        db.categories.find(
-            c =>
-                c.id ===
-                note.categoryId
-        );
-
-    const linksHTML =
-        (note.links || [])
-            .map(link => {
-
-                if(!link.url){
-                    return "";
-                }
-
-                return `
-                    <div>
-                        🔗
-                        <a
-                            href="${escapeHTML(link.url)}"
-                            target="_blank"
-                            rel="noopener"
-                        >
-                            ${escapeHTML(
-                                link.title ||
-                                link.url
-                            )}
-                        </a>
-                    </div>
-                `;
-
-            })
-            .join("");
-
-    detail.innerHTML = `
-
-        <div class="detail-card">
-
-            <div class="detail-title">
-                ${escapeHTML(
-                    note.title ||
-                    "Untitled Note"
-                )}
-            </div>
-
-            <div class="action-row">
-
-                <button
-                    class="btn primary"
-                    onclick="openEditNote('${note.id}')"
-                >
-                    Edit
-                </button>
-
-                <button
-                    class="btn"
-                    onclick="toggleFavorite('${note.id}')"
-                >
-                    ${
-                        note.favorite
-                            ? "★ Remove Favorite"
-                            : "☆ Favorite"
-                    }
-                </button>
-
-                <button
-                    class="btn"
-                    onclick="togglePin('${note.id}')"
-                >
-                    ${
-                        note.pinned
-                            ? "📌 Unpin"
-                            : "📌 Pin"
-                    }
-                </button>
-
-                ${
-                    note.deleted
-                        ? `
-                            <button
-                                class="btn success"
-                                onclick="restoreNote('${note.id}')"
-                            >
-                                Restore
-                            </button>
-                        `
-                        : `
-                            <button
-                                class="btn danger"
-                                onclick="deleteNote('${note.id}')"
-                            >
-                                Delete
-                            </button>
-                        `
-                }
-
-            </div>
-
-            <div class="field">
-
-                <label>Content</label>
-
-                <div class="readonly-box">
-                    ${escapeHTML(note.content)}
-                </div>
-
-            </div>
-
-            <div class="field">
-
-                <label>Links</label>
-
-                ${
-                    linksHTML ||
-                    "<span>No links</span>"
-                }
-
-            </div>
-
-            <div class="meta">
-
-                <div>
-                    <strong>Created:</strong>
-                    ${formatDate(note.createdAt)}
-                </div>
-
-                <div>
-                    <strong>Last Modified:</strong>
-                    ${formatDate(note.modifiedAt)}
-                </div>
-
-                <div>
-                    <strong>Last Viewed:</strong>
-                    ${formatDate(note.lastViewedAt)}
-                </div>
-
-                <div>
-                    <strong>View Count:</strong>
-                    ${note.viewCount}
-                </div>
-
-                <div>
-                    <strong>Category:</strong>
-                    ${
-                        category
-                            ? escapeHTML(category.name)
-                            : "Uncategorized"
-                    }
-                </div>
-
-                <div>
-                    <strong>Tags:</strong>
-                    ${
-                        (note.tags || [])
-                            .map(
-                                escapeHTML
-                            )
-                            .join(", ") ||
-                        "None"
-                    }
-                </div>
-
-                <div>
-                    <strong>Note Color:</strong>
-                    ${escapeHTML(note.color)}
-                </div>
-
-                ${
-                    note.deleted
-                        ? `
-                            <div>
-                                <strong>Status:</strong>
-                                In Trash
-                            </div>
-                        `
-                        : `
-                            <div>
-                                <strong>Status:</strong>
-                                Active
-                            </div>
-                        `
-                }
-
-            </div>
-
-        </div>
-    `;
-
-}
-
-
-/* =========================================================
-   ADD NOTE
-========================================================= */
-
-function openAddNote(){
-
-    editingNoteId =
-        null;
-
-    $("noteModalTitle").textContent =
-        "Add Note";
-
-    $("noteTitle").value =
-        "";
-
-    $("noteContent").value =
-        "";
-
-    $("noteTags").value =
-        "";
-
-    $("noteColor").value =
-        "#1a73e8";
-
-    populateCategorySelect(
-        null
-    );
-
-    $("linksContainer").innerHTML =
-        "";
-
-    addLinkRow();
-
-    $("noteModal").classList.add(
-        "show"
-    );
-
-}
-
-
-/* =========================================================
-   EDIT NOTE
-========================================================= */
-
-function openEditNote(id){
-
-    const note =
-        db.notes.find(
-            n => n.id === id
-        );
-
-    if(!note){
-        return;
-    }
-
-    editingNoteId =
-        id;
-
-    $("noteModalTitle").textContent =
-        "Edit Note";
-
-    $("noteTitle").value =
-        note.title;
-
-    $("noteContent").value =
-        note.content;
-
-    $("noteTags").value =
-        (note.tags || [])
-            .join(", ");
-
-    $("noteColor").value =
-        note.color ||
-        "#1a73e8";
-
-    populateCategorySelect(
-        note.categoryId
-    );
-
-    $("linksContainer").innerHTML =
-        "";
-
-    (note.links || []).forEach(
-        link =>
-            addLinkRow(
-                link.title,
-                link.url
-            )
-    );
-
-    if(
-        !(note.links || []).length
-    ){
-        addLinkRow();
-    }
-
-    $("noteModal").classList.add(
-        "show"
-    );
-
-}
-
-
-/* =========================================================
-   CATEGORY SELECT
-========================================================= */
-
-function populateCategorySelect(
-    selectedId
+function getCategoryPath(
+    categoryId
 ){
 
-    const select =
-        $("noteCategory");
-
-    select.innerHTML = `
-        <option value="">
-            Uncategorized
-        </option>
-    `;
-
-    db.categories.forEach(
-        category => {
-
-            const option =
-                document.createElement(
-                    "option"
-                );
-
-            option.value =
-                category.id;
-
-            option.textContent =
-                getCategoryPath(
-                    category.id
-                );
-
-            if(
-                category.id ===
-                selectedId
-            ){
-                option.selected =
-                    true;
-            }
-
-            select.appendChild(
-                option
-            );
-
-        }
-    );
-
-}
-
-function getCategoryPath(id){
+    if(!categoryId){
+        return "";
+    }
 
     const parts = [];
 
     let current =
         db.categories.find(
-            c => c.id === id
+            c =>
+                c.id ===
+                categoryId
         );
 
-    while(current){
+    const guard =
+        new Set();
+
+    while(
+        current &&
+        !guard.has(current.id)
+    ){
+
+        guard.add(
+            current.id
+        );
 
         parts.unshift(
             current.name
@@ -2627,1281 +3386,2215 @@ function getCategoryPath(id){
                     c.id ===
                     current.parentId
             );
-
     }
 
     return parts.join(
         " / "
     );
-
 }
 
 
 /* =========================================================
-   LINKS
-========================================================= */
+   TAGS
+   ========================================================= */
 
-function addLinkRow(
-    title="",
-    url=""
-){
+function getUsedTags(){
 
-    const row =
-        document.createElement(
-            "div"
-        );
-
-    row.className =
-        "link-row";
-
-    row.innerHTML = `
-
-        <input
-            type="text"
-            placeholder="Link title"
-            value="${escapeHTML(title)}"
-        >
-
-        <input
-            type="url"
-            placeholder="https://..."
-            value="${escapeHTML(url)}"
-        >
-
-        <button
-            class="btn danger"
-            type="button"
-        >
-            ×
-        </button>
-
-    `;
-
-    row.querySelector(
-        "button"
-    ).addEventListener(
-        "click",
-        () => row.remove()
-    );
-
-    $("linksContainer")
-        .appendChild(row);
-
-}
-
-
-/* =========================================================
-   SAVE NOTE FROM MODAL
-========================================================= */
-
-async function saveNoteFromModal(){
-
-    const title =
-        $("noteTitle").value.trim();
-
-    const content =
-        $("noteContent").value;
-
-    if(!title && !content){
-
-        alert(
-            "Title یا Content میں کچھ لکھیں۔"
-        );
-
-        return;
-    }
-
-    const tags =
-        $("noteTags")
-            .value
-            .split(",")
-            .map(
-                tag => tag.trim()
-            )
-            .filter(Boolean);
-
-    const links = [];
-
-    document
-        .querySelectorAll(
-            "#linksContainer .link-row"
-        )
-        .forEach(row => {
-
-            const inputs =
-                row.querySelectorAll(
-                    "input"
-                );
-
-            const linkTitle =
-                inputs[0].value.trim();
-
-            const url =
-                inputs[1].value.trim();
-
-            if(url){
-
-                links.push({
-
-                    title:
-                        linkTitle,
-
-                    url:
-                        url
-
-                });
-
-            }
-
-        });
-
-    const categoryId =
-        $("noteCategory").value ||
-        null;
-
-    const color =
-        $("noteColor").value ||
-        "#1a73e8";
-
-    const timestamp =
-        nowISO();
-
-    if(editingNoteId){
-
-        const note =
-            db.notes.find(
-                n =>
-                    n.id ===
-                    editingNoteId
-            );
-
-        if(!note){
-            return;
-        }
-
-        note.title =
-            title;
-
-        note.content =
-            content;
-
-        note.categoryId =
-            categoryId;
-
-        note.tags =
-            tags;
-
-        note.links =
-            links;
-
-        note.color =
-            color;
-
-        note.modifiedAt =
-            timestamp;
-
-    }else{
-
-        const note = {
-
-            id:
-                uid("note"),
-
-            title:
-                title,
-
-            content:
-                content,
-
-            categoryId:
-                categoryId,
-
-            tags:
-                tags,
-
-            links:
-                links,
-
-            color:
-                color,
-
-            favorite:
-                false,
-
-            pinned:
-                false,
-
-            deleted:
-                false,
-
-            createdAt:
-                timestamp,
-
-            modifiedAt:
-                timestamp,
-
-            lastViewedAt:
-                null,
-
-            viewCount:
-                0,
-
-            binNumber:
-                null
-
-        };
-
-        db.notes.unshift(
-            note
-        );
-
-        selectedNoteId =
-            note.id;
-
-    }
-
-    updateTagRegistry();
-
-    $("noteModal")
-        .classList.remove(
-            "show"
-        );
-
-    renderEverything();
-
-    await saveDatabase();
-
-}
-
-
-/* =========================================================
-   TAG REGISTRY
-========================================================= */
-
-function updateTagRegistry(){
-
-    const set =
+    const used =
         new Set();
 
     db.notes.forEach(
         note => {
 
-            (note.tags || [])
-                .forEach(
-                    tag =>
-                        set.add(tag)
-                );
+            if(
+                note.deleted &&
+                note.trashHidden
+            ){
+                return;
+            }
 
+            note.tags.forEach(
+                tag =>
+                    used.add(tag)
+            );
         }
     );
 
-    db.tags =
-        Array.from(set)
-            .sort(
-                (a,b) =>
-                    a.localeCompare(b)
-            );
-
+    return [
+        ...used
+    ].sort(
+        (a,b) =>
+            a.localeCompare(b)
+    );
 }
 
 
 /* =========================================================
-   FAVORITE
-========================================================= */
+   SIDEBAR
+   ========================================================= */
 
-async function toggleFavorite(
-    id
-){
+function toggleSidebar(){
 
-    const note =
-        db.notes.find(
-            n => n.id === id
+    sidebarOpen =
+        !sidebarOpen;
+
+    const sidebar =
+        document.getElementById(
+            "sidebar"
         );
 
-    if(!note){
-        return;
+    const overlay =
+        document.getElementById(
+            "sidebarOverlay"
+        );
+
+    const button =
+        document.getElementById(
+            "sidebarToggle"
+        );
+
+    if(sidebarOpen){
+
+        sidebar.classList.add(
+            "open"
+        );
+
+        overlay.classList.add(
+            "open"
+        );
+
+        button.textContent =
+            "Hide";
+
+    }else{
+
+        sidebar.classList.remove(
+            "open"
+        );
+
+        overlay.classList.remove(
+            "open"
+        );
+
+        button.textContent =
+            "Show";
     }
-
-    note.favorite =
-        !note.favorite;
-
-    note.modifiedAt =
-        nowISO();
-
-    renderEverything();
-
-    await saveDatabase();
-
 }
 
 
-/* =========================================================
-   PIN
-========================================================= */
+function toggleSidebarSection(id){
 
-async function togglePin(id){
-
-    const note =
-        db.notes.find(
-            n => n.id === id
+    const element =
+        document.getElementById(
+            id
         );
 
-    if(!note){
-        return;
-    }
-
-    note.pinned =
-        !note.pinned;
-
-    note.modifiedAt =
-        nowISO();
-
-    renderEverything();
-
-    await saveDatabase();
-
-}
-
-
-/* =========================================================
-   DELETE
-========================================================= */
-
-async function deleteNote(id){
-
-    const note =
-        db.notes.find(
-            n => n.id === id
-        );
-
-    if(!note){
+    if(!element){
         return;
     }
 
     if(
-        db.settings.deleteConfirmation
+        element.classList.contains(
+            "open"
+        )
     ){
 
-        const yes =
-            confirm(
-                "کیا آپ یہ note Trash میں بھیجنا چاہتے ہیں؟"
-            );
-
-        if(!yes){
-            return;
-        }
-
-    }
-
-    note.deleted =
-        true;
-
-    note.modifiedAt =
-        nowISO();
-
-    note.binNumber =
-        getNextBinNumber();
-
-    /*
-       System Bin tag
-    */
-
-    note.tags =
-        Array.from(
-            new Set([
-                ...(note.tags || []),
-                "Bin",
-                "Bin " + note.binNumber
-            ])
+        element.classList.remove(
+            "open"
         );
 
-    updateTagRegistry();
+        if(id === "categoryList"){
 
-    renderEverything();
+            categoryOpen =
+                false;
 
-    await saveDatabase();
+            document.getElementById(
+                "categoryArrow"
+            ).textContent =
+                "▸";
+        }
 
+        if(id === "tagList"){
+
+            tagOpen =
+                false;
+
+            document.getElementById(
+                "tagArrow"
+            ).textContent =
+                "▸";
+        }
+
+    }else{
+
+        element.classList.add(
+            "open"
+        );
+
+        if(id === "categoryList"){
+
+            categoryOpen =
+                true;
+
+            document.getElementById(
+                "categoryArrow"
+            ).textContent =
+                "▾";
+        }
+
+        if(id === "tagList"){
+
+            tagOpen =
+                true;
+
+            document.getElementById(
+                "tagArrow"
+            ).textContent =
+                "▾";
+        }
+    }
 }
 
 
-/* =========================================================
-   NEXT BIN NUMBER
-========================================================= */
+function renderSidebar(){
 
-function getNextBinNumber(){
+    const activeNotes =
+        db.notes.filter(
+            n =>
+                !n.deleted
+        );
 
-    let max =
-        0;
+    document.getElementById(
+        "allCount"
+    ).textContent =
+        activeNotes.length;
+
+    document.getElementById(
+        "favoriteCount"
+    ).textContent =
+        activeNotes.filter(
+            n =>
+                n.favorite
+        ).length;
+
+    document.getElementById(
+        "pinnedCount"
+    ).textContent =
+        activeNotes.filter(
+            n =>
+                n.pinned
+        ).length;
+
+    document.getElementById(
+        "trashCount"
+    ).textContent =
+        db.notes.filter(
+            n =>
+                n.deleted &&
+                !n.trashHidden
+        ).length;
+
+    renderCategories();
+    renderTags();
+}
+
+
+function renderCategories(){
+
+    const container =
+        document.getElementById(
+            "categoryList"
+        );
+
+    /*
+       IMPORTANT:
+       صرف وہ categories دکھائی جائیں گی جن میں
+       کم از کم ایک active note یا descendant note ہو۔
+    */
+
+    const usedIds =
+        new Set();
 
     db.notes.forEach(
         note => {
 
-            const match =
-                String(
-                    note.binNumber || ""
-                ).match(
-                    /^\d+$/
-                );
-
-            if(match){
-
-                max =
-                    Math.max(
-                        max,
-                        Number(
-                            match[0]
-                        )
-                    );
-
+            if(note.deleted){
+                return;
             }
 
+            if(note.categoryId){
+
+                let current =
+                    db.categories.find(
+                        c =>
+                            c.id ===
+                            note.categoryId
+                    );
+
+                const guard =
+                    new Set();
+
+                while(
+                    current &&
+                    !guard.has(current.id)
+                ){
+
+                    guard.add(
+                        current.id
+                    );
+
+                    usedIds.add(
+                        current.id
+                    );
+
+                    current =
+                        db.categories.find(
+                            c =>
+                                c.id ===
+                                current.parentId
+                        );
+                }
+            }
         }
     );
 
-    return max + 1;
-}
-
-
-/* =========================================================
-   RESTORE
-========================================================= */
-
-async function restoreNote(id){
-
-    const note =
-        db.notes.find(
-            n => n.id === id
+    const roots =
+        db.categories.filter(
+            c =>
+                !c.parentId &&
+                usedIds.has(c.id)
         );
 
-    if(!note){
-        return;
-    }
+    if(!roots.length){
 
-    note.deleted =
-        false;
-
-    note.modifiedAt =
-        nowISO();
-
-    /*
-       Bin tag permanent requirement:
-       Bin + Bin number remain.
-    */
-
-    renderEverything();
-
-    await saveDatabase();
-
-}
-
-
-/* =========================================================
-   RESTORE ALL
-========================================================= */
-
-async function restoreAllDeleted(){
-
-    const deleted =
-        db.notes.filter(
-            n => n.deleted
-        );
-
-    if(!deleted.length){
-
-        alert(
-            "Trash خالی ہے۔"
-        );
+        container.innerHTML =
+            `
+            <div class="sidebar-subtitle">
+                No used categories
+            </div>
+            `;
 
         return;
     }
 
-    deleted.forEach(
+    container.innerHTML =
+        roots
+            .map(
+                category =>
+                    renderCategoryTree(
+                        category,
+                        usedIds
+                    )
+            )
+            .join("");
+}
+
+
+function renderCategoryTree(
+    category,
+    usedIds
+){
+
+    if(!usedIds.has(category.id)){
+        return "";
+    }
+
+    const children =
+        db.categories.filter(
+            c =>
+                c.parentId ===
+                category.id &&
+                usedIds.has(c.id)
+        );
+
+    const count =
+        countCategoryNotes(
+            category.id
+        );
+
+    const childrenHtml =
+        children.length
+        ?
+        `
+        <div class="tree-children">
+            ${
+                children
+                    .map(
+                        child =>
+                            renderCategoryTree(
+                                child,
+                                usedIds
+                            )
+                    )
+                    .join("")
+            }
+        </div>
+        `
+        :
+        "";
+
+    return `
+        <div class="tree-row">
+
+            <span class="tree-arrow"
+                  onclick="event.stopPropagation(); toggleCategoryNode('${category.id}')">
+                ${
+                    children.length
+                    ?
+                    "▸"
+                    :
+                    ""
+                }
+            </span>
+
+            <div class="tree-content">
+
+                <div class="sidebar-item"
+                     onclick="setCategoryView('${category.id}')">
+
+                    <span class="sidebar-icon">
+                        📁
+                    </span>
+
+                    <span class="sidebar-label">
+                        ${escapeHtml(category.name)}
+                    </span>
+
+                    <span class="sidebar-count">
+                        ${count}
+                    </span>
+
+                    <button class="sidebar-edit"
+                            onclick="event.stopPropagation(); categoryMenu('${category.id}')">
+                        ⋮
+                    </button>
+
+                </div>
+
+                <div id="catChildren-${category.id}"
+                     style="display:none;">
+                    ${childrenHtml}
+                </div>
+
+            </div>
+
+        </div>
+    `;
+}
+
+
+function toggleCategoryNode(id){
+
+    const element =
+        document.getElementById(
+            "catChildren-" + id
+        );
+
+    if(!element){
+        return;
+    }
+
+    const isHidden =
+        element.style.display ===
+        "none";
+
+    element.style.display =
+        isHidden
+        ?
+        "block"
+        :
+        "none";
+}
+
+
+function countCategoryNotes(
+    categoryId
+){
+
+    let count = 0;
+
+    db.notes.forEach(
         note => {
 
-            note.deleted =
-                false;
+            if(
+                note.deleted ||
+                !note.categoryId
+            ){
+                return;
+            }
 
-            note.modifiedAt =
-                nowISO();
+            if(
+                note.categoryId ===
+                categoryId
+            ){
 
+                count++;
+
+                return;
+            }
+
+            if(
+                isDescendantOf(
+                    note.categoryId,
+                    categoryId
+                )
+            ){
+
+                count++;
+            }
         }
     );
 
-    renderEverything();
-
-    await saveDatabase();
-
+    return count;
 }
 
 
-/* =========================================================
-   EMPTY TRASH
-   IMPORTANT:
-   یہ permanent delete نہیں ہے۔
-   Notes کو hide/archival state میں رکھا جاتا ہے۔
-========================================================= */
+function categoryMenu(id){
 
-async function emptyTrash(){
-
-    const deleted =
-        db.notes.filter(
-            n => n.deleted
+    const category =
+        db.categories.find(
+            c =>
+                c.id === id
         );
 
-    if(!deleted.length){
-
-        alert(
-            "Trash پہلے ہی خالی ہے۔"
-        );
-
+    if(!category){
         return;
     }
 
-    /*
-       Permanent deletion intentionally نہیں۔
-       Notes database میں رہیں گے۔
-    */
-
-    deleted.forEach(
-        note => {
-
-            note.trashHidden =
-                true;
-
-            note.modifiedAt =
-                nowISO();
-
-        }
-    );
-
-    renderEverything();
-
-    await saveDatabase();
-
-    alert(
-        "Trash items normal Trash view سے hide کر دیے گئے ہیں۔ Permanent deletion نہیں ہوئی۔"
-    );
-
-}
-
-
-/* =========================================================
-   CATEGORY EDIT
-========================================================= */
-
-function editCategory(category){
-
-    const action =
+    const choice =
         prompt(
-            "Category action:\n\n" +
-            "1 = Rename\n" +
+            "Category:\n" +
+            "1 = Add Sister\n" +
             "2 = Add Child\n" +
-            "3 = Add Sister\n" +
+            "3 = Rename\n" +
             "4 = Remove\n\n" +
-            "Action number:"
+            "Enter option:",
+            "3"
         );
 
-    if(!action){
+    if(choice === "1"){
+
+        addCategory(
+            category.parentId
+        );
+
+    }else if(choice === "2"){
+
+        addCategory(
+            category.id
+        );
+
+    }else if(choice === "3"){
+
+        renameCategory(
+            category.id
+        );
+
+    }else if(choice === "4"){
+
+        removeCategory(
+            category.id
+        );
+    }
+}
+
+
+function renderTags(){
+
+    const container =
+        document.getElementById(
+            "tagList"
+        );
+
+    const usedTags =
+        getUsedTags();
+
+    if(!usedTags.length){
+
+        container.innerHTML =
+            `
+            <div class="sidebar-subtitle">
+                No used tags
+            </div>
+            `;
+
         return;
     }
 
-    if(action === "1"){
+    container.innerHTML =
+        usedTags
+            .map(
+                tag => {
 
-        const name =
+                    const count =
+                        db.notes.filter(
+                            note =>
+                                !note.deleted &&
+                                note.tags.includes(
+                                    tag
+                                )
+                        ).length;
+
+                    return `
+                        <div class="sidebar-item"
+                             onclick="setTagView('${escapeAttribute(tag)}')">
+
+                            <span class="sidebar-icon">
+                                🏷️
+                            </span>
+
+                            <span class="sidebar-label">
+                                ${escapeHtml(tag)}
+                            </span>
+
+                            <span class="sidebar-count">
+                                ${count}
+                            </span>
+
+                            <button class="sidebar-edit"
+                                    onclick="event.stopPropagation(); tagMenu('${escapeAttribute(tag)}')">
+                                ⋮
+                            </button>
+
+                        </div>
+                    `;
+                }
+            )
+            .join("");
+}
+
+
+function tagMenu(tag){
+
+    const choice =
+        prompt(
+            "Tag: " +
+            tag +
+            "\n\n" +
+            "1 = Rename\n" +
+            "2 = Remove Tag Association\n\n" +
+            "Enter option:",
+            "1"
+        );
+
+    if(choice === "1"){
+
+        const newName =
             prompt(
-                "New category name:",
-                category.name
+                "New tag name:",
+                tag
             );
 
         if(
-            name &&
-            name.trim()
+            !newName ||
+            !newName.trim()
         ){
-
-            category.name =
-                name.trim();
-
-            saveDatabase();
-            renderEverything();
-
-        }
-
-        return;
-    }
-
-    if(action === "2"){
-
-        const name =
-            prompt(
-                "Child category name:"
-            );
-
-        if(
-            name &&
-            name.trim()
-        ){
-
-            db.categories.push({
-
-                id:
-                    uid("cat"),
-
-                name:
-                    name.trim(),
-
-                parentId:
-                    category.id
-
-            });
-
-            saveDatabase();
-            renderEverything();
-
-        }
-
-        return;
-    }
-
-    if(action === "3"){
-
-        const name =
-            prompt(
-                "Sister category name:"
-            );
-
-        if(
-            name &&
-            name.trim()
-        ){
-
-            db.categories.push({
-
-                id:
-                    uid("cat"),
-
-                name:
-                    name.trim(),
-
-                parentId:
-                    category.parentId ||
-                    null
-
-            });
-
-            saveDatabase();
-            renderEverything();
-
-        }
-
-        return;
-    }
-
-    if(action === "4"){
-
-        const yes =
-            confirm(
-                "Category remove کریں؟ Notes delete نہیں ہوں گے۔"
-            );
-
-        if(!yes){
             return;
         }
 
-        /*
-           Child categories کو parent کے ساتھ
-           reassign کیا جاتا ہے۔
-        */
-
-        db.categories.forEach(
-            c => {
-
-                if(
-                    c.parentId ===
-                    category.id
-                ){
-
-                    c.parentId =
-                        category.parentId ||
-                        null;
-
-                }
-
-            }
-        );
+        const clean =
+            newName.trim();
 
         db.notes.forEach(
             note => {
 
-                if(
-                    note.categoryId ===
-                    category.id
-                ){
-
-                    note.categoryId =
-                        category.parentId ||
-                        null;
-
-                }
-
+                note.tags =
+                    note.tags.map(
+                        t =>
+                            t === tag
+                            ?
+                            clean
+                            :
+                            t
+                    );
             }
         );
 
-        db.categories =
-            db.categories.filter(
-                c =>
-                    c.id !==
-                    category.id
+        db.tags =
+            db.tags.map(
+                t =>
+                    t === tag
+                    ?
+                    clean
+                    :
+                    t
             );
 
-        saveDatabase();
+        markChanged();
 
-        renderEverything();
+        refreshUI();
 
+    }else if(choice === "2"){
+
+        db.notes.forEach(
+            note => {
+
+                note.tags =
+                    note.tags.filter(
+                        t =>
+                            t !== tag
+                    );
+            }
+        );
+
+        markChanged();
+
+        refreshUI();
+    }
+}
+
+
+/* =========================================================
+   VIEWS
+   ========================================================= */
+
+function setView(view){
+
+    currentView =
+        view;
+
+    currentCategoryId =
+        null;
+
+    currentTagName =
+        null;
+
+    currentPage =
+        1;
+
+    updateSidebarActive();
+
+    renderListTitle();
+
+    renderNoteList();
+}
+
+
+function setCategoryView(id){
+
+    currentView =
+        "category";
+
+    currentCategoryId =
+        id;
+
+    currentTagName =
+        null;
+
+    currentPage =
+        1;
+
+    updateSidebarActive();
+
+    renderListTitle();
+
+    renderNoteList();
+}
+
+
+function setTagView(tag){
+
+    currentView =
+        "tag";
+
+    currentTagName =
+        tag;
+
+    currentCategoryId =
+        null;
+
+    currentPage =
+        1;
+
+    updateSidebarActive();
+
+    renderListTitle();
+
+    renderNoteList();
+}
+
+
+function updateSidebarActive(){
+
+    document
+        .querySelectorAll(
+            ".sidebar-item[data-view]"
+        )
+        .forEach(
+            item => {
+
+                item.classList.toggle(
+                    "active",
+                    item.dataset.view ===
+                    currentView
+                );
+            }
+        );
+}
+
+
+function renderListTitle(){
+
+    const title =
+        document.getElementById(
+            "listTitle"
+        );
+
+    if(currentView === "all"){
+
+        title.textContent =
+            "All Notes";
+
+    }else if(currentView === "favorites"){
+
+        title.textContent =
+            "Favorites";
+
+    }else if(currentView === "pinned"){
+
+        title.textContent =
+            "Pinned";
+
+    }else if(currentView === "trash"){
+
+        title.textContent =
+            db.trash.label ||
+            "Trash";
+
+    }else if(currentView === "category"){
+
+        const category =
+            db.categories.find(
+                c =>
+                    c.id ===
+                    currentCategoryId
+            );
+
+        title.textContent =
+            category
+            ?
+            category.name
+            :
+            "Category";
+
+    }else if(currentView === "tag"){
+
+        title.textContent =
+            "Tag: " +
+            currentTagName;
+    }
+}
+
+
+/* =========================================================
+   FILTER NOTES
+   ========================================================= */
+
+function getVisibleNotes(){
+
+    let notes =
+        [...db.notes];
+
+    if(currentView === "trash"){
+
+        notes =
+            notes.filter(
+                note =>
+                    note.deleted &&
+                    !note.trashHidden
+            );
+
+    }else{
+
+        notes =
+            notes.filter(
+                note =>
+                    !note.deleted
+            );
     }
 
+    if(currentView === "favorites"){
+
+        notes =
+            notes.filter(
+                note =>
+                    note.favorite
+            );
+    }
+
+    if(currentView === "pinned"){
+
+        notes =
+            notes.filter(
+                note =>
+                    note.pinned
+            );
+    }
+
+    if(currentView === "category"){
+
+        notes =
+            notes.filter(
+                note =>
+                    note.categoryId ===
+                    currentCategoryId ||
+                    (
+                        note.categoryId &&
+                        isDescendantOf(
+                            note.categoryId,
+                            currentCategoryId
+                        )
+                    )
+            );
+    }
+
+    if(currentView === "tag"){
+
+        notes =
+            notes.filter(
+                note =>
+                    note.tags.includes(
+                        currentTagName
+                    )
+            );
+    }
+
+    if(searchText){
+
+        const q =
+            searchText.toLowerCase();
+
+        notes =
+            notes.filter(
+                note => {
+
+                    const category =
+                        getCategoryPath(
+                            note.categoryId
+                        );
+
+                    return (
+
+                        note.title
+                            .toLowerCase()
+                            .includes(q)
+
+                        ||
+
+                        note.content
+                            .toLowerCase()
+                            .includes(q)
+
+                        ||
+
+                        category
+                            .toLowerCase()
+                            .includes(q)
+
+                        ||
+
+                        note.tags
+                            .join(" ")
+                            .toLowerCase()
+                            .includes(q)
+
+                    );
+                }
+            );
+    }
+
+    return sortNotes(
+        notes
+    );
+}
+
+
+/* =========================================================
+   SORT
+   ========================================================= */
+
+function sortNotes(notes){
+
+    const sorting =
+        db.settings.sorting;
+
+    if(
+        sorting ===
+        "Alphabetical"
+    ){
+
+        return notes.sort(
+            (a,b) =>
+                a.title.localeCompare(
+                    b.title
+                )
+        );
+    }
+
+    if(
+        sorting ===
+        "Newest"
+    ){
+
+        return notes.sort(
+            (a,b) =>
+                new Date(b.createdAt) -
+                new Date(a.createdAt)
+        );
+    }
+
+    if(
+        sorting ===
+        "Oldest"
+    ){
+
+        return notes.sort(
+            (a,b) =>
+                new Date(a.createdAt) -
+                new Date(b.createdAt)
+        );
+    }
+
+    return notes.sort(
+        (a,b) =>
+            new Date(b.modifiedAt) -
+            new Date(a.modifiedAt)
+    );
+}
+
+
+/* =========================================================
+   RENDER NOTE LIST
+   ========================================================= */
+
+function renderNoteList(){
+
+    const container =
+        document.getElementById(
+            "noteList"
+        );
+
+    let notes =
+        getVisibleNotes();
+
+    document.getElementById(
+        "listCount"
+    ).textContent =
+        notes.length;
+
+    const perPage =
+        db.settings.notesPerPage;
+
+    let pages = 1;
+
+    if(perPage !== "All"){
+
+        const n =
+            Number(perPage);
+
+        pages =
+            Math.max(
+                1,
+                Math.ceil(
+                    notes.length / n
+                )
+            );
+
+        currentPage =
+            Math.min(
+                currentPage,
+                pages
+            );
+
+        const start =
+            (currentPage - 1) * n;
+
+        notes =
+            notes.slice(
+                start,
+                start + n
+            );
+
+    }else{
+
+        currentPage =
+            1;
+    }
+
+    if(!notes.length){
+
+        container.innerHTML =
+            `
+            <div class="empty">
+                No notes found.
+            </div>
+            `;
+
+        renderPagination(
+            1
+        );
+
+        return;
+    }
+
+    container.innerHTML =
+        notes
+            .map(
+                note =>
+                    renderNoteRow(
+                        note
+                    )
+            )
+            .join("");
+
+    renderPagination(
+        pages
+    );
+}
+
+
+function renderNoteRow(note){
+
+    const preview =
+        note.content
+            .replace(/\s+/g," ")
+            .trim();
+
+    const date =
+        formatDateTime(
+            note.modifiedAt
+        );
+
+    return `
+        <div class="note-row ${
+            selectedNoteId === note.id
+            ? "active"
+            : ""
+        }"
+        onclick="selectNote('${note.id}')">
+
+            <div class="note-marker"
+                 style="--note-color:${escapeAttribute(note.color)}">
+            </div>
+
+            <div class="note-row-body">
+
+                <div class="note-row-title">
+                    ${
+                        note.pinned
+                        ? "📌 "
+                        : ""
+                    }
+
+                    ${
+                        note.favorite
+                        ? "⭐ "
+                        : ""
+                    }
+
+                    ${escapeHtml(
+                        note.title
+                    )}
+                </div>
+
+                <div class="note-row-preview">
+                    ${escapeHtml(
+                        preview ||
+                        "No content"
+                    )}
+                </div>
+
+                <div class="note-row-meta">
+
+                    <span>
+                        ${escapeHtml(date)}
+                    </span>
+
+                    ${
+                        note.tags.length
+                        ?
+                        `
+                        <span>
+                            • ${escapeHtml(
+                                note.tags.slice(
+                                    0,
+                                    3
+                                ).join(", ")
+                            )}
+                        </span>
+                        `
+                        :
+                        ""
+                    }
+
+                </div>
+
+            </div>
+
+            <div class="note-actions">
+
+                <button
+                    title="Favorite"
+                    onclick="event.stopPropagation(); toggleFavorite('${note.id}')">
+                    ${
+                        note.favorite
+                        ? "★"
+                        : "☆"
+                    }
+                </button>
+
+                <button
+                    title="Pin"
+                    onclick="event.stopPropagation(); togglePinned('${note.id}')">
+                    ${
+                        note.pinned
+                        ? "📌"
+                        : "📍"
+                    }
+                </button>
+
+                ${
+                    note.deleted
+                    ?
+                    `
+                    <button
+                        title="Restore"
+                        onclick="event.stopPropagation(); restoreNote('${note.id}')">
+                        ↩
+                    </button>
+                    `
+                    :
+                    `
+                    <button
+                        title="Delete"
+                        onclick="event.stopPropagation(); deleteNote('${note.id}')">
+                        🗑
+                    </button>
+                    `
+                }
+
+            </div>
+
+        </div>
+    `;
+}
+
+
+/* =========================================================
+   PAGINATION
+   ========================================================= */
+
+function renderPagination(
+    pages
+){
+
+    const container =
+        document.getElementById(
+            "pagination"
+        );
+
+    if(pages <= 1){
+
+        container.style.display =
+            "none";
+
+        return;
+    }
+
+    container.style.display =
+        "flex";
+
+    let html = "";
+
+    html +=
+        `
+        <button class="btn small"
+                onclick="changePage(-1)"
+                ${currentPage <= 1 ? "disabled" : ""}>
+            Prev
+        </button>
+        `;
+
+    html +=
+        `
+        <span style="font-size:12px;">
+            ${currentPage} / ${pages}
+        </span>
+        `;
+
+    html +=
+        `
+        <button class="btn small"
+                onclick="changePage(1)"
+                ${currentPage >= pages ? "disabled" : ""}>
+            Next
+        </button>
+        `;
+
+    container.innerHTML =
+        html;
+}
+
+
+function changePage(delta){
+
+    currentPage +=
+        delta;
+
+    renderNoteList();
 }
 
 
 /* =========================================================
    SETTINGS
-========================================================= */
+   ========================================================= */
 
 function openSettings(){
 
-    $("settingSidebar").value =
-        db.settings.sidebarView;
+    currentView =
+        "settings";
 
-    $("settingTheme").value =
-        db.settings.theme;
+    document.getElementById(
+        "listTitle"
+    ).textContent =
+        "Settings";
 
-    $("settingFont").value =
-        db.settings.fontSize;
+    document.getElementById(
+        "listCount"
+    ).textContent =
+        "";
 
-    $("settingListStyle").value =
-        db.settings.noteListStyle;
+    document.getElementById(
+        "noteList"
+    ).innerHTML =
+        "";
 
-    $("settingSort").value =
-        db.settings.sort;
-
-    $("settingPerPage").value =
-        db.settings.notesPerPage;
-
-    $("settingDeleteConfirm").value =
-        String(
-            db.settings.deleteConfirmation
+    const detail =
+        document.getElementById(
+            "detailBody"
         );
 
-    $("settingAutoSave").value =
-        String(
-            db.settings.autoSave
-        );
+    detail.innerHTML =
+        renderSettings();
 
-    $("settingsModal")
-        .classList.add(
-            "show"
-        );
-
+    selectedNoteId =
+        null;
 }
 
-async function saveSettings(){
 
-    db.settings.sidebarView =
-        $("settingSidebar").value;
+function renderSettings(){
 
-    db.settings.theme =
-        $("settingTheme").value;
+    const s =
+        db.settings;
 
-    db.settings.fontSize =
-        $("settingFont").value;
+    return `
 
-    db.settings.noteListStyle =
-        $("settingListStyle").value;
+        <div class="settings-grid">
 
-    db.settings.sort =
-        $("settingSort").value;
+            <div class="setting">
 
-    db.settings.notesPerPage =
-        $("settingPerPage").value;
+                <label>
+                    Sidebar View
+                </label>
 
-    db.settings.deleteConfirmation =
-        $("settingDeleteConfirm").value ===
-        "true";
+                <select id="setSidebarView"
+                        onchange="saveSetting('sidebarView',this.value)">
 
-    db.settings.autoSave =
-        $("settingAutoSave").value ===
-        "true";
+                    ${option(
+                        "Compact",
+                        s.sidebarView
+                    )}
+
+                    ${option(
+                        "Normal",
+                        s.sidebarView
+                    )}
+
+                    ${option(
+                        "Expanded",
+                        s.sidebarView
+                    )}
+
+                </select>
+
+            </div>
+
+            <div class="setting">
+
+                <label>
+                    Theme
+                </label>
+
+                <select id="setTheme"
+                        onchange="saveSetting('theme',this.value)">
+
+                    ${option(
+                        "Day",
+                        s.theme
+                    )}
+
+                    ${option(
+                        "Night",
+                        s.theme
+                    )}
+
+                    ${option(
+                        "System",
+                        s.theme
+                    )}
+
+                </select>
+
+            </div>
+
+            <div class="setting">
+
+                <label>
+                    Font Size
+                </label>
+
+                <select onchange="saveSetting('fontSize',this.value)">
+
+                    ${option(
+                        "Small",
+                        s.fontSize
+                    )}
+
+                    ${option(
+                        "Normal",
+                        s.fontSize
+                    )}
+
+                    ${option(
+                        "Large",
+                        s.fontSize
+                    )}
+
+                    ${option(
+                        "Extra Large",
+                        s.fontSize
+                    )}
+
+                </select>
+
+            </div>
+
+            <div class="setting">
+
+                <label>
+                    Note List Style
+                </label>
+
+                <select onchange="saveSetting('noteListStyle',this.value)">
+
+                    ${option(
+                        "Compact",
+                        s.noteListStyle
+                    )}
+
+                    ${option(
+                        "Normal",
+                        s.noteListStyle
+                    )}
+
+                    ${option(
+                        "Detailed",
+                        s.noteListStyle
+                    )}
+
+                </select>
+
+            </div>
+
+            <div class="setting">
+
+                <label>
+                    Sorting
+                </label>
+
+                <select onchange="saveSetting('sorting',this.value)">
+
+                    ${option(
+                        "Last Modified First",
+                        s.sorting
+                    )}
+
+                    ${option(
+                        "Newest",
+                        s.sorting
+                    )}
+
+                    ${option(
+                        "Oldest",
+                        s.sorting
+                    )}
+
+                    ${option(
+                        "Alphabetical",
+                        s.sorting
+                    )}
+
+                </select>
+
+            </div>
+
+            <div class="setting">
+
+                <label>
+                    Notes Per Page
+                </label>
+
+                <select onchange="saveSetting('notesPerPage',this.value)">
+
+                    ${option(
+                        "10",
+                        String(s.notesPerPage)
+                    )}
+
+                    ${option(
+                        "20",
+                        String(s.notesPerPage)
+                    )}
+
+                    ${option(
+                        "50",
+                        String(s.notesPerPage)
+                    )}
+
+                    ${option(
+                        "100",
+                        String(s.notesPerPage)
+                    )}
+
+                    ${option(
+                        "All",
+                        String(s.notesPerPage)
+                    )}
+
+                </select>
+
+            </div>
+
+            <div class="setting">
+
+                <label>
+                    Autosave
+                </label>
+
+                <select onchange="saveSetting('autosave',this.value === 'true')">
+
+                    <option value="true"
+                        ${s.autosave ? "selected" : ""}>
+                        On
+                    </option>
+
+                    <option value="false"
+                        ${!s.autosave ? "selected" : ""}>
+                        Off
+                    </option>
+
+                </select>
+
+            </div>
+
+            <div class="setting">
+
+                <label>
+                    Autosave Interval
+                </label>
+
+                <select onchange="saveSetting('autosaveInterval',Number(this.value))">
+
+                    ${[5,10,15,30,60]
+                        .map(
+                            x =>
+                                `
+                                <option value="${x}"
+                                    ${Number(s.autosaveInterval) === x ? "selected" : ""}>
+                                    ${x} seconds
+                                </option>
+                                `
+                        )
+                        .join("")
+                    }
+
+                </select>
+
+            </div>
+
+            <div class="setting">
+
+                <label>
+                    Delete Confirmation
+                </label>
+
+                <select onchange="saveSetting('deleteConfirmation',this.value === 'true')">
+
+                    <option value="true"
+                        ${s.deleteConfirmation ? "selected" : ""}>
+                        On
+                    </option>
+
+                    <option value="false"
+                        ${!s.deleteConfirmation ? "selected" : ""}>
+                        Off
+                    </option>
+
+                </select>
+
+            </div>
+
+            <div class="setting">
+
+                <label>
+                    Date / Time Format
+                </label>
+
+                <select onchange="saveSetting('dateTimeFormat',this.value)">
+
+                    ${option(
+                        "Local",
+                        s.dateTimeFormat
+                    )}
+
+                    ${option(
+                        "12 Hour",
+                        s.dateTimeFormat
+                    )}
+
+                    ${option(
+                        "24 Hour",
+                        s.dateTimeFormat
+                    )}
+
+                </select>
+
+            </div>
+
+        </div>
+
+        <div style="margin-top:15px;">
+
+            <div class="field-label">
+                Checklist Web App URL
+            </div>
+
+            <div style="display:flex;gap:7px;">
+
+                <input id="checklistUrl"
+                       class="editor-field"
+                       value="${escapeAttribute(db.checklist.url || "")}"
+                       placeholder="https://script.google.com/...">
+
+                <button class="btn primary"
+                        onclick="saveChecklistUrl()">
+                    Save
+                </button>
+
+            </div>
+
+        </div>
+
+        <div style="margin-top:15px;">
+
+            <div class="field-label">
+                Trash Name
+            </div>
+
+            <select class="editor-field"
+                    onchange="changeTrashLabel(this.value)">
+
+                ${
+                    [
+                        "Trash",
+                        "Recycle Bin",
+                        "Dustbin",
+                        "Deleted Items",
+                        "Deleted Notes",
+                        "Waste Bin",
+                        "Bin",
+                        "Removed Items",
+                        "Discarded Items",
+                        "Deleted"
+                    ]
+                    .map(
+                        x =>
+                            `
+                            <option
+                                ${x === db.trash.label ? "selected" : ""}>
+                                ${escapeHtml(x)}
+                            </option>
+                            `
+                    )
+                    .join("")
+                }
+
+            </select>
+
+        </div>
+
+        <div class="detail-actions"
+             style="margin-top:18px;">
+
+            <button class="btn"
+                    onclick="addCategory()">
+                Add Root Category
+            </button>
+
+            <button class="btn"
+                    onclick="restoreAllDeleted()">
+                Restore All Deleted
+            </button>
+
+            <button class="btn"
+                    onclick="emptyTrash()">
+                Empty Trash
+            </button>
+
+            <button class="btn"
+                    onclick="restoreTrash()">
+                Restore Trash
+            </button>
+
+        </div>
+
+    `;
+}
+
+
+function option(
+    value,
+    selected
+){
+
+    return `
+        <option value="${escapeAttribute(value)}"
+            ${value === selected ? "selected" : ""}>
+            ${escapeHtml(value)}
+        </option>
+    `;
+}
+
+
+function saveSetting(
+    key,
+    value
+){
+
+    db.settings[key] =
+        value;
 
     applySettings();
 
-    $("settingsModal")
-        .classList.remove(
-            "show"
+    markChanged();
+
+    showToast(
+        "Setting saved.",
+        "success"
+    );
+}
+
+
+function saveChecklistUrl(){
+
+    const input =
+        document.getElementById(
+            "checklistUrl"
         );
 
-    renderEverything();
+    db.checklist.url =
+        input.value.trim();
 
-    await saveDatabase();
+    markChanged();
 
+    showToast(
+        "Checklist link saved.",
+        "success"
+    );
+}
+
+
+function changeTrashLabel(value){
+
+    db.trash.label =
+        value;
+
+    markChanged();
+
+    document.getElementById(
+        "trashLabel"
+    ).textContent =
+        value;
+
+    renderListTitle();
 }
 
 
 /* =========================================================
-   APPLY SETTINGS
-========================================================= */
+   SETTINGS APPLICATION
+   ========================================================= */
 
 function applySettings(){
 
     const theme =
         db.settings.theme;
 
+    document.body.classList.remove(
+        "night"
+    );
+
     if(theme === "Night"){
 
-        document.body.style.background =
-            "#202124";
+        document.body.classList.add(
+            "night"
+        );
 
-        document.body.style.color =
-            "#e8eaed";
+    }else if(theme === "System"){
 
-    }else{
+        if(
+            window.matchMedia &&
+            window.matchMedia(
+                "(prefers-color-scheme: dark)"
+            ).matches
+        ){
 
-        document.body.style.background =
-            "#f4f6f8";
-
-        document.body.style.color =
-            "#202124";
-
+            document.body.classList.add(
+                "night"
+            );
+        }
     }
 
-    const font =
-        db.settings.fontSize;
+    const fontSizes = {
 
-    let size =
-        "16px";
+        "Small":
+            "13px",
 
-    if(font === "Small"){
-        size = "14px";
-    }
+        "Normal":
+            "15px",
 
-    if(font === "Large"){
-        size = "18px";
-    }
+        "Large":
+            "17px",
 
-    if(font === "Extra Large"){
-        size = "20px";
-    }
+        "Extra Large":
+            "19px"
+    };
 
-    document.body.style.fontSize =
-        size;
+    document.documentElement.style
+        .setProperty(
+            "--font-size",
+            fontSizes[
+                db.settings.fontSize
+            ] ||
+            "15px"
+        );
 
+    document.getElementById(
+        "trashLabel"
+    ).textContent =
+        db.trash.label ||
+        "Trash";
 }
 
 
 /* =========================================================
-   SEARCH
-========================================================= */
-
-$("searchInput")
-    .addEventListener(
-        "input",
-        event => {
-
-            searchText =
-                event.target.value
-                    .trim();
-
-            renderNoteList();
-
-        }
-    );
-
-
-/* =========================================================
-   SIDEBAR EVENTS
-========================================================= */
-
-$("menuBtn")
-    .addEventListener(
-        "click",
-        () => {
-
-            $("sidebar")
-                .classList.toggle(
-                    "open"
-                );
-
-            $("overlay")
-                .classList.toggle(
-                    "show"
-                );
-
-        }
-    );
-
-$("overlay")
-    .addEventListener(
-        "click",
-        () => {
-
-            $("sidebar")
-                .classList.remove(
-                    "open"
-                );
-
-            $("overlay")
-                .classList.remove(
-                    "show"
-                );
-
-        }
-    );
-
-document
-    .querySelectorAll(
-        ".side-item[data-view]"
-    )
-    .forEach(
-        item => {
-
-            item.addEventListener(
-                "click",
-                () => {
-
-                    const view =
-                        item.dataset.view;
-
-                    if(view === "settings"){
-
-                        openSettings();
-
-                        return;
-                    }
-
-                    if(view === "checklist"){
-
-                        openChecklist();
-
-                        return;
-                    }
-
-                    currentView =
-                        view;
-
-                    currentCategoryId =
-                        null;
-
-                    currentTag =
-                        null;
-
-                    document
-                        .querySelectorAll(
-                            ".side-item[data-view]"
-                        )
-                        .forEach(
-                            x =>
-                                x.classList.remove(
-                                    "active"
-                                )
-                        );
-
-                    item.classList.add(
-                        "active"
-                    );
-
-                    renderNoteList();
-
-                }
-            );
-
-        }
-    );
-
-
-/* =========================================================
-   MAIN BUTTONS
-========================================================= */
-
-$("connectBtn")
-    .addEventListener(
-        "click",
-        connectGoogleDrive
-    );
-
-$("loadBtn")
-    .addEventListener(
-        "click",
-        loadDatabase
-    );
-
-$("syncBtn")
-    .addEventListener(
-        "click",
-        synchronizeTime
-    );
-
-$("lastSyncBtn")
-    .addEventListener(
-        "click",
-        showLastSyncTime
-    );
-
-$("addBtn")
-    .addEventListener(
-        "click",
-        openAddNote
-    );
-
-$("editBtn")
-    .addEventListener(
-        "click",
-        () => {
-
-            if(!selectedNoteId){
-
-                alert(
-                    "پہلے note select کریں۔"
-                );
-
-                return;
-            }
-
-            openEditNote(
-                selectedNoteId
-            );
-
-        }
-    );
-
-$("favoriteBtn")
-    .addEventListener(
-        "click",
-        () => {
-
-            if(!selectedNoteId){
-
-                alert(
-                    "پہلے note select کریں۔"
-                );
-
-                return;
-            }
-
-            toggleFavorite(
-                selectedNoteId
-            );
-
-        }
-    );
-
-$("pinBtn")
-    .addEventListener(
-        "click",
-        () => {
-
-            if(!selectedNoteId){
-
-                alert(
-                    "پہلے note select کریں۔"
-                );
-
-                return;
-            }
-
-            togglePin(
-                selectedNoteId
-            );
-
-        }
-    );
-
-$("deleteBtn")
-    .addEventListener(
-        "click",
-        () => {
-
-            if(!selectedNoteId){
-
-                alert(
-                    "پہلے note select کریں۔"
-                );
-
-                return;
-            }
-
-            deleteNote(
-                selectedNoteId
-            );
-
-        }
-    );
-
-
-/* =========================================================
-   NOTE MODAL EVENTS
-========================================================= */
-
-$("cancelNoteBtn")
-    .addEventListener(
-        "click",
-        () => {
-
-            $("noteModal")
-                .classList.remove(
-                    "show"
-                );
-
-        }
-    );
-
-$("saveNoteBtn")
-    .addEventListener(
-        "click",
-        saveNoteFromModal
-    );
-
-$("addLinkBtn")
-    .addEventListener(
-        "click",
-        () => addLinkRow()
-    );
-
-
-/* =========================================================
-   SETTINGS EVENTS
-========================================================= */
-
-$("closeSettingsBtn")
-    .addEventListener(
-        "click",
-        () => {
-
-            $("settingsModal")
-                .classList.remove(
-                    "show"
-                );
-
-        }
-    );
-
-$("saveSettingsBtn")
-    .addEventListener(
-        "click",
-        saveSettings
-    );
-
-
-/* =========================================================
    CHECKLIST
-========================================================= */
+   ========================================================= */
 
 function openChecklist(){
 
-    if(db.checklistLink){
+    const url =
+        db.checklist.url;
 
-        window.open(
-            db.checklistLink,
-            "_blank",
-            "noopener"
+    if(!url){
+
+        showToast(
+            "Checklist Web App link is not configured. Settings میں link add کریں۔",
+            "error"
         );
 
         return;
     }
 
-    const url =
-        prompt(
-            "Checklist Web App URL درج کریں:"
-        );
+    window.open(
+        url,
+        "_blank",
+        "noopener,noreferrer"
+    );
+}
+
+
+/* =========================================================
+   REFRESH
+   ========================================================= */
+
+function refreshUI(){
 
     if(
-        url &&
-        url.trim()
+        currentView ===
+        "settings"
     ){
 
-        db.checklistLink =
-            url.trim();
+        openSettings();
 
-        saveDatabase();
-
-        window.open(
-            db.checklistLink,
-            "_blank",
-            "noopener"
-        );
-
+        return;
     }
 
+    renderSidebar();
+
+    renderListTitle();
+
+    renderNoteList();
+
+    renderDetail();
 }
 
 
 /* =========================================================
-   AUTO SAVE
-========================================================= */
+   SEARCH
+   ========================================================= */
 
-function scheduleSave(){
+document.getElementById(
+    "searchInput"
+).addEventListener(
+    "input",
+    function(){
 
-    clearTimeout(
-        saveTimer
-    );
+        searchText =
+            this.value.trim();
 
-    saveTimer =
-        setTimeout(
-            () => {
+        currentPage =
+            1;
 
-                if(
-                    db.settings.autoSave
-                ){
-
-                    saveDatabase();
-
-                }
-
-            },
-            1200
-        );
-
-}
-
-
-/* =========================================================
-   INITIAL DATABASE STATE
-========================================================= */
-
-db =
-    normalizeDatabase({
-        version:1,
-        notes:[],
-        categories:[],
-        tags:[],
-        settings:defaultSettings,
-        checklistLink:"",
-        lastSynchronizedTime:null
-    });
-
-
-/* =========================================================
-   INITIAL UI
-========================================================= */
-
-renderEverything();
-
-
-/*
-   Sidebar intentionally CLOSED
-   on initial page load.
-*/
-
-
-/* =========================================================
-   GOOGLE INITIALIZATION
-========================================================= */
-
-window.addEventListener(
-    "load",
-    () => {
-
-        initGoogle();
-
+        renderNoteList();
     }
 );
+
+
+/* =========================================================
+   BUTTON EVENTS
+   ========================================================= */
+
+document.getElementById(
+    "sidebarToggle"
+).addEventListener(
+    "click",
+    toggleSidebar
+);
+
+document.getElementById(
+    "sidebarOverlay"
+).addEventListener(
+    "click",
+    function(){
+
+        if(sidebarOpen){
+            toggleSidebar();
+        }
+    }
+);
+
+document.getElementById(
+    "connectBtn"
+).addEventListener(
+    "click",
+    connectDrive
+);
+
+document.getElementById(
+    "loadBtn"
+).addEventListener(
+    "click",
+    loadDatabase
+);
+
+document.getElementById(
+    "syncBtn"
+).addEventListener(
+    "click",
+    synchronize
+);
+
+
+/* =========================================================
+   KEYBOARD SHORTCUTS
+   ========================================================= */
+
+document.addEventListener(
+    "keydown",
+    function(event){
+
+        if(
+            event.ctrlKey &&
+            event.key.toLowerCase() === "s"
+        ){
+
+            event.preventDefault();
+
+            if(pendingChanges){
+
+                saveDatabaseToDrive();
+            }
+        }
+
+        if(
+            event.key === "Escape" &&
+            sidebarOpen
+        ){
+
+            toggleSidebar();
+        }
+    }
+);
+
+
+/* =========================================================
+   DATE / TIME
+   ========================================================= */
+
+function formatDateTime(value){
+
+    if(!value){
+        return "—";
+    }
+
+    const date =
+        new Date(value);
+
+    if(
+        Number.isNaN(
+            date.getTime()
+        )
+    ){
+        return "—";
+    }
+
+    const settings =
+        db.settings.dateTimeFormat;
+
+    if(settings === "12 Hour"){
+
+        return date.toLocaleString(
+            undefined,
+            {
+                year:"numeric",
+                month:"2-digit",
+                day:"2-digit",
+                hour:"2-digit",
+                minute:"2-digit",
+                second:"2-digit",
+                hour12:true
+            }
+        );
+
+    }
+
+    if(settings === "24 Hour"){
+
+        return date.toLocaleString(
+            undefined,
+            {
+                year:"numeric",
+                month:"2-digit",
+                day:"2-digit",
+                hour:"2-digit",
+                minute:"2-digit",
+                second:"2-digit",
+                hour12:false
+            }
+        );
+    }
+
+    return date.toLocaleString();
+}
+
+
+/* =========================================================
+   UTILITIES
+   ========================================================= */
+
+function generateId(prefix){
+
+    return (
+        prefix +
+        "_" +
+        Date.now().toString(36) +
+        "_" +
+        Math.random()
+            .toString(36)
+            .slice(2,9)
+    );
+}
+
+
+function escapeHtml(value){
+
+    return String(
+        value ?? ""
+    )
+    .replace(
+        /&/g,
+        "&amp;"
+    )
+    .replace(
+        /</g,
+        "&lt;"
+    )
+    .replace(
+        />/g,
+        "&gt;"
+    )
+    .replace(
+        /"/g,
+        "&quot;"
+    )
+    .replace(
+        /'/g,
+        "&#039;"
+    );
+}
+
+
+function escapeAttribute(value){
+
+    return escapeHtml(
+        value
+    );
+}
+
+
+function showToast(
+    message,
+    type = "normal"
+){
+
+    const toast =
+        document.getElementById(
+            "toast"
+        );
+
+    toast.textContent =
+        message;
+
+    toast.classList.add(
+        "show"
+    );
+
+    clearTimeout(
+        toast._timer
+    );
+
+    toast._timer =
+        setTimeout(
+            function(){
+
+                toast.classList.remove(
+                    "show"
+                );
+
+            },
+            2500
+        );
+}
+
+
+/* =========================================================
+   INITIALIZATION
+   ========================================================= */
+
+function initializeApp(){
+
+    /*
+       Sidebar ہمیشہ closed/hidden سے شروع ہوگا۔
+    */
+
+    sidebarOpen =
+        false;
+
+    document.getElementById(
+        "sidebar"
+    ).classList.remove(
+        "open"
+    );
+
+    document.getElementById(
+        "sidebarOverlay"
+    ).classList.remove(
+        "open"
+    );
+
+    document.getElementById(
+        "sidebarToggle"
+    ).textContent =
+        "Show";
+
+    /*
+       Categories اور Tags default طور پر بند۔
+    */
+
+    document.getElementById(
+        "categoryList"
+    ).classList.remove(
+        "open"
+    );
+
+    document.getElementById(
+        "tagList"
+    ).classList.remove(
+        "open"
+    );
+
+    categoryOpen = false;
+    tagOpen = false;
+
+    db =
+        normalizeDatabase(
+            db
+        );
+
+    applySettings();
+
+    renderSidebar();
+
+    renderListTitle();
+
+    renderNoteList();
+
+    renderDetail();
+
+    initializeGoogle();
+}
+
+
+/* =========================================================
+   SYSTEM THEME LIVE UPDATE
+   ========================================================= */
+
+if(
+    window.matchMedia
+){
+
+    const media =
+        window.matchMedia(
+            "(prefers-color-scheme: dark)"
+        );
+
+    media.addEventListener(
+        "change",
+        function(){
+
+            if(
+                db.settings.theme ===
+                "System"
+            ){
+
+                applySettings();
+            }
+        }
+    );
+}
+
+
+initializeApp();
 
 </script>
 
