@@ -3,9 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <title>Notes Manager</title>
-
 <style>
 :root{
     --bg:#f4f6f9;
@@ -24,9 +22,7 @@
     --font-size:15px;
 }
 
-*{
-    box-sizing:border-box;
-}
+*{ box-sizing:border-box; }
 
 html,body{
     margin:0;
@@ -49,13 +45,13 @@ body{
     position:sticky;
     top:0;
     z-index:1000;
-    height:62px;
+    min-height:62px;
     background:var(--surface);
     border-bottom:1px solid var(--border);
     display:flex;
     align-items:center;
     gap:8px;
-    padding:8px 12px;
+    padding:8px 12px 8px 92px;
     box-shadow:0 2px 8px rgba(0,0,0,.04);
 }
 
@@ -64,53 +60,53 @@ body{
     align-items:center;
     gap:8px;
     min-width:0;
+    flex:none;
 }
 
 .header-title{
-    font-size:19px;
+    font-size:18px;
     font-weight:700;
     white-space:nowrap;
 }
 
+/* ===== COMPACT STATUS LINE ===== */
+
 .header-status{
     display:flex;
     align-items:center;
-    gap:7px;
+    gap:8px;
     flex-wrap:wrap;
     min-width:0;
-    margin-left:8px;
+    flex:1;
+    margin-left:4px;
 }
 
-.status-pill{
-    display:inline-flex;
-    align-items:center;
-    min-height:32px;
-    padding:0 10px;
-    border:1px solid var(--border);
-    border-radius:8px;
-    background:var(--surface2);
-    color:var(--muted);
-    font-size:12px;
+.status-text{
+    font-size:11px;
+    font-weight:600;
     white-space:nowrap;
+    line-height:1.2;
 }
 
-.status-pill.connected{
-    color:var(--success);
-    border-color:#bbf7d0;
-    background:#f0fdf4;
+.status-text.drive-on{ color:#15803d; }
+.status-text.drive-off{ color:#dc2626; }
+
+.status-text.sync-on{ color:#15803d; }
+.status-text.sync-off{ color:#b45309; }
+.status-text.sync-err{ color:#dc2626; }
+
+.status-text.pending{ color:#b45309; }
+.status-text.no-pending{ color:#697386; }
+
+.status-text.last-sync{ color:#2563eb; }
+
+.status-sep{
+    color:#cbd5e1;
+    font-size:10px;
+    user-select:none;
 }
 
-.status-pill.pending{
-    color:var(--warning);
-    border-color:#fde68a;
-    background:#fffbeb;
-}
-
-.status-pill.error{
-    color:var(--danger);
-    border-color:#fecaca;
-    background:#fef2f2;
-}
+/* ===== TOP ACTION BUTTONS - UNIFORM ===== */
 
 .header-actions{
     margin-left:auto;
@@ -118,6 +114,7 @@ body{
     align-items:center;
     gap:6px;
     flex-wrap:nowrap;
+    flex:none;
 }
 
 button,
@@ -133,20 +130,22 @@ button{
 
 .btn{
     height:34px;
-    min-width:86px;
-    padding:0 12px;
+    min-width:74px;
+    padding:0 10px;
     border:1px solid var(--border);
     border-radius:8px;
     background:var(--surface);
     color:var(--text);
-    font-size:13px;
+    font-size:12px;
     font-weight:600;
     transition:.15s ease;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    white-space:nowrap;
 }
 
-.btn:hover{
-    background:#f1f5f9;
-}
+.btn:hover{ background:#f1f5f9; }
 
 .btn.primary{
     background:var(--primary);
@@ -154,9 +153,7 @@ button{
     border-color:var(--primary);
 }
 
-.btn.primary:hover{
-    background:var(--primary2);
-}
+.btn.primary:hover{ background:var(--primary2); }
 
 .btn.danger{
     color:white;
@@ -174,6 +171,7 @@ button{
     min-width:65px;
     height:30px;
     font-size:12px;
+    padding:0 8px;
 }
 
 .btn.icon{
@@ -203,13 +201,7 @@ button{
     font-weight:700;
 }
 
-.sidebar-toggle:hover{
-    background:#eef2ff;
-}
-
-.app-header{
-    padding-left:92px;
-}
+.sidebar-toggle:hover{ background:#eef2ff; }
 
 /* =========================================================
    SIDEBAR
@@ -223,9 +215,7 @@ button{
     display:none;
 }
 
-.sidebar-overlay.open{
-    display:block;
-}
+.sidebar-overlay.open{ display:block; }
 
 .sidebar{
     position:fixed;
@@ -243,13 +233,9 @@ button{
     padding:10px;
 }
 
-.sidebar.open{
-    transform:translateX(0);
-}
+.sidebar.open{ transform:translateX(0); }
 
-.sidebar-section{
-    margin-bottom:8px;
-}
+.sidebar-section{ margin-bottom:8px; }
 
 .sidebar-item{
     position:relative;
@@ -264,9 +250,7 @@ button{
 }
 
 .sidebar-item:hover,
-.sidebar-item.active{
-    background:#eef2ff;
-}
+.sidebar-item.active{ background:#eef2ff; }
 
 .sidebar-icon{
     width:20px;
@@ -285,23 +269,44 @@ button{
 .sidebar-count{
     color:var(--muted);
     font-size:11px;
+    flex:none;
 }
 
-.sidebar-edit{
+/* ===== EDIT / REMOVE BUTTONS ON SIDEBAR ITEMS ===== */
+
+.sidebar-controls{
     display:none;
-    width:28px;
-    height:26px;
-    min-width:28px;
-    padding:0;
-    border:0;
-    border-radius:6px;
-    background:#e2e8f0;
-    cursor:pointer;
+    gap:3px;
+    flex:none;
 }
 
-.sidebar-item:hover .sidebar-edit,
-.sidebar-item.selected .sidebar-edit{
-    display:block;
+.sidebar-item:hover .sidebar-controls,
+.sidebar-item.selected .sidebar-controls{
+    display:flex;
+}
+
+.sidebar-ctrl{
+    width:24px;
+    height:24px;
+    min-width:24px;
+    padding:0;
+    border:1px solid var(--border);
+    border-radius:6px;
+    background:var(--surface);
+    color:var(--text);
+    font-size:11px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    line-height:1;
+}
+
+.sidebar-ctrl:hover{ background:#e2e8f0; }
+
+.sidebar-ctrl.danger:hover{
+    background:#fef2f2;
+    border-color:#fecaca;
+    color:#dc2626;
 }
 
 .sidebar-collapse{
@@ -309,9 +314,7 @@ button{
     padding-left:18px;
 }
 
-.sidebar-tree{
-    margin-left:8px;
-}
+.sidebar-tree{ margin-left:8px; }
 
 .tree-row{
     display:flex;
@@ -333,19 +336,13 @@ button{
     min-width:0;
 }
 
-.tree-children{
-    margin-left:17px;
-}
+.tree-children{ margin-left:17px; }
 
 .tag-list,
-.category-list{
-    display:none;
-}
+.category-list{ display:none; }
 
 .tag-list.open,
-.category-list.open{
-    display:block;
-}
+.category-list.open{ display:block; }
 
 .sidebar-subtitle{
     padding:6px 9px;
@@ -385,9 +382,7 @@ button{
     outline:none;
 }
 
-.search-box input:focus{
-    border-color:var(--primary);
-}
+.search-box input:focus{ border-color:var(--primary); }
 
 .workspace{
     display:grid;
@@ -414,9 +409,7 @@ button{
     border-bottom:1px solid var(--border);
 }
 
-.panel-title{
-    font-weight:700;
-}
+.panel-title{ font-weight:700; }
 
 .note-list{
     max-height:calc(100vh - 180px);
@@ -432,13 +425,8 @@ button{
     cursor:pointer;
 }
 
-.note-row:hover{
-    background:#f8fafc;
-}
-
-.note-row.active{
-    background:#eff6ff;
-}
+.note-row:hover{ background:#f8fafc; }
+.note-row.active{ background:#eff6ff; }
 
 .note-marker{
     width:5px;
@@ -495,13 +483,9 @@ button{
    NOTE DETAIL
    ========================================================= */
 
-.detail{
-    min-width:0;
-}
+.detail{ min-width:0; }
 
-.detail-body{
-    padding:14px;
-}
+.detail-body{ padding:14px; }
 
 .note-title-display{
     font-size:24px;
@@ -528,9 +512,7 @@ button{
     color:var(--text);
 }
 
-.editor-field:focus{
-    border-color:var(--primary);
-}
+.editor-field:focus{ border-color:var(--primary); }
 
 .editor-title{
     font-size:23px;
@@ -543,9 +525,7 @@ button{
     line-height:1.55;
 }
 
-.field-group{
-    margin-bottom:12px;
-}
+.field-group{ margin-bottom:12px; }
 
 .field-label{
     display:block;
@@ -565,9 +545,7 @@ button{
    LINKS / TAGS
    ========================================================= */
 
-.links-box{
-    margin-top:18px;
-}
+.links-box{ margin-top:18px; }
 
 .link-row{
     display:flex;
@@ -601,7 +579,7 @@ button{
 }
 
 /* =========================================================
-   METADATA - COMPACT TWO COLUMN TABLE
+   METADATA
    ========================================================= */
 
 .metadata-box{
@@ -630,9 +608,7 @@ button{
     border-bottom:1px solid #e7ebf0;
 }
 
-.metadata-table tr:last-child{
-    border-bottom:0;
-}
+.metadata-table tr:last-child{ border-bottom:0; }
 
 .metadata-table td{
     padding:5px 8px;
@@ -764,17 +740,13 @@ body.night .btn{
     color:var(--text);
 }
 
-body.night .metadata-title{
-    background:#263449;
-}
+body.night .metadata-title{ background:#263449; }
 
-body.night .note-row:hover{
-    background:#1e293b;
-}
+body.night .note-row:hover{ background:#1e293b; }
+body.night .note-row.active{ background:#1e3a5f; }
 
-body.night .note-row.active{
-    background:#1e3a5f;
-}
+body.night .status-text.drive-on{ color:#4ade80; }
+body.night .status-text.sync-on{ color:#4ade80; }
 
 /* =========================================================
    RESPONSIVE
@@ -783,23 +755,26 @@ body.night .note-row.active{
 @media(max-width:850px){
 
     .app-header{
-        height:auto;
         min-height:62px;
         align-items:flex-start;
         flex-wrap:wrap;
         padding-top:9px;
         padding-bottom:9px;
+        padding-left:92px;
     }
 
-    .header-title{
-        font-size:17px;
-    }
+    .header-title{ font-size:16px; }
 
     .header-status{
         width:100%;
         margin-left:0;
         order:3;
+        gap:6px;
+        padding-top:4px;
+        border-top:1px dashed var(--border);
     }
+
+    .status-text{ font-size:10px; }
 
     .header-actions{
         margin-left:auto;
@@ -809,13 +784,9 @@ body.night .note-row.active{
         grid-template-columns:1fr;
     }
 
-    .note-list{
-        max-height:40vh;
-    }
+    .note-list{ max-height:40vh; }
 
-    .settings-grid{
-        grid-template-columns:1fr;
-    }
+    .settings-grid{ grid-template-columns:1fr; }
 
     .metadata-table td{
         padding:5px 6px;
@@ -825,43 +796,35 @@ body.night .note-row.active{
 
 @media(max-width:550px){
 
-    .main{
-        padding:7px;
-    }
+    .main{ padding:7px; }
 
-    .app-header{
-        padding-left:88px;
-    }
+    .app-header{ padding-left:88px; }
 
-    .header-actions{
-        gap:4px;
-    }
+    .header-actions{ gap:4px; }
 
     .header-actions .btn{
-        min-width:65px;
-        padding:0 8px;
+        min-width:64px;
+        padding:0 7px;
         font-size:11px;
     }
 
-    .toolbar .btn{
-        min-width:72px;
-    }
+    .toolbar .btn{ min-width:72px; }
 
-    .detail-body{
-        padding:10px;
-    }
+    .detail-body{ padding:10px; }
 
-    .note-title-display{
-        font-size:20px;
-    }
+    .note-title-display{ font-size:20px; }
 
-    .metadata-table td.label{
-        width:24%;
-    }
+    .metadata-table td.label{ width:24%; }
+    .metadata-table td.value{ width:26%; }
 
-    .metadata-table td.value{
-        width:26%;
-    }
+    .status-text{ font-size:9px; }
+    .status-sep{ display:none; }
+    .header-status{ gap:4px 8px; }
+}
+
+@media(max-width:400px){
+    .status-text{ font-size:9px; }
+    .header-title{ font-size:15px; }
 }
 </style>
 </head>
@@ -881,49 +844,24 @@ body.night .note-row.active{
 <header class="app-header">
 
     <div class="header-left">
-        <div class="header-title">Notes Manager</div>
+        <div class="header-title">Notes</div>
     </div>
 
+    <!-- COMPACT SINGLE-LINE STATUS -->
     <div class="header-status">
-
-        <div id="driveStatus" class="status-pill">
-            Drive Not Connected
-        </div>
-
-        <div id="syncStatus" class="status-pill">
-            Not Synced
-        </div>
-
-        <div id="pendingStatus" class="status-pill">
-            No Changes Pending
-        </div>
-
-        <div id="lastSyncStatus" class="status-pill">
-            Last Sync: —
-        </div>
-
+        <span id="driveStatus" class="status-text drive-off">Drive: Off</span>
+        <span class="status-sep">|</span>
+        <span id="syncStatus" class="status-text sync-off">Sync: Idle</span>
+        <span class="status-sep">|</span>
+        <span id="lastChangeStatus" class="status-text last-sync">Change: —</span>
+        <span class="status-sep">|</span>
+        <span id="pendingStatus" class="status-text no-pending">Pending: No</span>
     </div>
 
     <div class="header-actions">
-
-        <button id="connectBtn"
-                class="btn primary"
-                type="button">
-            Connect
-        </button>
-
-        <button id="loadBtn"
-                class="btn"
-                type="button">
-            Load
-        </button>
-
-        <button id="syncBtn"
-                class="btn"
-                type="button">
-            Sync
-        </button>
-
+        <button id="connectBtn" class="btn primary" type="button">Connect</button>
+        <button id="loadBtn" class="btn" type="button">Load</button>
+        <button id="syncBtn" class="btn" type="button">Sync</button>
     </div>
 
 </header>
@@ -1074,7 +1012,7 @@ body.night .note-row.active{
         <button class="btn primary"
                 type="button"
                 onclick="addNote()">
-            + Add Note
+            + Add
         </button>
 
         <button class="btn"
@@ -1168,12 +1106,6 @@ const DRIVE_SCOPE =
 const DATABASE_NAME =
 "MasterDB.json";
 
-/*
-   اگر آپ بعد میں MasterDB.json کو صرف ایک مخصوص Drive Folder
-   میں تلاش کروانا چاہیں تو یہاں Folder ID ڈال سکتے ہیں۔
-
-   خالی ہونے کی صورت میں پورے Drive میں exact filename search ہوگا۔
-*/
 const DATABASE_FOLDER_ID = "";
 
 
@@ -1209,6 +1141,7 @@ let saveInProgress = false;
 let pendingChanges = false;
 
 let lastSuccessfulSync = null;
+let lastChangeTime = null;
 
 
 /* =========================================================
@@ -1309,20 +1242,12 @@ function initializeGoogle(){
                     "success"
                 );
 
-                /*
-                   Connect کے بعد account authorization مکمل ہے۔
-                   Database automatically load کیا جاتا ہے۔
-                */
                 loadDatabase();
             }
 
         });
 }
 
-
-/* =========================================================
-   CONNECT
-   ========================================================= */
 
 function connectDrive(){
 
@@ -1377,18 +1302,18 @@ function setDriveConnected(value){
     if(value){
 
         el.textContent =
-            "Drive Connected";
+            "Drive: On";
 
         el.className =
-            "status-pill connected";
+            "status-text drive-on";
 
     }else{
 
         el.textContent =
-            "Drive Not Connected";
+            "Drive: Off";
 
         el.className =
-            "status-pill";
+            "status-text drive-off";
     }
 }
 
@@ -1853,10 +1778,6 @@ async function saveDatabaseToDrive(){
                 2
             );
 
-        /*
-           اگر file موجود نہیں تو پہلے create کریں۔
-        */
-
         if(!databaseFileId){
 
             const file =
@@ -1939,10 +1860,14 @@ function markChanged(){
 
     pendingChanges = true;
 
+    lastChangeTime =
+        new Date();
+
     db.meta.updated =
-        new Date().toISOString();
+        lastChangeTime.toISOString();
 
     updatePendingStatus();
+    updateLastChangeStatus();
 
     scheduleAutosave();
 }
@@ -1958,19 +1883,42 @@ function updatePendingStatus(){
     if(pendingChanges){
 
         el.textContent =
-            "Changes Pending";
+            "Pending: Yes";
 
         el.className =
-            "status-pill pending";
+            "status-text pending";
 
     }else{
 
         el.textContent =
-            "No Changes Pending";
+            "Pending: No";
 
         el.className =
-            "status-pill";
+            "status-text no-pending";
     }
+}
+
+
+function updateLastChangeStatus(){
+
+    const el =
+        document.getElementById(
+            "lastChangeStatus"
+        );
+
+    if(!lastChangeTime){
+
+        el.textContent =
+            "Change: —";
+
+        return;
+    }
+
+    el.textContent =
+        "Change: " +
+        formatShortTime(
+            lastChangeTime
+        );
 }
 
 
@@ -2048,47 +1996,43 @@ function setSyncStatus(text,type){
             "syncStatus"
         );
 
-    el.textContent =
-        text;
-
     if(type === "success"){
 
+        el.textContent =
+            "Sync: " + text;
+
         el.className =
-            "status-pill connected";
+            "status-text sync-on";
 
     }else if(type === "error"){
 
+        el.textContent =
+            "Sync: Error";
+
         el.className =
-            "status-pill error";
+            "status-text sync-err";
 
     }else{
 
+        el.textContent =
+            "Sync: " + text;
+
         el.className =
-            "status-pill";
+            "status-text sync-off";
     }
 }
 
 
 function setLastSync(date){
 
-    const el =
-        document.getElementById(
-            "lastSyncStatus"
-        );
-
     if(!date){
-
-        el.textContent =
-            "Last Sync: —";
-
         return;
     }
 
-    el.textContent =
-        "Last Sync: " +
-        formatDateTime(
-            date
-        );
+    lastSuccessfulSync =
+        date;
+
+    updateLastChangeStatus();
 }
 
 
@@ -2201,6 +2145,10 @@ function updateNote(id, changes){
 }
 
 
+/* =========================================================
+   DELETE → RECYCLE BIN
+   ========================================================= */
+
 function deleteNote(id){
 
     const note =
@@ -2216,7 +2164,7 @@ function deleteNote(id){
 
         const ok =
             confirm(
-                "Delete this note and move it to Trash?"
+                "Move this note to the Recycle Bin?"
             );
 
         if(!ok){
@@ -2227,18 +2175,9 @@ function deleteNote(id){
     note.deleted = true;
     note.trashHidden = false;
 
-    db.binCounter =
-        Math.max(
-            Number(db.binCounter || 0),
-            getHighestBinNumber()
-        ) + 1;
-
-    note.binNumber =
-        db.binCounter;
-
     /*
-       Bin tag is permanent.
-       Numbered Bin tag is assigned for this cycle.
+       Only a single "Bin" tag is added.
+       No incremental Bin numbering anymore.
     */
 
     addTagToNote(
@@ -2246,22 +2185,24 @@ function deleteNote(id){
         "Bin"
     );
 
-    addTagToNote(
-        note,
-        "Bin " + note.binNumber
-    );
+    note.binNumber = 0;
 
     note.modifiedAt =
         new Date().toISOString();
 
     markChanged();
 
+    /*
+       Immediately clear selection & refresh list
+       so note disappears from active view.
+    */
+
     selectedNoteId = null;
 
     refreshUI();
 
     showToast(
-        "Note moved to Trash.",
+        "Note moved to Recycle Bin.",
         "success"
     );
 }
@@ -2332,11 +2273,6 @@ function restoreAllDeleted(){
 }
 
 
-/*
-   Empty Trash does NOT permanently delete anything.
-
-   It simply hides deleted notes from the normal Trash view.
-*/
 function emptyTrash(){
 
     const deleted =
@@ -2347,7 +2283,7 @@ function emptyTrash(){
     if(!deleted.length){
 
         showToast(
-            "Trash is already empty.",
+            "Recycle Bin is already empty.",
             "normal"
         );
 
@@ -2356,7 +2292,7 @@ function emptyTrash(){
 
     const ok =
         confirm(
-            "Empty Trash? Notes will NOT be permanently deleted. They will only be hidden from the normal Trash view."
+            "Empty Recycle Bin? Notes will NOT be permanently deleted. They will only be hidden from the normal view."
         );
 
     if(!ok){
@@ -2379,7 +2315,7 @@ function emptyTrash(){
     refreshUI();
 
     showToast(
-        "Trash emptied from normal view. No permanent deletion occurred.",
+        "Recycle Bin emptied from normal view. No permanent deletion occurred.",
         "success"
     );
 }
@@ -2403,37 +2339,15 @@ function restoreTrash(){
     refreshUI();
 
     showToast(
-        "Trash restored.",
+        "Recycle Bin restored.",
         "success"
     );
 }
 
 
 /* =========================================================
-   BIN HELPERS
+   TAG HELPERS
    ========================================================= */
-
-function getHighestBinNumber(){
-
-    let highest =
-        Number(db.binCounter || 0);
-
-    db.notes.forEach(
-        note => {
-
-            highest =
-                Math.max(
-                    highest,
-                    Number(
-                        note.binNumber || 0
-                    )
-                );
-        }
-    );
-
-    return highest;
-}
-
 
 function addTagToNote(note, tag){
 
@@ -2446,6 +2360,18 @@ function addTagToNote(note, tag){
 
         db.tags.push(tag);
     }
+}
+
+
+function removeTagFromNote(note, tag){
+
+    note.tags =
+        note.tags.filter(
+            t => t !== tag
+        );
+
+    note.modifiedAt =
+        new Date().toISOString();
 }
 
 
@@ -2517,9 +2443,6 @@ function selectNote(id){
     note.viewCount =
         Number(note.viewCount || 0) + 1;
 
-    /*
-       View metadata is a database change as well.
-    */
     markChanged();
 
     renderNoteList();
@@ -2793,7 +2716,7 @@ function renderMetadata(
                         ${
                             note.deleted
                             ?
-                            "In Trash"
+                            "In Recycle Bin"
                             :
                             "Active"
                         }
@@ -3027,10 +2950,6 @@ function saveEditedNote(id){
             linksText
         );
 
-    /*
-       Keep global tag registry synchronized.
-    */
-
     note.tags.forEach(
         tag => {
 
@@ -3200,7 +3119,7 @@ function removeCategory(id){
 
     const ok =
         confirm(
-            "Remove this category? Notes will NOT be deleted."
+            "Remove this category? Notes will remain but be reassigned to the parent (or No Category)."
         );
 
     if(!ok){
@@ -3210,6 +3129,10 @@ function removeCategory(id){
     const parentId =
         category.parentId || null;
 
+    /*
+       Reassign notes to parent category.
+    */
+
     db.notes.forEach(
         note => {
 
@@ -3217,24 +3140,52 @@ function removeCategory(id){
 
                 note.categoryId =
                     parentId;
+
+                note.modifiedAt =
+                    new Date().toISOString();
             }
         }
     );
 
+    /*
+       Remove category and all its descendants.
+    */
+
+    const toRemove = new Set([id]);
+
+    let changed = true;
+
+    while(changed){
+
+        changed = false;
+
+        db.categories.forEach(c => {
+
+            if(
+                c.parentId &&
+                toRemove.has(c.parentId) &&
+                !toRemove.has(c.id)
+            ){
+                toRemove.add(c.id);
+                changed = true;
+            }
+        });
+    }
+
     db.categories =
         db.categories.filter(
-            c =>
-                c.id !== id &&
-                !isDescendantOf(
-                    c.id,
-                    id
-                )
+            c => !toRemove.has(c.id)
         );
 
     markChanged();
 
     renderSidebar();
     refreshUI();
+
+    showToast(
+        "Category removed. Notes kept.",
+        "success"
+    );
 }
 
 
@@ -3395,7 +3346,7 @@ function getCategoryPath(
 
 
 /* =========================================================
-   TAGS
+   TAGS - ONLY ACTIVE NOTES
    ========================================================= */
 
 function getUsedTags(){
@@ -3403,19 +3354,31 @@ function getUsedTags(){
     const used =
         new Set();
 
+    /*
+       Only consider ACTIVE (non-deleted) notes.
+       Notes in Recycle Bin are excluded entirely.
+    */
+
     db.notes.forEach(
         note => {
 
-            if(
-                note.deleted &&
-                note.trashHidden
-            ){
+            if(note.deleted){
                 return;
             }
 
             note.tags.forEach(
-                tag =>
-                    used.add(tag)
+                tag => {
+
+                    /*
+                       Skip auto-assigned "Bin" tag
+                       from sidebar listing.
+                    */
+                    if(tag === "Bin"){
+                        return;
+                    }
+
+                    used.add(tag);
+                }
             );
         }
     );
@@ -3607,9 +3570,8 @@ function renderCategories(){
         );
 
     /*
-       IMPORTANT:
-       صرف وہ categories دکھائی جائیں گی جن میں
-       کم از کم ایک active note یا descendant note ہو۔
+       Only categories that contain at least one active note
+       (directly or through descendants).
     */
 
     const usedIds =
@@ -3764,10 +3726,21 @@ function renderCategoryTree(
                         ${count}
                     </span>
 
-                    <button class="sidebar-edit"
-                            onclick="event.stopPropagation(); categoryMenu('${category.id}')">
-                        ⋮
-                    </button>
+                    <div class="sidebar-controls">
+
+                        <button class="sidebar-ctrl"
+                                title="Rename"
+                                onclick="event.stopPropagation(); renameCategory('${category.id}')">
+                            ✎
+                        </button>
+
+                        <button class="sidebar-ctrl danger"
+                                title="Remove"
+                                onclick="event.stopPropagation(); removeCategory('${category.id}')">
+                            🗑
+                        </button>
+
+                    </div>
 
                 </div>
 
@@ -3849,56 +3822,6 @@ function countCategoryNotes(
 }
 
 
-function categoryMenu(id){
-
-    const category =
-        db.categories.find(
-            c =>
-                c.id === id
-        );
-
-    if(!category){
-        return;
-    }
-
-    const choice =
-        prompt(
-            "Category:\n" +
-            "1 = Add Sister\n" +
-            "2 = Add Child\n" +
-            "3 = Rename\n" +
-            "4 = Remove\n\n" +
-            "Enter option:",
-            "3"
-        );
-
-    if(choice === "1"){
-
-        addCategory(
-            category.parentId
-        );
-
-    }else if(choice === "2"){
-
-        addCategory(
-            category.id
-        );
-
-    }else if(choice === "3"){
-
-        renameCategory(
-            category.id
-        );
-
-    }else if(choice === "4"){
-
-        removeCategory(
-            category.id
-        );
-    }
-}
-
-
 function renderTags(){
 
     const container =
@@ -3951,10 +3874,21 @@ function renderTags(){
                                 ${count}
                             </span>
 
-                            <button class="sidebar-edit"
-                                    onclick="event.stopPropagation(); tagMenu('${escapeAttribute(tag)}')">
-                                ⋮
-                            </button>
+                            <div class="sidebar-controls">
+
+                                <button class="sidebar-ctrl"
+                                        title="Rename"
+                                        onclick="event.stopPropagation(); renameTag('${escapeAttribute(tag)}')">
+                                    ✎
+                                </button>
+
+                                <button class="sidebar-ctrl danger"
+                                        title="Remove tag from all notes"
+                                        onclick="event.stopPropagation(); removeTagEverywhere('${escapeAttribute(tag)}')">
+                                    🗑
+                                </button>
+
+                            </div>
 
                         </div>
                     `;
@@ -3964,83 +3898,103 @@ function renderTags(){
 }
 
 
-function tagMenu(tag){
+function renameTag(tag){
 
-    const choice =
+    const newName =
         prompt(
-            "Tag: " +
-            tag +
-            "\n\n" +
-            "1 = Rename\n" +
-            "2 = Remove Tag Association\n\n" +
-            "Enter option:",
-            "1"
+            "Rename tag:",
+            tag
         );
 
-    if(choice === "1"){
+    if(
+        !newName ||
+        !newName.trim()
+    ){
+        return;
+    }
 
-        const newName =
-            prompt(
-                "New tag name:",
-                tag
-            );
+    const clean =
+        newName.trim();
 
-        if(
-            !newName ||
-            !newName.trim()
-        ){
-            return;
+    db.notes.forEach(
+        note => {
+
+            note.tags =
+                note.tags.map(
+                    t =>
+                        t === tag
+                        ?
+                        clean
+                        :
+                        t
+                );
+
+            note.modifiedAt =
+                new Date().toISOString();
         }
+    );
 
-        const clean =
-            newName.trim();
-
-        db.notes.forEach(
-            note => {
-
-                note.tags =
-                    note.tags.map(
-                        t =>
-                            t === tag
-                            ?
-                            clean
-                            :
-                            t
-                    );
-            }
+    db.tags =
+        db.tags.map(
+            t =>
+                t === tag
+                ?
+                clean
+                :
+                t
         );
 
-        db.tags =
-            db.tags.map(
-                t =>
-                    t === tag
-                    ?
-                    clean
-                    :
-                    t
-            );
+    markChanged();
 
-        markChanged();
+    refreshUI();
 
-        refreshUI();
+    showToast(
+        "Tag renamed.",
+        "success"
+    );
+}
 
-    }else if(choice === "2"){
 
-        db.notes.forEach(
-            note => {
+function removeTagEverywhere(tag){
+
+    const ok =
+        confirm(
+            "Remove tag '" + tag + "' from all notes?\n\nNotes will NOT be deleted."
+        );
+
+    if(!ok){
+        return;
+    }
+
+    db.notes.forEach(
+        note => {
+
+            if(note.tags.includes(tag)){
 
                 note.tags =
                     note.tags.filter(
-                        t =>
-                            t !== tag
+                        t => t !== tag
                     );
+
+                note.modifiedAt =
+                    new Date().toISOString();
             }
+        }
+    );
+
+    db.tags =
+        db.tags.filter(
+            t => t !== tag
         );
 
-        markChanged();
+    markChanged();
 
-        refreshUI();
-    }
+    refreshUI();
+
+    showToast(
+        "Tag removed. Notes kept.",
+        "success"
+    );
 }
 
 
@@ -4159,7 +4113,7 @@ function renderListTitle(){
 
         title.textContent =
             db.trash.label ||
-            "Trash";
+            "Recycle Bin";
 
     }else if(currentView === "category"){
 
@@ -4697,8 +4651,7 @@ function renderSettings(){
                     Sidebar View
                 </label>
 
-                <select id="setSidebarView"
-                        onchange="saveSetting('sidebarView',this.value)">
+                <select onchange="saveSetting('sidebarView',this.value)">
 
                     ${option(
                         "Compact",
@@ -4725,8 +4678,7 @@ function renderSettings(){
                     Theme
                 </label>
 
-                <select id="setTheme"
-                        onchange="saveSetting('theme',this.value)">
+                <select onchange="saveSetting('theme',this.value)">
 
                     ${option(
                         "Day",
@@ -4998,7 +4950,7 @@ function renderSettings(){
         <div style="margin-top:15px;">
 
             <div class="field-label">
-                Trash Name
+                Recycle Bin Name
             </div>
 
             <select class="editor-field"
@@ -5006,8 +4958,8 @@ function renderSettings(){
 
                 ${
                     [
-                        "Trash",
                         "Recycle Bin",
+                        "Trash",
                         "Dustbin",
                         "Deleted Items",
                         "Deleted Notes",
@@ -5038,22 +4990,22 @@ function renderSettings(){
 
             <button class="btn"
                     onclick="addCategory()">
-                Add Root Category
+                Add Category
             </button>
 
             <button class="btn"
                     onclick="restoreAllDeleted()">
-                Restore All Deleted
+                Restore All
             </button>
 
             <button class="btn"
                     onclick="emptyTrash()">
-                Empty Trash
+                Empty Bin
             </button>
 
             <button class="btn"
                     onclick="restoreTrash()">
-                Restore Trash
+                Restore Bin
             </button>
 
         </div>
@@ -5192,7 +5144,7 @@ function applySettings(){
         "trashLabel"
     ).textContent =
         db.trash.label ||
-        "Trash";
+        "Recycle Bin";
 }
 
 
@@ -5408,6 +5360,33 @@ function formatDateTime(value){
 }
 
 
+function formatShortTime(value){
+
+    if(!value){
+        return "—";
+    }
+
+    const date =
+        new Date(value);
+
+    if(
+        Number.isNaN(
+            date.getTime()
+        )
+    ){
+        return "—";
+    }
+
+    return date.toLocaleTimeString(
+        undefined,
+        {
+            hour:"2-digit",
+            minute:"2-digit"
+        }
+    );
+}
+
+
 /* =========================================================
    UTILITIES
    ========================================================= */
@@ -5503,10 +5482,6 @@ function showToast(
 
 function initializeApp(){
 
-    /*
-       Sidebar ہمیشہ closed/hidden سے شروع ہوگا۔
-    */
-
     sidebarOpen =
         false;
 
@@ -5526,10 +5501,6 @@ function initializeApp(){
         "sidebarToggle"
     ).textContent =
         "Show";
-
-    /*
-       Categories اور Tags default طور پر بند۔
-    */
 
     document.getElementById(
         "categoryList"
@@ -5560,6 +5531,8 @@ function initializeApp(){
     renderNoteList();
 
     renderDetail();
+
+    updateLastChangeStatus();
 
     initializeGoogle();
 }
